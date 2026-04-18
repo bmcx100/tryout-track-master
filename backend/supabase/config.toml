@@ -1,0 +1,34 @@
+# Supabase configuration for Track Master
+# Local development config
+
+[project]
+account_tier = "free"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+email.enabled = true
+email.autoconfirm = false
+
+[realtime]
+enabled = true
+max_bytes_per_second = 1000000
+
+[storage]
+enabled = true
+file_size_limit = 52428800
+
+[vector]
+enabled = false
