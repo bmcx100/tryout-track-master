@@ -34,7 +34,7 @@ export function LongPressMenu({ player, onClose }: LongPressMenuProps) {
             #{player.jersey_number} {player.name}
           </div>
           <div className="long-press-player-info">
-            {player.previous_team ?? player.division} · {formatStatus(player.status)}
+            {player.division} · {formatStatus(player.status)}
           </div>
         </div>
         <button className="long-press-action" onClick={onClose}>

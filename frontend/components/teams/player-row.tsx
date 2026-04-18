@@ -1,6 +1,6 @@
 "use client"
 
-import { GripVertical, Lock } from "lucide-react"
+import { GripVertical, Check } from "lucide-react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import type { Player } from "@/types"
@@ -44,7 +44,7 @@ export function PlayerRow({ player, isLocked, onLongPress }: PlayerRowProps) {
         className="player-drag-handle"
         {...(isLocked ? {} : { ...attributes, ...listeners })}
       >
-        {isLocked ? <Lock size={14} /> : <GripVertical size={14} />}
+        {isLocked ? <Check size={14} /> : <GripVertical size={14} />}
       </span>
       <span className="player-jersey">#{player.jersey_number}</span>
       {player.position && (
