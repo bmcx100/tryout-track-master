@@ -1,34 +1,65 @@
 # Supabase configuration for Track Master
 # Local development config
 
-[project]
-account_tier = "free"
+project_id = "track-master"
 
 [api]
 enabled = true
 port = 54321
-schemas = ["public"]
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
 
 [db]
 port = 54322
-major_version = 15
+shadow_port = 54320
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
 
 [studio]
 enabled = true
 port = 54323
 
+[inbucket]
+enabled = true
+port = 54324
+
 [auth]
 enabled = true
-email.enabled = true
-email.autoconfirm = false
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://127.0.0.1:3000"]
+jwt_expiry = 3600
+enable_signup = true
+enable_anonymous_sign_ins = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+max_frequency = "1s"
+
+[auth.external.google]
+enabled = false
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+redirect_uri = ""
+skip_nonce_check = true
 
 [realtime]
 enabled = true
-max_bytes_per_second = 1000000
 
 [storage]
 enabled = true
-file_size_limit = 52428800
+file_size_limit = "50MiB"
 
-[vector]
-enabled = false
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+
+[analytics]
+enabled = true
+port = 54327
+backend = "postgres"
