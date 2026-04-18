@@ -497,3 +497,27 @@
 .auth-footer-link {
   @apply font-medium text-primary underline underline-offset-4;
 }
+
+/* ============================================================
+   App Shell
+   ============================================================ */
+
+.app-shell {
+  @apply min-h-screen;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  background: var(--dm-parchment);
+}
+
+.dashboard-placeholder {
+  @apply flex min-h-[60vh] flex-col items-center justify-center gap-2;
+}
+
+.dashboard-placeholder-title {
+  @apply text-2xl font-bold;
+  color: var(--dm-umber);
+}
+
+.dashboard-placeholder-text {
+  @apply text-sm;
+  color: var(--dm-dust);
+}
