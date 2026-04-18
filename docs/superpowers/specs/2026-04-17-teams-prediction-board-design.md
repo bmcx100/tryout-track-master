@@ -85,38 +85,43 @@ U15 BB players (by jersey) -> U13 BB players (by jersey) -> ...
 
 ### Team Sections
 
+Teams stack flush with no gaps between them. Alternating header background tones (Dune / darker Dune) visually separate adjacent sections. No left borders on any section.
+
 Each team level is displayed as a collapsible section:
 
 **Official teams** (admin-announced):
-- Solid green left border
-- Green "OFFICIAL" badge
+- Green checkmark badge, sentence case: "✓ Official"
 - Collapsed by default (tap to expand)
-- Shows roster count: "17/17"
+- Shows: "17 Players"
 - Players within are locked, not draggable
 
 **Predicted teams** (parent's ranking):
-- Dashed blue left border
-- Blue "PREDICTION" badge
+- Gold badge, sentence case: "Prediction"
 - Expanded by default (collapsible)
-- Shows: "17 predicted"
+- Shows: "17 Players"
 - Players are draggable via drag handles
+
+**Team header layout** (left to right):
+- Team name (e.g. "AA") + player count on the left
+- Badge (Official/Prediction) + chevron on the right
 
 Teams are always ordered top-down: AA, A, BB, B, C (matching the real tryout structure).
 
 ### Player Row
 
-Each row in the prediction list shows (left to right):
+Player rows stretch edge-to-edge (full width, no card margins). Each row shows (left to right):
 
 | Element | Description |
 |---------|-------------|
 | Drag handle | Grip icon for reordering (hidden on official/locked rows) |
-| Heart | Red heart if hearted as friend, empty otherwise |
-| Jersey number | Prefixed with # (e.g. #16) |
+| Jersey number | Prefixed with # (e.g. #16), IBM Plex Mono, Gold |
+| Position badge | Small badge: F (forward), D (defense), G (goalie) |
 | Player name | Full name, truncated with ellipsis if too long |
-| Previous team | Short label (e.g. "U13 A") |
-| Status pill | Colored badge: Trying Out, Registered, Made Team, Cut, etc. |
+| Previous team | Condensed label, no space (e.g. "U13AA"), IBM Plex Mono, Dust |
 
 **No rank numbers are displayed.** The position in the list IS the rank.
+**No status pills** (Trying Out, Registered, etc.) are shown in player rows.
+**No hearts** are shown inline in player rows.
 
 ### Reordering
 
@@ -128,7 +133,7 @@ Each row in the prediction list shows (left to right):
 
 When an admin announces a team (e.g. AA):
 
-1. AA section changes from predicted (dashed blue) to official (solid green).
+1. AA section badge changes from "Prediction" (gold) to "✓ Official" (green checkmark).
 2. The official players are locked at the top with checkmarks instead of drag handles.
 3. The section collapses by default.
 4. Remaining players keep their relative order in the parent's ranking.
@@ -223,7 +228,16 @@ ALTER TABLE tryout_players
   ADD COLUMN previous_team text;
 ```
 
-Stores the full previous team label (e.g. "U13 AA", "U15 Minor A"). Free text since players may come from other associations.
+Stores the full previous team label condensed without spaces (e.g. "U13AA", "U15MinorA"). Free text since players may come from other associations.
+
+### New: `position` field on `tryout_players`
+
+```sql
+ALTER TABLE tryout_players
+  ADD COLUMN position text CHECK (position IN ('F', 'D', 'G'));
+```
+
+Player position: F (forward), D (defense), G (goalie). Displayed as a small badge between jersey number and player name.
 
 ### New: `player_predictions` table
 
@@ -278,17 +292,17 @@ Every player has a **UUID primary key** (`tryout_players.id`) separate from thei
 
 ## Status Badge Colors
 
-| Status | Background | Text |
-|--------|-----------|------|
-| Registered | Warm yellow | Dark amber |
-| Trying Out | Light green | Dark green |
-| Made Team | Light blue | Dark blue |
-| Cut | Light red | Dark red |
-| Moved Up | Light indigo | Dark indigo |
-| Moved Down | Light pink | Dark pink |
-| Withdrew | Light gray | Dark gray |
+Status badges are **not displayed in player rows** on the prediction board. They appear only on the Player Detail page and in the Previous Teams view. Colors use the Desert Monolith palette where possible, with functional color exceptions for clarity.
 
-*Exact color values will be set during styling phase.*
+| Status | Background | Text | Hex (bg / text) |
+|--------|-----------|------|-----------------|
+| Registered | Gold 12% | Gold | `rgba(158,123,47,0.12)` / `#9E7B2F` |
+| Trying Out | Green 10% | Dark green | `rgba(46,125,50,0.10)` / `#2e7d32` |
+| Made Team | Green 10% | Dark green | `rgba(46,125,50,0.10)` / `#2e7d32` |
+| Cut | Cinnabar 10% | Cinnabar | `rgba(184,58,42,0.10)` / `#B83A2A` |
+| Moved Up | Green 10% | Dark green | `rgba(46,125,50,0.10)` / `#2e7d32` |
+| Moved Down | Cinnabar 10% | Cinnabar | `rgba(184,58,42,0.10)` / `#B83A2A` |
+| Withdrew | Dust 12% | Dust | `rgba(184,160,106,0.12)` / `#B8A06A` |
 
 ---
 
@@ -331,11 +345,10 @@ Every player has a **UUID primary key** (`tryout_players.id`) separate from thei
 │   │   └── PredictedTeamSection (collapsible, per team)
 │   │       └── PlayerRow (draggable)
 │   │           ├── DragHandle
-│   │           ├── HeartIcon
 │   │           ├── JerseyNumber
+│   │           ├── PositionBadge (F/D/G)
 │   │           ├── PlayerName
-│   │           ├── PreviousTeam
-│   │           └── StatusBadge
+│   │           └── PreviousTeam
 │   │
 │   └── PreviousTeamsView [Client: grouped read-only list]
 │       └── PreviousTeamSection (per previous team)
@@ -367,9 +380,59 @@ Every player has a **UUID primary key** (`tryout_players.id`) separate from thei
 
 ---
 
-## Scope Note
+## Visual Style Guide
 
-**Styling is intentionally not specified here.** The layout, functionality, and interaction patterns are locked. Visual styling (colors, fonts, spacing, shadows, border styles) will be defined in a separate styling pass.
+Design system: **Desert Monolith**. Full system definition in `docs/design-system-desert-monolith.md`. CSS custom properties in `frontend/app/globals.css`.
+
+### Palette
+
+| Token | Hex | OKLCH | Usage |
+|-------|-----|-------|-------|
+| Gold | `#9E7B2F` | `oklch(0.602 0.102 83.6)` | Brand, headings, active states, jersey numbers |
+| Light Gold | `#C9A84C` | `oklch(0.743 0.117 89.5)` | Bottom nav active, hover, decorative |
+| Cinnabar | `#B83A2A` | `oklch(0.531 0.165 30.5)` | CTAs, buttons, destructive actions |
+| Parchment | `#FBF6ED` | `oklch(0.975 0.013 82.4)` | Page background, player row background |
+| Dune | `#F2E8D0` | `oklch(0.933 0.033 88.1)` | Team header tone 1, card surfaces |
+| Dune Alt | `#EBE0C4` | `oklch(0.908 0.039 89.1)` | Team header tone 2 (alternating) |
+| Umber | `#2A2117` | `oklch(0.255 0.022 69.5)` | Primary text, bottom nav background |
+| Dust | `#B8A06A` | `oklch(0.714 0.077 86.5)` | Muted text, labels, placeholders |
+| Official Green | `#2e7d32` | `oklch(0.523 0.135 144.2)` | Official badge only (functional exception) |
+
+### Typography
+
+| Role | Font | Weight | Usage |
+|------|------|--------|-------|
+| Headings | Outfit | 600-700 | Page title, team names, nav labels |
+| Body | Outfit | 400-500 | Player names, descriptions |
+| Data | IBM Plex Mono | 400-500 | Jersey numbers, counts, badges, previous team |
+| Drama | Fraunces Italic | 400-700 | Hero text only (28px+, not used on Teams page) |
+
+### Borders
+
+All borders are gold-tinted, never gray: `oklch(0.743 0.117 89.5 / 12%)`. Player row separators use 8% opacity. No left borders on team sections.
+
+### Bottom Navigation
+
+- **Background**: Umber (dark section)
+- **Active tab**: Light Gold `#C9A84C`, no underline
+- **Inactive tabs**: Light Gold at 50% opacity
+- **Height**: 70px + safe-area padding
+
+### Team Section Headers
+
+- Stack flush with zero gap between sections
+- Alternating backgrounds: Dune (`#F2E8D0`) and Dune Alt (`#EBE0C4`)
+- Separated by 1px gold-tinted border-top at 10% opacity
+- Official badge: green checkmark, sentence case
+- Prediction badge: gold, sentence case
+
+### Player Row Layout
+
+Edge-to-edge, 20px horizontal padding, 8px vertical padding. Elements in order: drag handle (Dust, 50% opacity) → jersey # (Gold, Plex Mono) → position badge (F/D/G, Gold-tinted bg) → player name (Umber, Outfit 500) → previous team (Dust, Plex Mono, condensed like "U13AA").
+
+### App Header
+
+56px height, Parchment at 85% opacity with 20px backdrop blur. Gold-tinted bottom border. "Teams" title absolutely centered. Group label in Gold on the left, avatar gradient (Gold → Light Gold) on the right.
 
 ---
 
