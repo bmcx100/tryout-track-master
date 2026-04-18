@@ -579,3 +579,61 @@
   @apply text-sm font-medium;
   color: var(--dm-umber);
 }
+
+/* ============================================================
+   Long Press Menu (Bottom Sheet)
+   ============================================================ */
+
+.long-press-overlay {
+  @apply fixed inset-0 z-20;
+  background: oklch(0.255 0.022 69.5 / 40%);
+  animation: fadeIn 150ms ease-out;
+}
+
+.long-press-sheet {
+  @apply fixed bottom-0 left-0 right-0 z-30 rounded-t-3xl px-5 pb-8 pt-4;
+  background: var(--dm-parchment);
+  box-shadow: var(--dm-shadow-lg);
+  animation: slideUp 200ms ease-out;
+}
+
+.long-press-header {
+  @apply mb-4 border-b pb-3;
+  border-color: var(--dm-border);
+}
+
+.long-press-player-name {
+  @apply text-base font-bold;
+  color: var(--dm-umber);
+}
+
+.long-press-player-info {
+  @apply mt-0.5 text-xs;
+  color: var(--dm-dust);
+  font-family: var(--font-mono);
+}
+
+.long-press-action {
+  @apply flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium;
+  color: var(--dm-umber);
+  transition: background 150ms ease-out;
+}
+
+.long-press-action:hover {
+  background: var(--dm-dune);
+}
+
+.long-press-action-icon {
+  @apply flex-shrink-0;
+  color: var(--dm-gold);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
