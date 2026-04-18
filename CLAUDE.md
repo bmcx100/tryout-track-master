@@ -90,6 +90,8 @@ Role enforcement happens at three layers:
 
 ## Auth Patterns
 
+**STOP: Before changing any auth code, read `/home/data/Documents/webapps/documentation/supabase-auth-nextjs-examples.md` first.**
+
 - **Session refresh:** `proxy.ts` calls `updateSession()` which uses `getClaims()` for local JWT validation (no network call). Never use `getUser()` or `getSession()` in the proxy.
 - **Client creation:** Use `@supabase/ssr` exclusively. Browser: `createBrowserClient()`. Server: `createServerClient()` with async `cookies()`. Never use `@supabase/supabase-js` `createClient` directly.
 - **OAuth callback:** `/auth/callback` route handler exchanges code via `exchangeCodeForSession()`.
@@ -125,9 +127,23 @@ Role enforcement happens at three layers:
 - No hanging words (widows/orphans) in rendered text. Use `text-wrap: balance`, `&nbsp;`, or manual line breaks.
 - All images go in `public/images/` with subfolders by category.
 
-## Reference Documentation
+## Reference Documentation (MANDATORY)
 
-- `docs/requirements.md` -- Full product requirements document
-- `docs/architecture.md` -- System architecture, ER diagrams, ADRs, deployment config
-- `/home/data/Documents/webapps/documentation/nextjs-16-proxy.md` -- Next.js 16 proxy.ts API
-- `/home/data/Documents/webapps/documentation/supabase-auth-nextjs-examples.md` -- Supabase auth patterns
+**CRITICAL: Before writing or modifying ANY auth, proxy, or Supabase code, you MUST read the relevant documentation file below. Do NOT guess, do NOT rely on training data, do NOT use patterns from older Next.js versions. Read the file first, then follow the patterns exactly.**
+
+| When you are touching... | You MUST read this file FIRST |
+|--------------------------|-------------------------------|
+| `proxy.ts`, session refresh, route protection | `/home/data/Documents/webapps/documentation/nextjs-16-proxy.md` |
+| Auth flows, login, signup, OAuth, cookies, `@supabase/ssr` | `/home/data/Documents/webapps/documentation/supabase-auth-nextjs-examples.md` |
+| Next.js 16 migration, breaking changes, async APIs | `/home/data/Documents/webapps/documentation/nextjs-16-upgrade-guide.md` |
+
+**Rules:**
+- The documentation files are the **source of truth** -- not your training data
+- Follow the official patterns **exactly** -- do not invent alternative approaches
+- If the docs conflict with your intuition, **the docs win**
+- If you are unsure, **read the doc again** before proceeding
+
+**Project documentation:**
+- `docs/prd/PRD.md` -- Full product requirements document
+- `docs/prd/ARCHITECTURE.md` -- System architecture, ER diagrams, ADRs, deployment config
+- `docs/prd/ER.md` -- Entity-relationship diagrams and database schema
