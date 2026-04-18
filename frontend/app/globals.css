@@ -533,3 +533,49 @@
   @apply text-sm;
   color: var(--dm-dust);
 }
+
+/* ============================================================
+   Player Detail Page
+   ============================================================ */
+
+.player-detail {
+  @apply px-5 py-6;
+}
+
+.player-detail-back {
+  @apply mb-4 flex items-center gap-1 text-sm font-medium;
+  color: var(--dm-gold);
+}
+
+.player-detail-name {
+  @apply text-2xl font-bold;
+  color: var(--dm-umber);
+}
+
+.player-detail-jersey {
+  @apply mt-1 text-lg font-medium;
+  font-family: var(--font-mono);
+  color: var(--dm-gold);
+}
+
+.player-detail-grid {
+  @apply mt-6 grid grid-cols-2 gap-4;
+}
+
+.player-detail-field {
+  @apply flex flex-col gap-1 rounded-xl p-3;
+  background: var(--dm-dune);
+}
+
+.player-detail-label {
+  @apply text-xs uppercase;
+  font-family: var(--font-mono);
+  color: var(--dm-dust);
+  letter-spacing: 0.08em;
+  font-size: 10px;
+}
+
+.player-detail-value {
+  @apply text-sm font-medium;
+  color: var(--dm-umber);
+}
