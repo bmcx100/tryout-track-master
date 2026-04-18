@@ -246,6 +246,10 @@
   @apply flex items-center gap-2;
 }
 
+.team-header-right {
+  @apply flex items-center gap-2;
+}
+
 .team-name {
   @apply text-sm font-bold;
   color: var(--dm-umber);
