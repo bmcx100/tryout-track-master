@@ -334,6 +334,14 @@
   letter-spacing: 0.02em;
 }
 
+.prev-teams-status {
+  @apply flex-shrink-0 text-xs;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dm-dust);
+  letter-spacing: 0.02em;
+}
+
 /* ============================================================
    Bottom Navigation (Dark)
    ============================================================ */
