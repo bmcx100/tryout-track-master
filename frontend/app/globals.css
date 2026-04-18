@@ -124,3 +124,96 @@
     @apply bg-background text-foreground;
   }
 }
+
+.auth-error-page {
+  @apply flex min-h-screen items-center justify-center px-4;
+}
+
+.auth-error-card {
+  @apply flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-8 text-center shadow-sm;
+}
+
+.auth-error-title {
+  @apply text-2xl font-bold text-foreground;
+}
+
+.auth-error-message {
+  @apply text-muted-foreground;
+}
+
+.auth-error-link {
+  @apply text-sm font-medium text-primary underline underline-offset-4;
+}
+
+.public-layout {
+  @apply flex min-h-screen flex-col items-center justify-center bg-background;
+}
+
+.landing-main {
+  @apply flex w-full max-w-lg flex-col gap-8 px-6 py-12 text-center;
+}
+
+.landing-content {
+  @apply flex flex-col items-center gap-6;
+}
+
+.landing-title {
+  @apply text-4xl font-bold tracking-tight text-foreground;
+}
+
+.landing-subtitle {
+  @apply text-lg text-muted-foreground;
+}
+
+.landing-actions {
+  @apply flex gap-3;
+}
+
+.auth-form-container {
+  @apply flex w-full max-w-sm flex-col gap-4 px-6;
+}
+
+.auth-form-title {
+  @apply text-center text-2xl font-bold text-foreground;
+}
+
+.auth-divider {
+  @apply relative flex items-center py-2;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  @apply flex-1 border-t border-border content-[''];
+}
+
+.auth-divider-text {
+  @apply px-3 text-xs uppercase text-muted-foreground;
+}
+
+.auth-form {
+  @apply flex flex-col gap-4;
+}
+
+.auth-field {
+  @apply flex flex-col gap-1.5;
+}
+
+.auth-label {
+  @apply text-sm font-medium text-foreground;
+}
+
+.auth-input {
+  @apply rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring;
+}
+
+.auth-error {
+  @apply text-sm text-destructive;
+}
+
+.auth-footer {
+  @apply text-center text-sm text-muted-foreground;
+}
+
+.auth-footer-link {
+  @apply font-medium text-primary underline underline-offset-4;
+}
