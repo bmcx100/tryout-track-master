@@ -231,6 +231,7 @@
 
 .team-header {
   @apply flex cursor-pointer items-center justify-between px-5 py-2.5;
+  width: 100%;
   border-top: 1px solid oklch(0.743 0.117 89.5 / 10%);
 }
 
@@ -356,6 +357,14 @@
   padding-bottom: env(safe-area-inset-bottom);
   background: var(--dm-umber);
   border-top: 1px solid oklch(0.743 0.117 89.5 / 15%);
+}
+
+@media (min-width: 640px) {
+  .bottom-nav {
+    @apply absolute;
+    max-width: 393px;
+    border-radius: 0 0 1rem 1rem;
+  }
 }
 
 .bottom-nav-item {
@@ -515,9 +524,25 @@
    ============================================================ */
 
 .app-shell {
-  @apply min-h-screen;
+  @apply min-h-screen mx-auto;
+  max-width: 393px;
   padding-bottom: calc(70px + env(safe-area-inset-bottom));
   background: var(--dm-parchment);
+}
+
+@media (min-width: 640px) {
+  body {
+    @apply flex items-center justify-center;
+    min-height: 100svh;
+    background: black;
+  }
+
+  .app-shell {
+    @apply relative overflow-y-auto shadow-2xl;
+    height: 100svh;
+    max-height: 900px;
+    border-radius: 1rem;
+  }
 }
 
 .dashboard-placeholder {
@@ -595,6 +620,17 @@
   background: var(--dm-parchment);
   box-shadow: var(--dm-shadow-lg);
   animation: slideUp 200ms ease-out;
+}
+
+@media (min-width: 640px) {
+  .long-press-overlay {
+    @apply absolute;
+  }
+
+  .long-press-sheet {
+    @apply absolute;
+    max-width: 393px;
+  }
 }
 
 .long-press-header {
