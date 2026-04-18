@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { ChevronDown } from "lucide-react"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import type { Player } from "@/types"
 import { PlayerRow } from "./player-row"
 
@@ -45,7 +46,10 @@ export function TeamSection({
         </div>
       </button>
       {isExpanded && (
-        <div>
+        <SortableContext
+          items={players.map((p) => p.id)}
+          strategy={verticalListSortingStrategy}
+        >
           {players.map((player) => (
             <PlayerRow
               key={player.id}
@@ -54,7 +58,7 @@ export function TeamSection({
               onLongPress={onPlayerLongPress}
             />
           ))}
-        </div>
+        </SortableContext>
       )}
     </div>
   )
