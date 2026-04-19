@@ -3,76 +3,114 @@
 import { useState, useCallback, useRef } from "react"
 import type { TryoutPlayer, Team } from "@/types"
 import { ViewToggle } from "./view-toggle"
+import { PositionFilter } from "./position-filter"
 import { PredictionBoard } from "./prediction-board"
 import { PreviousTeamsView } from "./previous-teams-view"
 import { LongPressMenu } from "./long-press-menu"
-import { savePredictionOrder } from "@/app/(app)/teams/actions"
+import {
+  savePredictionOrder,
+  savePreviousTeamOrder,
+  resetPredictionOrders,
+  resetPreviousTeamOrders,
+} from "@/app/(app)/teams/actions"
 
 type TeamsPageClientProps = {
   players: TryoutPlayer[]
   teams: Team[]
-  divisions: string[]
-  initialDivision: string
-  savedOrder: string[] | null
+  savedOrders: Record<string, string[]>
+  savedPreviousOrders: Record<string, string[]>
   associationId: string
 }
 
 export function TeamsPageClient({
   players,
   teams,
-  divisions,
-  initialDivision,
-  savedOrder,
+  savedOrders,
+  savedPreviousOrders,
   associationId,
 }: TeamsPageClientProps) {
   const [activeView, setActiveView] = useState<"predictions" | "previous">("predictions")
-  const [activeDivision, setActiveDivision] = useState(initialDivision)
+  const [activePosition, setActivePosition] = useState<string | null>(null)
+  const [resetKey, setResetKey] = useState(0)
   const [selectedPlayer, setSelectedPlayer] = useState<TryoutPlayer | null>(null)
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [currentPredictionOrders, setCurrentPredictionOrders] = useState(savedOrders)
+  const [currentPreviousOrders, setCurrentPreviousOrders] = useState(savedPreviousOrders)
+  const [isResetting, setIsResetting] = useState(false)
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const savePreviousTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
-  const divisionPlayers = players.filter((p) => p.division === activeDivision)
-  const divisionTeams = teams.filter((t) => t.division === activeDivision)
+  const hasCustomOrder = activeView === "predictions"
+    ? Object.keys(currentPredictionOrders).length > 0
+    : Object.keys(currentPreviousOrders).length > 0
 
-  const handleOrderChange = useCallback((playerIds: string[]) => {
-    // Debounced save — 1 second after last drag
-    if (saveTimer.current) clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => {
-      savePredictionOrder(associationId, activeDivision, playerIds)
+  const handleOrderChange = useCallback((division: string, playerIds: string[]) => {
+    setCurrentPredictionOrders((prev) => ({ ...prev, [division]: playerIds }))
+    if (saveTimers.current[division]) clearTimeout(saveTimers.current[division])
+    saveTimers.current[division] = setTimeout(() => {
+      savePredictionOrder(associationId, division, playerIds)
     }, 1000)
-  }, [associationId, activeDivision])
+  }, [associationId])
+
+  const handlePreviousOrderChange = useCallback((previousTeam: string, playerIds: string[]) => {
+    setCurrentPreviousOrders((prev) => ({ ...prev, [previousTeam]: playerIds }))
+    if (savePreviousTimers.current[previousTeam]) clearTimeout(savePreviousTimers.current[previousTeam])
+    savePreviousTimers.current[previousTeam] = setTimeout(() => {
+      savePreviousTeamOrder(associationId, previousTeam, playerIds)
+    }, 1000)
+  }, [associationId])
+
+  const handleReset = useCallback(() => {
+    setIsResetting(true)
+    setTimeout(() => setIsResetting(false), 500)
+
+    if (activePosition === null) {
+      if (activeView === "predictions") {
+        resetPredictionOrders(associationId)
+        setCurrentPredictionOrders({})
+      } else {
+        resetPreviousTeamOrders(associationId)
+        setCurrentPreviousOrders({})
+      }
+    }
+    setResetKey((k) => k + 1)
+  }, [activePosition, activeView, associationId])
+
+  const instructionText = activePosition
+    ? `Showing ${activePosition === "F" ? "forwards" : activePosition === "D" ? "defensemen" : "goalies"} only \u2014 drag to\u00a0reorder`
+    : "Drag players up and down between\u00a0teams"
 
   return (
     <>
-      {divisions.length > 1 && (
-        <div className="division-tabs">
-          {divisions.map((div) => (
-            <button
-              key={div}
-              className={div === activeDivision ? "division-tab-active" : "division-tab"}
-              onClick={() => setActiveDivision(div)}
-            >
-              {div}
-            </button>
-          ))}
-        </div>
-      )}
-
       <ViewToggle activeView={activeView} onViewChange={setActiveView} />
-      <p className="instruction-line">
-        Drag players up and down between&nbsp;teams
-      </p>
+      <PositionFilter
+        activePosition={activePosition}
+        onPositionChange={setActivePosition}
+        onReset={handleReset}
+        isResetting={isResetting}
+        hasCustomOrder={hasCustomOrder}
+      />
+      <p className="instruction-line">{instructionText}</p>
 
       {activeView === "predictions" ? (
         <PredictionBoard
-          key={activeDivision}
-          players={divisionPlayers}
-          teams={divisionTeams}
-          savedOrder={savedOrder}
+          key={`predictions-${resetKey}`}
+          players={players}
+          teams={teams}
+          savedOrders={currentPredictionOrders}
+          savedPreviousOrders={currentPreviousOrders}
+          positionFilter={activePosition}
           onOrderChange={handleOrderChange}
           onPlayerLongPress={setSelectedPlayer}
         />
       ) : (
-        <PreviousTeamsView players={divisionPlayers} />
+        <PreviousTeamsView
+          key={`previous-${resetKey}`}
+          players={players}
+          savedOrders={currentPreviousOrders}
+          positionFilter={activePosition}
+          onOrderChange={handlePreviousOrderChange}
+          onPlayerLongPress={setSelectedPlayer}
+        />
       )}
 
       {selectedPlayer && (

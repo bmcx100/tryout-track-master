@@ -16,7 +16,9 @@ export default async function AppLayout({
 
   return (
     <div className="app-shell">
-      {children}
+      <div className="app-shell-content">
+        {children}
+      </div>
       <BottomNav />
     </div>
   )

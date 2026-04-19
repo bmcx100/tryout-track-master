@@ -22,7 +22,9 @@ export function TeamSection({
   onPlayerLongPress,
 }: TeamSectionProps) {
   const [isExpanded, setIsExpanded] = useState(!isOfficial)
-  const toneClass = index % 2 === 0 ? "team-header-tone-1" : "team-header-tone-2"
+  const tones = ["team-header-tone-1", "team-header-tone-2", "team-header-tone-3"]
+  const toneClass = tones[index % 3]
+  const label = isOfficial ? "Official" : "Prediction"
 
   return (
     <div>
@@ -31,13 +33,13 @@ export function TeamSection({
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="team-header-left">
-          <span className="team-name">{teamName}</span>
-          <span className="team-count">{players.length} Players</span>
+          <span className="team-name">
+            {teamName}
+            <span className="team-name-label">{label}</span>
+          </span>
         </div>
         <div className="team-header-right">
-          <span className={`team-badge ${isOfficial ? "team-badge-official" : "team-badge-prediction"}`}>
-            {isOfficial ? "Official" : "Prediction"}
-          </span>
+          <span className="team-count">{players.length} Players</span>
           <ChevronDown
             size={16}
             className="team-chevron"

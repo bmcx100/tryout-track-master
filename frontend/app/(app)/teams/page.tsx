@@ -22,33 +22,48 @@ export default async function TeamsPage() {
     .eq("is_archived", false)
     .order("display_order")
 
-  // Get unique divisions
   const allPlayers: TryoutPlayer[] = playersData ?? []
   const allTeams: Team[] = teamsData ?? []
-  const divisions = [...new Set(allPlayers.map((p) => p.division))].sort()
-  const activeDivision = divisions[0] ?? ""
 
-  // Fetch user's saved prediction for the active division
-  const { data: prediction } = await supabase
+  // Fetch user's saved predictions for all divisions
+  const { data: predictions } = await supabase
     .from("player_predictions")
-    .select("player_order")
+    .select("division, player_order")
     .eq("user_id", user.id)
     .eq("association_id", associationId)
-    .eq("division", activeDivision)
-    .single()
+
+  const savedOrders: Record<string, string[]> = {}
+  for (const pred of predictions ?? []) {
+    savedOrders[pred.division] = pred.player_order
+  }
+
+  // Fetch user's saved previous-team sort orders
+  const { data: previousOrders } = await supabase
+    .from("previous_team_orders")
+    .select("previous_team, player_order")
+    .eq("user_id", user.id)
+    .eq("association_id", associationId)
+
+  const savedPreviousOrders: Record<string, string[]> = {}
+  for (const order of previousOrders ?? []) {
+    savedPreviousOrders[order.previous_team] = order.player_order
+  }
 
   const email = user.email ?? ""
   const initials = email.substring(0, 2).toUpperCase()
 
+  // Determine active division(s) from players
+  const divisions = [...new Set(allPlayers.map((p) => p.division))].sort()
+  const activeDivision = divisions.length === 1 ? divisions[0] : divisions.join("/")
+
   return (
     <>
-      <TeamsHeader groupLabel={`${association.abbreviation} ${activeDivision}`} initials={initials} />
+      <TeamsHeader groupLabel={association.abbreviation} division={activeDivision} initials={initials} />
       <TeamsPageClient
         players={allPlayers}
         teams={allTeams}
-        divisions={divisions}
-        initialDivision={activeDivision}
-        savedOrder={prediction?.player_order ?? null}
+        savedOrders={savedOrders}
+        savedPreviousOrders={savedPreviousOrders}
         associationId={associationId}
       />
     </>

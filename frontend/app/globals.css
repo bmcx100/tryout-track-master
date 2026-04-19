@@ -49,110 +49,110 @@
 }
 
 /* ============================================================
-   Desert Monolith — Design System
+   NuCash Dark — Design System
    ============================================================
    Palette tokens (hex reference):
-     --dm-gold:        #9E7B2F   Primary brand, headings, active states
-     --dm-light-gold:  #C9A84C   Gradients, hover, decorative emphasis
-     --dm-cinnabar:    #B83A2A   CTAs, buttons, alerts, actionable elements
-     --dm-parchment:   #FBF6ED   Page background
-     --dm-dune:        #F2E8D0   Card/surface background
-     --dm-dune-alt:    #EBE0C4   Alternating surface (team headers)
-     --dm-umber:       #2A2117   Primary text, dark sections
-     --dm-dust:        #B8A06A   Muted text, labels, placeholders
+     --dm-gold:        #D4A823   Gold accent, brand, headings
+     --dm-light-gold:  #E0BE4A   Lighter gold, hover, decorative
+     --dm-cinnabar:    #ECC436   Bright yellow, CTAs, buttons
+     --dm-parchment:   #111111   Near-black page background
+     --dm-dune:        #1C1C1E   Dark gray card/surface
+     --dm-dune-alt:    #151516   Slightly darker surface
+     --dm-umber:       #F0F0F0   Near-white primary text
+     --dm-dust:        #6B6B6B   Muted text, labels
    ============================================================ */
 
 :root {
   --radius: 0.625rem;
 
-  /* Desert Monolith palette */
-  --dm-gold: oklch(0.602 0.102 83.6);
-  --dm-light-gold: oklch(0.743 0.117 89.5);
-  --dm-cinnabar: oklch(0.531 0.165 30.5);
-  --dm-parchment: oklch(0.975 0.013 82.4);
-  --dm-dune: oklch(0.933 0.033 88.1);
-  --dm-dune-alt: oklch(0.908 0.039 89.1);
-  --dm-umber: oklch(0.255 0.022 69.5);
-  --dm-dust: oklch(0.714 0.077 86.5);
-  --dm-official-green: oklch(0.523 0.135 144.2);
+  /* NuCash Dark palette */
+  --dm-gold: oklch(0.76 0.14 85);
+  --dm-light-gold: oklch(0.82 0.13 85);
+  --dm-cinnabar: oklch(0.84 0.16 88);
+  --dm-parchment: oklch(0.12 0 0);
+  --dm-dune: oklch(0.18 0 0);
+  --dm-dune-alt: oklch(0.15 0 0);
+  --dm-umber: oklch(0.94 0 0);
+  --dm-dust: oklch(0.48 0 0);
+  --dm-official-green: oklch(0.65 0.15 144);
 
-  /* Border base: gold-tinted, not gray */
-  --dm-border: oklch(0.743 0.117 89.5 / 12%);
-  --dm-border-subtle: oklch(0.743 0.117 89.5 / 8%);
+  /* Border base: light at low alpha */
+  --dm-border: oklch(1 0 0 / 8%);
+  --dm-border-subtle: oklch(1 0 0 / 5%);
 
-  /* Shadow base: warm umber, not cool gray */
-  --dm-shadow-sm: 0 1px 3px oklch(0.255 0.022 69.5 / 4%);
-  --dm-shadow-md: 0 4px 12px oklch(0.255 0.022 69.5 / 8%);
-  --dm-shadow-lg: 0 8px 32px oklch(0.255 0.022 69.5 / 12%);
+  /* Shadow base */
+  --dm-shadow-sm: 0 1px 3px oklch(0 0 0 / 20%);
+  --dm-shadow-md: 0 4px 12px oklch(0 0 0 / 30%);
+  --dm-shadow-lg: 0 8px 32px oklch(0 0 0 / 40%);
 
-  /* shadcn semantic tokens mapped to Desert Monolith */
-  --background: oklch(0.975 0.013 82.4);
-  --foreground: oklch(0.255 0.022 69.5);
-  --card: oklch(0.933 0.033 88.1);
-  --card-foreground: oklch(0.255 0.022 69.5);
-  --popover: oklch(0.975 0.013 82.4);
-  --popover-foreground: oklch(0.255 0.022 69.5);
-  --primary: oklch(0.602 0.102 83.6);
-  --primary-foreground: oklch(0.975 0.013 82.4);
-  --secondary: oklch(0.933 0.033 88.1);
-  --secondary-foreground: oklch(0.255 0.022 69.5);
-  --muted: oklch(0.933 0.033 88.1);
-  --muted-foreground: oklch(0.714 0.077 86.5);
-  --accent: oklch(0.933 0.033 88.1);
-  --accent-foreground: oklch(0.255 0.022 69.5);
-  --destructive: oklch(0.531 0.165 30.5);
-  --border: oklch(0.743 0.117 89.5 / 12%);
-  --input: oklch(0.743 0.117 89.5 / 15%);
-  --ring: oklch(0.602 0.102 83.6);
-  --chart-1: oklch(0.602 0.102 83.6);
-  --chart-2: oklch(0.531 0.165 30.5);
-  --chart-3: oklch(0.714 0.077 86.5);
-  --chart-4: oklch(0.743 0.117 89.5);
-  --chart-5: oklch(0.523 0.135 144.2);
+  /* shadcn semantic tokens mapped to NuCash Dark */
+  --background: oklch(0.12 0 0);
+  --foreground: oklch(0.94 0 0);
+  --card: oklch(0.18 0 0);
+  --card-foreground: oklch(0.94 0 0);
+  --popover: oklch(0.18 0 0);
+  --popover-foreground: oklch(0.94 0 0);
+  --primary: oklch(0.84 0.16 88);
+  --primary-foreground: oklch(0.12 0 0);
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.94 0 0);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.48 0 0);
+  --accent: oklch(0.84 0.16 88);
+  --accent-foreground: oklch(0.12 0 0);
+  --destructive: oklch(0.55 0.20 25);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.84 0.16 88);
+  --chart-1: oklch(0.76 0.14 85);
+  --chart-2: oklch(0.84 0.16 88);
+  --chart-3: oklch(0.48 0 0);
+  --chart-4: oklch(0.30 0 0);
+  --chart-5: oklch(0.65 0.15 144);
 
   /* Sidebar (desktop) */
-  --sidebar: oklch(0.933 0.033 88.1);
-  --sidebar-foreground: oklch(0.255 0.022 69.5);
-  --sidebar-primary: oklch(0.602 0.102 83.6);
-  --sidebar-primary-foreground: oklch(0.975 0.013 82.4);
-  --sidebar-accent: oklch(0.602 0.102 83.6 / 10%);
-  --sidebar-accent-foreground: oklch(0.602 0.102 83.6);
-  --sidebar-border: oklch(0.743 0.117 89.5 / 12%);
-  --sidebar-ring: oklch(0.602 0.102 83.6);
+  --sidebar: oklch(0.14 0 0);
+  --sidebar-foreground: oklch(0.94 0 0);
+  --sidebar-primary: oklch(0.84 0.16 88);
+  --sidebar-primary-foreground: oklch(0.12 0 0);
+  --sidebar-accent: oklch(1 0 0 / 6%);
+  --sidebar-accent-foreground: oklch(0.76 0.14 85);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.84 0.16 88);
 }
 
 .dark {
-  --background: oklch(0.255 0.022 69.5);
-  --foreground: oklch(0.975 0.013 82.4);
-  --card: oklch(0.255 0.022 69.5);
-  --card-foreground: oklch(0.975 0.013 82.4);
-  --popover: oklch(0.255 0.022 69.5);
-  --popover-foreground: oklch(0.975 0.013 82.4);
-  --primary: oklch(0.743 0.117 89.5);
-  --primary-foreground: oklch(0.255 0.022 69.5);
-  --secondary: oklch(0.255 0.022 69.5);
-  --secondary-foreground: oklch(0.975 0.013 82.4);
-  --muted: oklch(0.255 0.022 69.5);
-  --muted-foreground: oklch(0.975 0.013 82.4 / 45%);
-  --accent: oklch(0.531 0.165 30.5);
-  --accent-foreground: oklch(0.975 0.013 82.4);
-  --destructive: oklch(0.531 0.165 30.5);
-  --border: oklch(0.743 0.117 89.5 / 15%);
-  --input: oklch(0.743 0.117 89.5 / 15%);
-  --ring: oklch(0.743 0.117 89.5);
-  --chart-1: oklch(0.743 0.117 89.5);
-  --chart-2: oklch(0.531 0.165 30.5);
-  --chart-3: oklch(0.714 0.077 86.5);
-  --chart-4: oklch(0.602 0.102 83.6);
-  --chart-5: oklch(0.975 0.013 82.4 / 45%);
-  --sidebar: oklch(0.255 0.022 69.5);
-  --sidebar-foreground: oklch(0.975 0.013 82.4);
-  --sidebar-primary: oklch(0.743 0.117 89.5);
-  --sidebar-primary-foreground: oklch(0.255 0.022 69.5);
-  --sidebar-accent: oklch(0.743 0.117 89.5 / 10%);
-  --sidebar-accent-foreground: oklch(0.743 0.117 89.5);
-  --sidebar-border: oklch(0.743 0.117 89.5 / 15%);
-  --sidebar-ring: oklch(0.743 0.117 89.5);
+  --background: oklch(0.10 0 0);
+  --foreground: oklch(0.94 0 0);
+  --card: oklch(0.16 0 0);
+  --card-foreground: oklch(0.94 0 0);
+  --popover: oklch(0.16 0 0);
+  --popover-foreground: oklch(0.94 0 0);
+  --primary: oklch(0.84 0.16 88);
+  --primary-foreground: oklch(0.10 0 0);
+  --secondary: oklch(0.20 0 0);
+  --secondary-foreground: oklch(0.94 0 0);
+  --muted: oklch(0.20 0 0);
+  --muted-foreground: oklch(0.48 0 0);
+  --accent: oklch(0.84 0.16 88);
+  --accent-foreground: oklch(0.10 0 0);
+  --destructive: oklch(0.55 0.20 25);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.84 0.16 88);
+  --chart-1: oklch(0.76 0.14 85);
+  --chart-2: oklch(0.84 0.16 88);
+  --chart-3: oklch(0.48 0 0);
+  --chart-4: oklch(0.30 0 0);
+  --chart-5: oklch(0.65 0.15 144);
+  --sidebar: oklch(0.10 0 0);
+  --sidebar-foreground: oklch(0.94 0 0);
+  --sidebar-primary: oklch(0.84 0.16 88);
+  --sidebar-primary-foreground: oklch(0.10 0 0);
+  --sidebar-accent: oklch(1 0 0 / 6%);
+  --sidebar-accent-foreground: oklch(0.76 0.14 85);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.84 0.16 88);
 }
 
 @layer base {
@@ -170,13 +170,14 @@
 
 .app-header {
   @apply sticky top-0 z-10 flex h-14 items-center px-5;
-  background: oklch(0.975 0.013 82.4 / 85%);
+  background: oklch(0.12 0 0 / 85%);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--dm-border);
 }
 
 .app-header-group-label {
-  @apply text-sm font-semibold;
+  @apply rounded-full px-3 py-1 text-sm font-semibold;
+  background: oklch(0.76 0.14 85 / 15%);
   color: var(--dm-gold);
   letter-spacing: -0.01em;
 }
@@ -189,8 +190,8 @@
 
 .app-header-avatar {
   @apply ml-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold;
-  background: linear-gradient(135deg, var(--dm-gold), var(--dm-light-gold));
-  color: var(--dm-parchment);
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
 }
 
 /* ============================================================
@@ -198,22 +199,89 @@
    ============================================================ */
 
 .view-toggle {
-  @apply mx-5 my-3 flex rounded-2xl p-0.5;
-  background: var(--dm-dune);
-  border: 1px solid var(--dm-border);
+  @apply relative mx-5 my-3 flex rounded-2xl p-0.5;
+  background: oklch(0.76 0.14 85 / 15%);
+  border: 1px solid oklch(0.76 0.14 85 / 10%);
+}
+
+.view-toggle-pill {
+  @apply absolute top-0.5 bottom-0.5 rounded-xl;
+  background: var(--dm-cinnabar);
+  box-shadow: var(--dm-shadow-sm);
+  transition: left 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
 }
 
 .view-toggle-btn {
-  @apply flex-1 rounded-xl py-2 text-center text-sm font-semibold;
+  @apply relative z-1 flex-1 rounded-xl py-2 text-center text-sm font-semibold;
   color: var(--dm-dust);
-  transition: all 200ms ease-out;
+  background: transparent;
+  transition: color 200ms ease-out;
 }
 
-.view-toggle-btn-active {
-  @apply flex-1 rounded-xl py-2 text-center text-sm font-semibold;
-  background: var(--dm-parchment);
-  color: var(--dm-gold);
+.view-toggle-btn.active {
+  color: oklch(0.12 0 0);
+}
+
+/* ============================================================
+   Position Filter (All / F / D / G + Reset)
+   ============================================================ */
+
+.position-filter {
+  @apply mx-5 mt-1 mb-1 flex items-center gap-2;
+}
+
+.position-filter-track {
+  @apply relative flex rounded-xl p-0.5;
+  background: oklch(0.76 0.14 85 / 15%);
+  border: 1px solid oklch(0.76 0.14 85 / 10%);
+}
+
+.position-filter-pill {
+  @apply absolute top-0.5 bottom-0.5 rounded-lg;
+  background: var(--dm-cinnabar);
   box-shadow: var(--dm-shadow-sm);
+  transition: left 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.position-chip {
+  @apply relative z-1 rounded-lg px-3.5 py-1.5 text-xs font-semibold;
+  color: var(--dm-dust);
+  background: transparent;
+  border: none;
+  transition: color 200ms ease-out;
+}
+
+.position-chip.active {
+  color: oklch(0.12 0 0);
+}
+
+.position-reset-btn {
+  @apply ml-auto text-xs font-medium;
+  color: var(--dm-dust);
+  opacity: 0.7;
+  transition: opacity 200ms ease-out;
+}
+
+.position-reset-btn:hover {
+  opacity: 1;
+}
+
+.position-reset-active {
+  color: var(--dm-cinnabar);
+  opacity: 1;
+}
+
+.reset-spin {
+  animation: spin-once 500ms ease-out;
+}
+
+@keyframes spin-once {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
 }
 
 /* ============================================================
@@ -232,15 +300,19 @@
 .team-header {
   @apply flex cursor-pointer items-center justify-between px-5 py-2.5;
   width: 100%;
-  border-top: 1px solid oklch(0.743 0.117 89.5 / 10%);
+  border-top: 1px solid oklch(1 0 0 / 5%);
 }
 
 .team-header-tone-1 {
-  background: var(--dm-dune);
+  background: oklch(0.22 0 0);
 }
 
 .team-header-tone-2 {
-  background: var(--dm-dune-alt);
+  background: oklch(0.25 0 0);
+}
+
+.team-header-tone-3 {
+  background: oklch(0.28 0 0);
 }
 
 .team-header-left {
@@ -253,14 +325,15 @@
 
 .team-name {
   @apply text-sm font-bold;
-  color: var(--dm-umber);
+  color: oklch(0.94 0 0);
   letter-spacing: -0.01em;
 }
 
 .team-count {
   @apply text-xs;
   font-family: var(--font-mono);
-  color: var(--dm-dust);
+  color: oklch(0.55 0 0);
+  font-size: 11px;
   letter-spacing: 0.02em;
 }
 
@@ -272,18 +345,23 @@
 }
 
 .team-badge-official {
-  background: oklch(0.523 0.135 144.2 / 10%);
-  color: var(--dm-official-green);
+  background: oklch(0.65 0.15 144 / 20%);
+  color: oklch(0.72 0.12 144);
 }
 
 .team-badge-prediction {
-  background: oklch(0.602 0.102 83.6 / 12%);
-  color: var(--dm-gold);
+  display: none;
+}
+
+.team-name-label {
+  @apply text-xs font-normal italic;
+  color: oklch(0.55 0 0);
+  margin-left: 0.4rem;
 }
 
 .team-chevron {
   @apply text-sm;
-  color: var(--dm-dust);
+  color: oklch(0.55 0 0);
   transition: transform 200ms ease-out;
 }
 
@@ -293,9 +371,13 @@
 
 .player-row {
   @apply flex items-center gap-1.5 px-5 py-2;
-  background: var(--dm-parchment);
+  background: oklch(0.15 0 0);
   border-bottom: 1px solid var(--dm-border-subtle);
   transition: background 200ms ease-out;
+}
+
+.player-row:nth-child(even) {
+  background: oklch(0.17 0 0);
 }
 
 .player-row:last-child {
@@ -312,15 +394,15 @@
 .player-jersey {
   @apply w-7 flex-shrink-0 text-xs font-medium;
   font-family: var(--font-mono);
-  color: var(--dm-gold);
+  color: oklch(0.65 0 0);
   letter-spacing: 0.02em;
 }
 
 .player-position {
-  @apply flex-shrink-0 rounded px-1 py-0.5 text-xs font-medium;
+  @apply flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold;
   font-family: var(--font-mono);
-  font-size: 9px;
-  background: oklch(0.602 0.102 83.6 / 10%);
+  font-size: 11px;
+  background: oklch(0.76 0.14 85 / 15%);
   color: var(--dm-gold);
   letter-spacing: 0.05em;
 }
@@ -328,22 +410,22 @@
 .player-name {
   @apply min-w-0 flex-1 truncate text-xs font-medium;
   font-size: 13px;
-  color: var(--dm-umber);
+  color: oklch(0.90 0 0);
 }
 
 .player-prev-team {
-  @apply flex-shrink-0 text-xs;
+  @apply flex-shrink-0 text-xs font-medium;
   font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--dm-dust);
+  font-size: 12px;
+  color: oklch(0.55 0 0);
   letter-spacing: 0.02em;
 }
 
 .prev-teams-status {
-  @apply flex-shrink-0 text-xs;
+  @apply flex-shrink-0 text-xs font-medium;
   font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--dm-dust);
+  font-size: 12px;
+  color: oklch(0.55 0 0);
   letter-spacing: 0.02em;
 }
 
@@ -355,13 +437,14 @@
   @apply fixed bottom-0 left-0 right-0 z-10 flex items-start justify-around pt-2.5;
   height: calc(70px + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
-  background: var(--dm-umber);
-  border-top: 1px solid oklch(0.743 0.117 89.5 / 15%);
+  background: oklch(0.08 0 0);
+  border-top: 1px solid oklch(1 0 0 / 6%);
 }
 
 @media (min-width: 640px) {
   .bottom-nav {
-    @apply absolute left-0 right-0;
+    @apply flex-shrink-0;
+    position: static;
     width: 393px;
     border-radius: 0 0 1rem 1rem;
   }
@@ -370,13 +453,13 @@
 .bottom-nav-item {
   @apply flex flex-col items-center gap-0.5 text-xs font-semibold;
   font-size: 10px;
-  color: oklch(0.743 0.117 89.5 / 50%);
+  color: oklch(1 0 0 / 30%);
 }
 
 .bottom-nav-item-active {
   @apply flex flex-col items-center gap-0.5 text-xs font-semibold;
   font-size: 10px;
-  color: var(--dm-light-gold);
+  color: var(--dm-cinnabar);
 }
 
 .bottom-nav-icon {
@@ -384,19 +467,19 @@
 }
 
 /* ============================================================
-   Buttons (Desert Monolith)
+   Buttons
    ============================================================ */
 
 .btn-primary {
   @apply w-full rounded-4xl py-4 text-sm font-semibold;
   background: var(--dm-cinnabar);
-  color: var(--dm-parchment);
+  color: oklch(0.12 0 0);
   transition: all 200ms ease-out;
 }
 
 .btn-primary:hover {
-  filter: brightness(0.92);
-  box-shadow: 0 2px 8px oklch(0.531 0.165 30.5 / 15%);
+  filter: brightness(1.05);
+  box-shadow: 0 2px 8px oklch(0.84 0.16 88 / 25%);
 }
 
 .btn-primary:active {
@@ -412,18 +495,18 @@
 }
 
 .btn-outline:hover {
-  background: oklch(0.531 0.165 30.5 / 5%);
+  background: oklch(0.84 0.16 88 / 10%);
 }
 
 .btn-small {
   @apply rounded-3xl px-5 py-2 text-xs font-semibold;
   background: var(--dm-cinnabar);
-  color: var(--dm-parchment);
+  color: oklch(0.12 0 0);
   transition: all 200ms ease-out;
 }
 
 /* ============================================================
-   Auth Pages (existing, updated for Desert Monolith)
+   Auth Pages
    ============================================================ */
 
 .auth-error-page {
@@ -546,15 +629,21 @@
   body {
     @apply flex items-center justify-center;
     min-height: 100svh;
-    background: black;
+    background: oklch(0.06 0 0);
   }
 
   .app-shell {
-    @apply relative overflow-y-auto shadow-2xl;
+    @apply relative flex flex-col shadow-2xl;
     min-width: 393px;
     height: 100svh;
     max-height: 900px;
     border-radius: 1rem;
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+
+  .app-shell-content {
+    @apply flex-1 overflow-y-auto;
   }
 }
 
@@ -624,13 +713,13 @@
 
 .long-press-overlay {
   @apply fixed inset-0 z-20;
-  background: oklch(0.255 0.022 69.5 / 40%);
+  background: oklch(0 0 0 / 60%);
   animation: fadeIn 150ms ease-out;
 }
 
 .long-press-sheet {
   @apply fixed bottom-0 left-0 right-0 z-30 rounded-t-3xl px-5 pb-8 pt-4;
-  background: var(--dm-parchment);
+  background: oklch(0.18 0 0);
   box-shadow: var(--dm-shadow-lg);
   animation: slideUp 200ms ease-out;
 }
@@ -669,7 +758,7 @@
 }
 
 .long-press-action:hover {
-  background: var(--dm-dune);
+  background: oklch(1 0 0 / 5%);
 }
 
 .long-press-action-icon {
@@ -687,7 +776,7 @@
   to { transform: translateY(0); }
 }
 
-/* ── Admin Shell ─────────────────────────────────────── */
+/* -- Admin Shell -------------------------------------------- */
 
 .admin-shell {
   @apply min-h-screen w-full;
@@ -701,8 +790,8 @@ body:has(.admin-shell) {
 
 .admin-header {
   @apply flex items-center justify-between px-4 py-3;
-  background: var(--dm-umber);
-  color: var(--dm-parchment);
+  background: oklch(0.08 0 0);
+  color: var(--dm-umber);
 }
 
 .admin-header-label {
@@ -711,7 +800,7 @@ body:has(.admin-shell) {
   color: var(--dm-gold);
 }
 
-/* ── CSV Import ──────────────────────────────────────── */
+/* -- CSV Import --------------------------------------------- */
 
 .import-page {
   @apply px-4 py-6;
@@ -777,7 +866,7 @@ body:has(.admin-shell) {
 }
 
 .import-error-row td {
-  background: oklch(0.95 0.05 25);
+  background: oklch(0.20 0.05 25);
 }
 
 .import-summary {
@@ -791,14 +880,10 @@ body:has(.admin-shell) {
 
 .import-error-text {
   @apply text-sm font-medium;
-  color: var(--dm-cinnabar);
+  color: oklch(0.65 0.18 25);
 }
 
-.import-actions {
-  @apply flex gap-3 mt-4;
-}
-
-/* ── Join Page ───────────────────────────────────────── */
+/* -- Join Page ---------------------------------------------- */
 
 .join-page {
   @apply flex flex-col items-center justify-center px-6 py-12;
@@ -833,8 +918,9 @@ body:has(.admin-shell) {
 .join-input {
   @apply rounded-md border px-3 py-2 text-center text-lg tracking-widest;
   font-family: var(--font-ibm-plex-mono);
-  border-color: var(--dm-dune-alt);
+  border-color: oklch(1 0 0 / 10%);
   background: var(--dm-dune);
+  color: var(--dm-umber);
 }
 
 .join-input:focus {
@@ -845,17 +931,21 @@ body:has(.admin-shell) {
 
 .join-error {
   @apply text-sm text-center;
-  color: var(--dm-cinnabar);
+  color: oklch(0.65 0.18 25);
 }
 
-/* ── Dashboard ───────────────────────────────────────── */
+/* -- Dashboard ---------------------------------------------- */
 
 .dashboard-page {
   @apply px-4 pb-20;
 }
 
 .dashboard-header {
-  @apply flex items-center justify-between px-4 py-3;
+  @apply flex items-center justify-between px-4 pt-3 pb-5;
+}
+
+.dashboard-header-second {
+  @apply pt-6;
 }
 
 .dashboard-assoc-name {
@@ -868,7 +958,7 @@ body:has(.admin-shell) {
   @apply text-lg font-semibold;
 }
 
-/* ── Stats Bar ───────────────────────────────────────── */
+/* -- Stats Bar ---------------------------------------------- */
 
 .stats-bar {
   @apply flex gap-2 px-4 py-3 overflow-x-auto;
@@ -892,7 +982,7 @@ body:has(.admin-shell) {
   color: var(--dm-gold);
 }
 
-/* ── Division Tabs ───────────────────────────────────── */
+/* -- Division Tabs ------------------------------------------ */
 
 .division-tabs {
   @apply flex gap-1 px-4 py-2;
@@ -908,16 +998,58 @@ body:has(.admin-shell) {
 .division-tab-active {
   @apply rounded-full px-3 py-1 text-xs cursor-pointer;
   font-family: var(--font-ibm-plex-mono);
-  background: var(--dm-umber);
-  color: var(--dm-parchment);
+  background: var(--dm-cinnabar);
+  color: oklch(0.12 0 0);
 }
 
-/* ── Player List ─────────────────────────────────────── */
+/* -- Dashboard Link Card ------------------------------------ */
+
+.dashboard-link-card {
+  @apply flex items-center gap-4 rounded-xl px-5 py-4;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+  transition: all 200ms ease-out;
+  text-decoration: none;
+  color: inherit;
+}
+
+.dashboard-link-card:hover {
+  background: oklch(0.22 0 0);
+  box-shadow: var(--dm-shadow-sm);
+}
+
+.dashboard-link-card-icon {
+  @apply flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg;
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+}
+
+.dashboard-link-card-icon-text {
+  @apply text-xs font-bold;
+  letter-spacing: -0.01em;
+}
+
+.dashboard-link-card-title {
+  @apply text-sm font-semibold;
+  color: var(--dm-umber);
+}
+
+.dashboard-link-card-desc {
+  @apply text-xs;
+  color: var(--dm-dust);
+}
+
+.dashboard-link-card-second {
+  @apply mt-3;
+}
+
+/* -- Player List -------------------------------------------- */
 
 .player-search {
   @apply w-full rounded-md border px-3 py-2 text-sm;
-  border-color: var(--dm-dune-alt);
+  border-color: oklch(1 0 0 / 10%);
   background: var(--dm-dune);
+  color: var(--dm-umber);
 }
 
 .player-search:focus {
@@ -943,7 +1075,7 @@ body:has(.admin-shell) {
   color: var(--dm-dust);
 }
 
-/* ── Status Badge ────────────────────────────────────── */
+/* -- Status Badge ------------------------------------------- */
 
 .status-badge {
   @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs;
@@ -956,28 +1088,28 @@ body:has(.admin-shell) {
 }
 
 .status-badge-trying_out {
-  background: oklch(0.90 0.08 85);
-  color: oklch(0.40 0.10 85);
+  background: oklch(0.22 0 0);
+  color: oklch(0.70 0 0);
 }
 
 .status-badge-cut {
-  background: oklch(0.93 0.04 25);
-  color: var(--dm-cinnabar);
+  background: oklch(0.20 0.06 25);
+  color: oklch(0.70 0.15 25);
 }
 
 .status-badge-made_team {
-  background: oklch(0.92 0.06 145);
-  color: oklch(0.35 0.12 145);
+  background: oklch(0.20 0.06 145);
+  color: oklch(0.70 0.12 145);
 }
 
 .status-badge-moved_up {
-  background: oklch(0.90 0.06 220);
-  color: oklch(0.40 0.10 220);
+  background: oklch(0.22 0 0);
+  color: oklch(0.70 0 0);
 }
 
 .status-badge-moved_down {
-  background: oklch(0.93 0.04 45);
-  color: oklch(0.45 0.10 45);
+  background: oklch(0.20 0.05 48);
+  color: oklch(0.70 0.12 48);
 }
 
 .status-badge-withdrew {
@@ -985,7 +1117,7 @@ body:has(.admin-shell) {
   color: var(--dm-dust);
 }
 
-/* ── Player Card (list view) ─────────────────────────── */
+/* -- Player Card (list view) -------------------------------- */
 
 .player-list-card {
   @apply flex items-center gap-3 py-2;
@@ -1011,4 +1143,211 @@ body:has(.admin-shell) {
   @apply text-xs;
   color: var(--dm-dust);
   font-family: var(--font-ibm-plex-mono);
+}
+
+/* ============================================================
+   Continuations Tracker
+   ============================================================ */
+
+.continuations-page {
+  @apply pb-4;
+}
+
+.continuations-empty {
+  @apply flex min-h-[60vh] flex-col items-center justify-center gap-2;
+}
+
+.continuations-empty-text {
+  @apply text-sm;
+  color: var(--dm-dust);
+}
+
+.continuations-header {
+  @apply flex w-full cursor-pointer items-center justify-between px-5 py-3;
+  border-top: 1px solid oklch(1 0 0 / 5%);
+  background: oklch(0.22 0 0);
+}
+
+.continuations-header-left {
+  @apply flex items-center gap-2;
+}
+
+.continuations-header-title {
+  @apply text-sm font-bold;
+  color: var(--dm-gold);
+  letter-spacing: -0.01em;
+}
+
+.continuations-header-icon {
+  color: var(--dm-dust);
+  opacity: 0.6;
+}
+
+.continuations-session-info {
+  @apply px-5 py-1.5 text-xs;
+  color: var(--dm-dust);
+  background: oklch(0.19 0 0);
+}
+
+.continuations-section-label {
+  @apply flex w-full cursor-pointer items-center gap-1.5 px-5 py-2 text-xs font-semibold uppercase;
+  font-family: var(--font-mono);
+  color: var(--dm-dust);
+  letter-spacing: 0.04em;
+  font-size: 11px;
+  background: oklch(0.16 0 0);
+  border-top: 1px solid oklch(1 0 0 / 5%);
+}
+
+.continuations-session-subheader {
+  @apply flex w-full cursor-pointer items-center gap-1.5 py-1.5 text-xs font-medium;
+  padding-left: 2.25rem;
+  padding-right: 1.25rem;
+  color: oklch(0.70 0 0);
+  background: oklch(0.14 0 0);
+  border-top: 1px solid oklch(1 0 0 / 3%);
+}
+
+.continuations-session-count {
+  @apply ml-auto;
+  color: var(--dm-dust);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.continuations-session-players .continuation-player-row {
+  padding-left: 2.25rem;
+}
+
+.continuations-empty-cuts {
+  @apply px-5 py-3 text-xs italic;
+  color: var(--dm-dust);
+}
+
+.continuation-player-row {
+  @apply flex items-center gap-1.5 px-5 py-2;
+  background: oklch(0.15 0 0);
+  border-bottom: 1px solid var(--dm-border-subtle);
+  transition: background 200ms ease-out;
+}
+
+.continuation-player-row:nth-child(even) {
+  background: oklch(0.17 0 0);
+}
+
+.continuation-player-row:last-child {
+  border-bottom: none;
+}
+
+.continuation-player-row-cut {
+  opacity: 0.5;
+}
+
+.continuation-jersey-cut {
+  text-decoration: line-through;
+}
+
+.ip-badge {
+  @apply flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+  letter-spacing: 0.04em;
+}
+
+.notes-indicator {
+  @apply ml-1 inline-flex;
+  color: var(--dm-dust);
+  opacity: 0.6;
+  vertical-align: middle;
+}
+
+.favorite-btn {
+  @apply flex w-5 flex-shrink-0 items-center justify-center;
+  color: var(--dm-dust);
+  opacity: 0.4;
+  transition: all 150ms ease-out;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.favorite-btn:hover {
+  opacity: 0.7;
+}
+
+.favorite-btn-active {
+  color: oklch(0.65 0.20 25);
+  opacity: 1;
+}
+
+.favorite-btn-active:hover {
+  opacity: 0.8;
+}
+
+/* -- Round History Modal ------------------------------------ */
+
+.round-history-modal {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.round-history-header {
+  @apply flex items-center justify-between pb-3 mb-3;
+  border-bottom: 1px solid var(--dm-border);
+}
+
+.round-history-title {
+  @apply text-base font-bold;
+  color: var(--dm-umber);
+}
+
+.round-history-close {
+  @apply flex items-center justify-center;
+  color: var(--dm-dust);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.round-history-list {
+  @apply flex flex-col gap-1;
+}
+
+.round-history-item {
+  @apply rounded-xl;
+  background: oklch(0.15 0 0);
+  border: 1px solid var(--dm-border-subtle);
+}
+
+.round-history-item-active {
+  border-color: oklch(0.76 0.14 85 / 30%);
+}
+
+.round-history-item-header {
+  @apply flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-sm font-medium;
+  color: var(--dm-umber);
+  background: none;
+  border: none;
+}
+
+.round-history-item-title {
+  color: var(--dm-umber);
+}
+
+.round-history-item-content {
+  @apply px-4 pb-3;
+}
+
+.round-history-session {
+  @apply text-xs;
+  color: var(--dm-dust);
+  font-family: var(--font-mono);
+}
+
+.round-history-stat {
+  @apply text-xs font-medium;
+  color: var(--dm-dust);
 }

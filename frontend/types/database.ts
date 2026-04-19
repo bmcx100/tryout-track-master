@@ -122,6 +122,53 @@ export type Database = {
           },
         ]
       }
+      continuation_rounds: {
+        Row: {
+          association_id: string
+          created_at: string
+          division: string
+          id: string
+          ip_players: string[]
+          is_final_team: boolean
+          jersey_numbers: string[]
+          round_number: number
+          sessions: Json
+          team_level: string
+        }
+        Insert: {
+          association_id: string
+          created_at?: string
+          division: string
+          id?: string
+          ip_players?: string[]
+          is_final_team?: boolean
+          jersey_numbers: string[]
+          round_number: number
+          sessions?: Json
+          team_level: string
+        }
+        Update: {
+          association_id?: string
+          created_at?: string
+          division?: string
+          id?: string
+          ip_players?: string[]
+          is_final_team?: boolean
+          jersey_numbers?: string[]
+          round_number?: number
+          sessions?: Json
+          team_level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "continuation_rounds_association_id_fkey"
+            columns: ["association_id"]
+            isOneToOne: false
+            referencedRelation: "associations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       corrections: {
         Row: {
           association_id: string
@@ -175,6 +222,44 @@ export type Database = {
           },
           {
             foreignKeyName: "corrections_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "tryout_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_annotations: {
+        Row: {
+          created_at: string
+          id: string
+          is_favorite: boolean
+          notes: string | null
+          player_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_favorite?: boolean
+          notes?: string | null
+          player_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_favorite?: boolean
+          notes?: string | null
+          player_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_annotations_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "tryout_players"
@@ -337,6 +422,7 @@ export type Database = {
           id: string
           jersey_number: string
           name: string
+          position: string
           previous_team: string | null
           status: Database["public"]["Enums"]["player_status"]
           status_updated_at: string
@@ -351,6 +437,7 @@ export type Database = {
           id?: string
           jersey_number: string
           name: string
+          position?: string
           previous_team?: string | null
           status?: Database["public"]["Enums"]["player_status"]
           status_updated_at?: string
@@ -365,6 +452,7 @@ export type Database = {
           id?: string
           jersey_number?: string
           name?: string
+          position?: string
           previous_team?: string | null
           status?: Database["public"]["Enums"]["player_status"]
           status_updated_at?: string

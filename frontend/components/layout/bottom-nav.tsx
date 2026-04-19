@@ -2,12 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Users, MoreHorizontal } from "lucide-react"
+import { Home, Users, ListChecks } from "lucide-react"
 
 const tabs = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/teams", label: "Teams", icon: Users },
-  { href: "/settings", label: "More", icon: MoreHorizontal },
+  { href: "/continuations", label: "Sessions", icon: ListChecks },
 ] as const
 
 export function BottomNav() {
