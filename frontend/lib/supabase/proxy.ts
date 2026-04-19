@@ -35,17 +35,17 @@ export async function updateSession(request: NextRequest) {
 
   const user = data?.claims
 
-  // TODO: Re-enable auth redirect when user is set up
-  // if (
-  //   !user &&
-  //   !request.nextUrl.pathname.startsWith("/login") &&
-  //   !request.nextUrl.pathname.startsWith("/signup") &&
-  //   !request.nextUrl.pathname.startsWith("/auth")
-  // ) {
-  //   const url = request.nextUrl.clone()
-  //   url.pathname = "/login"
-  //   return NextResponse.redirect(url)
-  // }
+  if (
+    !user &&
+    request.nextUrl.pathname !== "/" &&
+    !request.nextUrl.pathname.startsWith("/login") &&
+    !request.nextUrl.pathname.startsWith("/signup") &&
+    !request.nextUrl.pathname.startsWith("/auth")
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/login"
+    return NextResponse.redirect(url)
+  }
 
   return supabaseResponse
 }
