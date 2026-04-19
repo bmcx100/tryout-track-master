@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronDown } from "lucide-react"
 import Link from "next/link"
 import { setActiveDivision } from "@/app/(app)/division/actions"
 
@@ -51,7 +50,6 @@ export function DivisionSwitcher({
       <header className="app-header">
         <button className="division-badge" onClick={() => setOpen(true)}>
           {label}
-          <ChevronDown size={14} className="division-badge-chevron" />
         </button>
         <span className="app-header-title">{title}</span>
         <Link href="/settings" className="app-header-avatar">{initials}</Link>

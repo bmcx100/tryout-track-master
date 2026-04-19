@@ -1,27 +1,35 @@
 import { requireAssociation } from "@/lib/auth"
-import { TeamsHeader } from "@/components/layout/teams-header"
+import { DivisionSwitcher } from "@/components/layout/division-switcher"
+import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
 import Link from "next/link"
 import { Home, Users, ListChecks } from "lucide-react"
 
 export default async function DashboardPage() {
-  const { supabase, user, associationId, association } = await requireAssociation()
+  const { user, associationId, association } = await requireAssociation()
 
   const email = user.email ?? ""
   const initials = email.substring(0, 2).toUpperCase()
 
-  // Determine active division from players
-  const { data: playersData } = await supabase
-    .from("tryout_players")
-    .select("division")
-    .eq("association_id", associationId)
-    .is("deleted_at", null)
+  // Fetch divisions with player counts
+  const divisions = await getDivisions(associationId)
 
-  const divisions = [...new Set((playersData ?? []).map((p) => p.division))].sort()
-  const activeDivision = divisions.length === 1 ? divisions[0] : divisions.join("/")
+  // Get user's active division preference, or default to division with most players
+  const savedDivision = await getActiveDivision(associationId)
+  const defaultDivision = divisions.length > 0
+    ? divisions.reduce((a, b) => a.playerCount > b.playerCount ? a : b).division
+    : ""
+  const activeDivision = savedDivision ?? defaultDivision
 
   return (
     <>
-      <TeamsHeader groupLabel={association.abbreviation} division={activeDivision} initials={initials} title="Home" />
+      <DivisionSwitcher
+        divisions={divisions}
+        activeDivision={activeDivision}
+        associationId={associationId}
+        abbreviation={association.abbreviation}
+        initials={initials}
+        title="Home"
+      />
       <div className="dashboard-page">
         <div className="dashboard-header">
           <h1 className="dashboard-title">Header Buttons</h1>

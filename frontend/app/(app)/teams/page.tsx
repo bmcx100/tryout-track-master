@@ -1,36 +1,53 @@
 import { requireAssociation } from "@/lib/auth"
-import { TeamsHeader } from "@/components/layout/teams-header"
+import { DivisionSwitcher } from "@/components/layout/division-switcher"
+import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
 import { TeamsPageClient } from "@/components/teams/teams-page-client"
 import type { TryoutPlayer, Team } from "@/types"
 
 export default async function TeamsPage() {
   const { supabase, user, associationId, association } = await requireAssociation()
 
-  // Fetch players for this association (active only)
+  const email = user.email ?? ""
+  const initials = email.substring(0, 2).toUpperCase()
+
+  // Fetch divisions with player counts
+  const divisions = await getDivisions(associationId)
+
+  // Get user's active division preference, or default to division with most players
+  const savedDivision = await getActiveDivision(associationId)
+  const defaultDivision = divisions.length > 0
+    ? divisions.reduce((a, b) => a.playerCount > b.playerCount ? a : b).division
+    : ""
+  const activeDivision = savedDivision ?? defaultDivision
+
+  // Fetch players filtered by active division
   const { data: playersData } = await supabase
     .from("tryout_players")
     .select("*")
     .eq("association_id", associationId)
+    .eq("division", activeDivision)
     .is("deleted_at", null)
     .order("name")
 
-  // Fetch teams for this association
+  // Fetch teams filtered by active division
   const { data: teamsData } = await supabase
     .from("teams")
     .select("*")
     .eq("association_id", associationId)
+    .eq("division", activeDivision)
     .eq("is_archived", false)
     .order("display_order")
 
   const allPlayers: TryoutPlayer[] = playersData ?? []
   const allTeams: Team[] = teamsData ?? []
 
-  // Fetch user's saved predictions for all divisions
+  // Fetch user's saved predictions for active division
   const { data: predictions } = await supabase
     .from("player_predictions")
     .select("division, player_order")
     .eq("user_id", user.id)
     .eq("association_id", associationId)
+    .eq("division", activeDivision)
 
   const savedOrders: Record<string, string[]> = {}
   for (const pred of predictions ?? []) {
@@ -49,16 +66,15 @@ export default async function TeamsPage() {
     savedPreviousOrders[order.previous_team] = order.player_order
   }
 
-  const email = user.email ?? ""
-  const initials = email.substring(0, 2).toUpperCase()
-
-  // Determine active division(s) from players
-  const divisions = [...new Set(allPlayers.map((p) => p.division))].sort()
-  const activeDivision = divisions.length === 1 ? divisions[0] : divisions.join("/")
-
   return (
     <>
-      <TeamsHeader groupLabel={association.abbreviation} division={activeDivision} initials={initials} />
+      <DivisionSwitcher
+        divisions={divisions}
+        activeDivision={activeDivision}
+        associationId={associationId}
+        abbreviation={association.abbreviation}
+        initials={initials}
+      />
       <TeamsPageClient
         players={allPlayers}
         teams={allTeams}
