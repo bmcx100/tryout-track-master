@@ -690,9 +690,13 @@
 /* ── Admin Shell ─────────────────────────────────────── */
 
 .admin-shell {
-  @apply min-h-screen;
+  @apply min-h-screen w-full;
   background: var(--dm-parchment);
   color: var(--dm-umber);
+}
+
+body:has(.admin-shell) {
+  background: var(--dm-parchment);
 }
 
 .admin-header {
