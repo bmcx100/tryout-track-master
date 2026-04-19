@@ -2,12 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Circle, MoreHorizontal } from "lucide-react"
+import { Home, Users, MoreHorizontal } from "lucide-react"
 
 const tabs = [
   { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/teams", label: "Teams", icon: Circle },
-  { href: "#", label: "More", icon: MoreHorizontal },
+  { href: "/teams", label: "Teams", icon: Users },
+  { href: "/settings", label: "More", icon: MoreHorizontal },
 ] as const
 
 export function BottomNav() {
@@ -16,7 +16,7 @@ export function BottomNav() {
   return (
     <nav className="bottom-nav">
       {tabs.map((tab) => {
-        const isActive = pathname.startsWith(tab.href) && tab.href !== "#"
+        const isActive = pathname.startsWith(tab.href)
         return (
           <Link
             key={tab.label}

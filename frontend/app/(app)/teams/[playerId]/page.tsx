@@ -1,10 +1,7 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { mockPlayers } from "@/lib/mock-data"
-
-function formatStatus(status: string): string {
-  return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-}
+import { requireAssociation } from "@/lib/auth"
+import { STATUS_LABELS } from "@/types"
 
 export default async function PlayerDetailPage({
   params,
@@ -12,9 +9,13 @@ export default async function PlayerDetailPage({
   params: Promise<{ playerId: string }>
 }) {
   const { playerId } = await params
+  const { supabase } = await requireAssociation()
 
-  // TODO: Replace with Supabase query
-  const player = mockPlayers.find((p) => p.id === playerId)
+  const { data: player } = await supabase
+    .from("tryout_players")
+    .select("*")
+    .eq("id", playerId)
+    .single()
 
   if (!player) {
     return (
@@ -39,11 +40,11 @@ export default async function PlayerDetailPage({
         </div>
         <div className="player-detail-field">
           <span className="player-detail-label">Position</span>
-          <span className="player-detail-value">{player.position ?? "—"}</span>
+          <span className="player-detail-value">{(player as Record<string, unknown>).position as string ?? "—"}</span>
         </div>
         <div className="player-detail-field">
           <span className="player-detail-label">Status</span>
-          <span className="player-detail-value">{formatStatus(player.status)}</span>
+          <span className="player-detail-value">{STATUS_LABELS[player.status] ?? player.status}</span>
         </div>
         <div className="player-detail-field">
           <span className="player-detail-label">Previous Team</span>

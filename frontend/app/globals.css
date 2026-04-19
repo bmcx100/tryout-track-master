@@ -797,3 +797,218 @@ body:has(.admin-shell) {
 .import-actions {
   @apply flex gap-3 mt-4;
 }
+
+/* ── Join Page ───────────────────────────────────────── */
+
+.join-page {
+  @apply flex flex-col items-center justify-center px-6 py-12;
+  min-height: calc(100vh - 4rem);
+}
+
+.join-title {
+  @apply text-2xl font-semibold text-center mb-2;
+}
+
+.join-desc {
+  @apply text-sm text-center mb-8;
+  color: var(--dm-dust);
+  max-width: 280px;
+  text-wrap: balance;
+}
+
+.join-form {
+  @apply w-full max-w-sm flex flex-col gap-4;
+}
+
+.join-input-group {
+  @apply flex flex-col gap-1;
+}
+
+.join-label {
+  @apply text-xs uppercase tracking-wider;
+  font-family: var(--font-ibm-plex-mono);
+  color: var(--dm-dust);
+}
+
+.join-input {
+  @apply rounded-md border px-3 py-2 text-center text-lg tracking-widest;
+  font-family: var(--font-ibm-plex-mono);
+  border-color: var(--dm-dune-alt);
+  background: var(--dm-dune);
+}
+
+.join-input:focus {
+  @apply outline-none ring-2;
+  ring-color: var(--dm-gold);
+  border-color: var(--dm-gold);
+}
+
+.join-error {
+  @apply text-sm text-center;
+  color: var(--dm-cinnabar);
+}
+
+/* ── Dashboard ───────────────────────────────────────── */
+
+.dashboard-page {
+  @apply px-4 pb-20;
+}
+
+.dashboard-header {
+  @apply flex items-center justify-between px-4 py-3;
+}
+
+.dashboard-assoc-name {
+  @apply text-sm tracking-wider uppercase;
+  font-family: var(--font-ibm-plex-mono);
+  color: var(--dm-dust);
+}
+
+.dashboard-title {
+  @apply text-lg font-semibold;
+}
+
+/* ── Stats Bar ───────────────────────────────────────── */
+
+.stats-bar {
+  @apply flex gap-2 px-4 py-3 overflow-x-auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.stats-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.stat-chip {
+  @apply flex-shrink-0 rounded-full px-3 py-1 text-xs;
+  font-family: var(--font-ibm-plex-mono);
+  background: var(--dm-dune);
+  color: var(--dm-umber);
+}
+
+.stat-chip-value {
+  @apply font-medium ml-1;
+  color: var(--dm-gold);
+}
+
+/* ── Division Tabs ───────────────────────────────────── */
+
+.division-tabs {
+  @apply flex gap-1 px-4 py-2;
+}
+
+.division-tab {
+  @apply rounded-full px-3 py-1 text-xs cursor-pointer transition-colors;
+  font-family: var(--font-ibm-plex-mono);
+  background: var(--dm-dune);
+  color: var(--dm-dust);
+}
+
+.division-tab-active {
+  @apply rounded-full px-3 py-1 text-xs cursor-pointer;
+  font-family: var(--font-ibm-plex-mono);
+  background: var(--dm-umber);
+  color: var(--dm-parchment);
+}
+
+/* ── Player List ─────────────────────────────────────── */
+
+.player-search {
+  @apply w-full rounded-md border px-3 py-2 text-sm;
+  border-color: var(--dm-dune-alt);
+  background: var(--dm-dune);
+}
+
+.player-search:focus {
+  @apply outline-none ring-2;
+  ring-color: var(--dm-gold);
+  border-color: var(--dm-gold);
+}
+
+.player-search-wrapper {
+  @apply px-4 py-2;
+}
+
+.player-list-section {
+  @apply px-4 pb-2;
+}
+
+.player-list-empty {
+  @apply flex flex-col items-center justify-center py-12 text-center;
+}
+
+.player-list-empty-text {
+  @apply text-sm;
+  color: var(--dm-dust);
+}
+
+/* ── Status Badge ────────────────────────────────────── */
+
+.status-badge {
+  @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs;
+  font-family: var(--font-ibm-plex-mono);
+}
+
+.status-badge-registered {
+  background: var(--dm-dune);
+  color: var(--dm-dust);
+}
+
+.status-badge-trying_out {
+  background: oklch(0.90 0.08 85);
+  color: oklch(0.40 0.10 85);
+}
+
+.status-badge-cut {
+  background: oklch(0.93 0.04 25);
+  color: var(--dm-cinnabar);
+}
+
+.status-badge-made_team {
+  background: oklch(0.92 0.06 145);
+  color: oklch(0.35 0.12 145);
+}
+
+.status-badge-moved_up {
+  background: oklch(0.90 0.06 220);
+  color: oklch(0.40 0.10 220);
+}
+
+.status-badge-moved_down {
+  background: oklch(0.93 0.04 45);
+  color: oklch(0.45 0.10 45);
+}
+
+.status-badge-withdrew {
+  background: var(--dm-dune);
+  color: var(--dm-dust);
+}
+
+/* ── Player Card (list view) ─────────────────────────── */
+
+.player-list-card {
+  @apply flex items-center gap-3 py-2;
+  border-bottom: 1px solid var(--dm-dune);
+}
+
+.player-list-card:last-child {
+  border-bottom: none;
+}
+
+.player-list-jersey {
+  @apply text-xs font-medium tabular-nums;
+  font-family: var(--font-ibm-plex-mono);
+  color: var(--dm-dust);
+  min-width: 2rem;
+}
+
+.player-list-name {
+  @apply flex-1 text-sm font-medium truncate;
+}
+
+.player-list-meta {
+  @apply text-xs;
+  color: var(--dm-dust);
+  font-family: var(--font-ibm-plex-mono);
+}

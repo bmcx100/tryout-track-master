@@ -3,15 +3,15 @@
 import { useState } from "react"
 import { ChevronDown } from "lucide-react"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import type { Player } from "@/types"
+import type { TryoutPlayer } from "@/types"
 import { PlayerRow } from "./player-row"
 
 type TeamSectionProps = {
   teamName: string
-  players: Player[]
+  players: TryoutPlayer[]
   isOfficial: boolean
   index: number
-  onPlayerLongPress?: (player: Player) => void
+  onPlayerLongPress?: (player: TryoutPlayer) => void
 }
 
 export function TeamSection({
@@ -36,7 +36,7 @@ export function TeamSection({
         </div>
         <div className="team-header-right">
           <span className={`team-badge ${isOfficial ? "team-badge-official" : "team-badge-prediction"}`}>
-            {isOfficial ? "✓ Official" : "Prediction"}
+            {isOfficial ? "Official" : "Prediction"}
           </span>
           <ChevronDown
             size={16}

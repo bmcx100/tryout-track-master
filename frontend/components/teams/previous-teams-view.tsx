@@ -2,14 +2,15 @@
 
 import { useState } from "react"
 import { ChevronDown } from "lucide-react"
-import type { Player } from "@/types"
+import type { TryoutPlayer } from "@/types"
+import { STATUS_LABELS } from "@/types"
 
 type PreviousTeamsViewProps = {
-  players: Player[]
+  players: TryoutPlayer[]
 }
 
-function groupByPreviousTeam(players: Player[]): Map<string, Player[]> {
-  const groups = new Map<string, Player[]>()
+function groupByPreviousTeam(players: TryoutPlayer[]): Map<string, TryoutPlayer[]> {
+  const groups = new Map<string, TryoutPlayer[]>()
   for (const player of players) {
     const key = player.previous_team ?? "Unknown"
     const existing = groups.get(key) ?? []
@@ -25,7 +26,7 @@ function PreviousTeamSection({
   index,
 }: {
   label: string
-  players: Player[]
+  players: TryoutPlayer[]
   index: number
 }) {
   const [isExpanded, setIsExpanded] = useState(true)
@@ -52,30 +53,17 @@ function PreviousTeamSection({
           {players.map((player) => (
             <div key={player.id} className="player-row">
               <span className="player-jersey">#{player.jersey_number}</span>
-              {player.position && (
+              {player.position && player.position !== "?" && (
                 <span className="player-position">{player.position}</span>
               )}
               <span className="player-name">{player.name}</span>
-              <span className="prev-teams-status">{formatStatus(player.status)}</span>
+              <span className="prev-teams-status">{STATUS_LABELS[player.status] ?? player.status}</span>
             </div>
           ))}
         </div>
       )}
     </div>
   )
-}
-
-function formatStatus(status: Player["status"]): string {
-  const labels: Record<Player["status"], string> = {
-    registered: "Registered",
-    trying_out: "Trying Out",
-    cut: "Cut",
-    made_team: "Made Team",
-    moved_up: "Moved Up",
-    moved_down: "Moved Down",
-    withdrew: "Withdrew",
-  }
-  return labels[status]
 }
 
 export function PreviousTeamsView({ players }: PreviousTeamsViewProps) {

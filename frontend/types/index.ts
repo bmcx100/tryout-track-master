@@ -1,38 +1,29 @@
-export type PlayerPosition = "F" | "D" | "G"
+import type { Tables } from "./database"
 
-export type PlayerStatus =
-  | "registered"
-  | "trying_out"
-  | "cut"
-  | "made_team"
-  | "moved_up"
-  | "moved_down"
-  | "withdrew"
+// Database row types aliased for convenience
+// Note: position column was added via migration 20260419000001 but
+// database.ts types haven't been regenerated yet, so we extend manually
+export type TryoutPlayer = Tables<"tryout_players"> & {
+  position?: string | null
+}
+export type Team = Tables<"teams">
+export type Association = Tables<"associations">
+export type UserAssociation = Tables<"user_associations">
+export type PlayerPrediction = Tables<"player_predictions">
+export type PlayerHeart = Tables<"player_hearts">
 
-export type Player = {
-  id: string
-  name: string
-  jersey_number: string
-  division: string
-  status: PlayerStatus
-  position: PlayerPosition | null
-  previous_team: string | null
-  team_id: string | null
-  association_id: string
+// UI-specific display types (extend DB types with computed fields)
+export type PlayerWithTeam = TryoutPlayer & {
+  teams: { name: string } | null
 }
 
-export type Team = {
-  id: string
-  name: string
-  division: string
-  display_order: number
-  max_roster_size: number
-  association_id: string
-  is_official: boolean
-}
-
-export type TrackedGroup = {
-  label: string
-  association_id: string
-  division: string
+// Status display labels
+export const STATUS_LABELS: Record<string, string> = {
+  registered: "Registered",
+  trying_out: "Trying Out",
+  cut: "Cut",
+  made_team: "Made Team",
+  moved_up: "Moved Up",
+  moved_down: "Moved Down",
+  withdrew: "Withdrew",
 }

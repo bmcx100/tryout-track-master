@@ -3,12 +3,12 @@
 import { GripVertical, Check } from "lucide-react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import type { Player } from "@/types"
+import type { TryoutPlayer } from "@/types"
 
 type PlayerRowProps = {
-  player: Player
+  player: TryoutPlayer
   isLocked: boolean
-  onLongPress?: (player: Player) => void
+  onLongPress?: (player: TryoutPlayer) => void
 }
 
 export function PlayerRow({ player, isLocked, onLongPress }: PlayerRowProps) {
@@ -47,7 +47,7 @@ export function PlayerRow({ player, isLocked, onLongPress }: PlayerRowProps) {
         {isLocked ? <Check size={14} /> : <GripVertical size={14} />}
       </span>
       <span className="player-jersey">#{player.jersey_number}</span>
-      {player.position && (
+      {player.position && player.position !== "?" && (
         <span className="player-position">{player.position}</span>
       )}
       <span className="player-name">{player.name}</span>

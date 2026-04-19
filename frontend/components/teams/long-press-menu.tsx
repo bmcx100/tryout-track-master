@@ -2,24 +2,12 @@
 
 import { Heart, User, PenLine } from "lucide-react"
 import { useRouter } from "next/navigation"
-import type { Player } from "@/types"
+import type { TryoutPlayer } from "@/types"
+import { STATUS_LABELS } from "@/types"
 
 type LongPressMenuProps = {
-  player: Player
+  player: TryoutPlayer
   onClose: () => void
-}
-
-function formatStatus(status: Player["status"]): string {
-  const labels: Record<Player["status"], string> = {
-    registered: "Registered",
-    trying_out: "Trying Out",
-    cut: "Cut",
-    made_team: "Made Team",
-    moved_up: "Moved Up",
-    moved_down: "Moved Down",
-    withdrew: "Withdrew",
-  }
-  return labels[status]
 }
 
 export function LongPressMenu({ player, onClose }: LongPressMenuProps) {
@@ -34,7 +22,7 @@ export function LongPressMenu({ player, onClose }: LongPressMenuProps) {
             #{player.jersey_number} {player.name}
           </div>
           <div className="long-press-player-info">
-            {player.division} · {formatStatus(player.status)}
+            {player.division} &middot; {STATUS_LABELS[player.status] ?? player.status}
           </div>
         </div>
         <button className="long-press-action" onClick={onClose}>
