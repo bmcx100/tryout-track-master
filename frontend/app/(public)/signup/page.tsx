@@ -1,15 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 
 export default function SignupPage() {
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
   async function handleSignup(e: React.FormEvent) {
@@ -21,9 +22,6 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-      },
     })
 
     if (error) {
@@ -32,8 +30,7 @@ export default function SignupPage() {
       return
     }
 
-    setSuccess(true)
-    setLoading(false)
+    router.push("/dashboard")
   }
 
   async function handleGoogleSignup() {
@@ -45,18 +42,6 @@ export default function SignupPage() {
         queryParams: { prompt: "select_account" },
       },
     })
-  }
-
-  if (success) {
-    return (
-      <div className="auth-form-container">
-        <h1 className="auth-form-title">Check your email</h1>
-        <p className="auth-footer">
-          We sent a confirmation link to <strong>{email}</strong>.
-          Click the link to activate your&nbsp;account.
-        </p>
-      </div>
-    )
   }
 
   return (

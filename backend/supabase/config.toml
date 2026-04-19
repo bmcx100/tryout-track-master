@@ -29,8 +29,8 @@ port = 54324
 
 [auth]
 enabled = true
-site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+site_url = "https://tryout-track-master.vercel.app"
+additional_redirect_urls = ["https://tryout-track-master.vercel.app"]
 jwt_expiry = 3600
 enable_signup = true
 enable_anonymous_sign_ins = false
@@ -38,12 +38,13 @@ enable_anonymous_sign_ins = false
 [auth.email]
 enable_signup = true
 double_confirm_changes = true
-enable_confirmations = true
-max_frequency = "1s"
+enable_confirmations = false
+max_frequency = "1m0s"
+otp_length = 8
 
 [auth.external.google]
-enabled = false
-client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+enabled = true
+client_id = "924666962267-fbdoobt2bj51m014nob4qaubpbr4lepl.apps.googleusercontent.com"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 redirect_uri = ""
 skip_nonce_check = true
