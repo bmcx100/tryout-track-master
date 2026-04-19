@@ -361,8 +361,8 @@
 
 @media (min-width: 640px) {
   .bottom-nav {
-    @apply absolute;
-    max-width: 393px;
+    @apply absolute left-0 right-0;
+    width: 393px;
     border-radius: 0 0 1rem 1rem;
   }
 }
@@ -447,7 +447,19 @@
 }
 
 .public-layout {
-  @apply flex min-h-screen flex-col items-center justify-center bg-background;
+  @apply flex min-h-screen w-full flex-col items-center justify-center bg-background;
+  max-width: 393px;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .public-layout {
+    @apply relative overflow-y-auto shadow-2xl;
+    min-width: 393px;
+    height: 100svh;
+    max-height: 900px;
+    border-radius: 1rem;
+  }
 }
 
 .landing-main {
@@ -524,7 +536,7 @@
    ============================================================ */
 
 .app-shell {
-  @apply min-h-screen mx-auto;
+  @apply min-h-screen mx-auto w-full;
   max-width: 393px;
   padding-bottom: calc(70px + env(safe-area-inset-bottom));
   background: var(--dm-parchment);
@@ -539,6 +551,7 @@
 
   .app-shell {
     @apply relative overflow-y-auto shadow-2xl;
+    min-width: 393px;
     height: 100svh;
     max-height: 900px;
     border-radius: 1rem;

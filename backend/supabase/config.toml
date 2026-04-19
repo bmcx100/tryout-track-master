@@ -38,7 +38,7 @@ enable_anonymous_sign_ins = false
 [auth.email]
 enable_signup = true
 double_confirm_changes = true
-enable_confirmations = false
+enable_confirmations = true
 max_frequency = "1s"
 
 [auth.external.google]
