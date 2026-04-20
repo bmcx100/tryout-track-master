@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { setActiveDivision } from "@/app/(app)/division/actions"
+import { setActiveAssociation } from "@/app/(app)/association/actions"
+
+type Association = {
+  id: string
+  name: string
+  abbreviation: string
+}
 
 type DivisionSwitcherProps = {
   divisions: { division: string, playerCount: number }[]
@@ -14,6 +21,7 @@ type DivisionSwitcherProps = {
   initials: string
   title?: string
   hasPendingCorrections?: boolean
+  associations: Association[]
 }
 
 export function DivisionSwitcher({
@@ -24,6 +32,7 @@ export function DivisionSwitcher({
   initials,
   title = "Teams",
   hasPendingCorrections,
+  associations,
 }: DivisionSwitcherProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -31,11 +40,20 @@ export function DivisionSwitcher({
 
   const label = `${abbreviation}-${activeDivision}`
 
-  const handleSelect = (division: string) => {
+  const handleSelectDivision = (division: string) => {
     setOpen(false)
     if (division === activeDivision) return
     startTransition(async () => {
       await setActiveDivision(associationId, division)
+      router.refresh()
+    })
+  }
+
+  const handleSelectAssociation = (assocId: string) => {
+    if (assocId === associationId) return
+    setOpen(false)
+    startTransition(async () => {
+      await setActiveAssociation(assocId)
       router.refresh()
     })
   }
@@ -50,6 +68,8 @@ export function DivisionSwitcher({
       return () => document.removeEventListener("keydown", handleKeyDown)
     }
   }, [open, handleKeyDown])
+
+  const showAssociations = associations.length > 1
 
   return (
     <>
@@ -69,13 +89,36 @@ export function DivisionSwitcher({
           <div className="division-overlay" onClick={() => setOpen(false)} />
           <div className="division-sheet">
             <div className="division-sheet-handle" />
+
+            {showAssociations && (
+              <>
+                <h2 className="division-sheet-title">Select Association</h2>
+                <div className="division-options">
+                  {associations.map((a) => (
+                    <button
+                      key={a.id}
+                      className={`division-option ${a.id === associationId ? "division-option-active" : ""}`}
+                      onClick={() => handleSelectAssociation(a.id)}
+                    >
+                      <div className="division-option-info">
+                        <span className="assoc-option-abbr">{a.abbreviation}</span>
+                        <span className="division-option-count">{a.name}</span>
+                      </div>
+                      <div className={`division-option-radio ${a.id === associationId ? "division-option-radio-checked" : ""}`} />
+                    </button>
+                  ))}
+                </div>
+                <div className="division-sheet-divider" />
+              </>
+            )}
+
             <h2 className="division-sheet-title">Select Division</h2>
             <div className="division-options">
               {divisions.map((d) => (
                 <button
                   key={d.division}
                   className={`division-option ${d.division === activeDivision ? "division-option-active" : ""}`}
-                  onClick={() => handleSelect(d.division)}
+                  onClick={() => handleSelectDivision(d.division)}
                 >
                   <div className="division-option-info">
                     <span className="division-option-name">{d.division}</span>

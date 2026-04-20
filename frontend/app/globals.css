@@ -927,6 +927,18 @@
   background: var(--dm-gold);
 }
 
+.assoc-option-abbr {
+  @apply text-sm font-bold;
+  color: var(--dm-gold);
+  font-family: var(--font-ibm-plex-mono);
+}
+
+.division-sheet-divider {
+  @apply my-4;
+  height: 1px;
+  background: oklch(1 0 0 / 8%);
+}
+
 .division-cancel-btn {
   @apply mt-4 w-full rounded-2xl py-3 text-sm font-semibold;
   background: oklch(0.22 0 0);

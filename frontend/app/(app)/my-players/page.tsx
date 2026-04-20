@@ -1,6 +1,7 @@
 import { requireAssociation } from "@/lib/auth"
 import { DivisionSwitcher } from "@/components/layout/division-switcher"
 import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
+import { getAllAssociations } from "@/app/(app)/association/actions"
 import { getMyPlayers } from "@/app/(app)/annotations/actions"
 import { getPendingCorrectionsCount } from "@/app/(app)/corrections/actions"
 import { Heart } from "lucide-react"
@@ -18,7 +19,10 @@ export default async function MyPlayersPage() {
     : ""
   const activeDivision = savedDivision ?? defaultDivision
 
-  const myPlayers = await getMyPlayers(associationId)
+  const [myPlayers, associations] = await Promise.all([
+    getMyPlayers(associationId),
+    getAllAssociations(),
+  ])
   const hasPendingCorrections = (role === "group_admin" || role === "admin")
     ? (await getPendingCorrectionsCount(associationId)) > 0
     : false
@@ -46,6 +50,7 @@ export default async function MyPlayersPage() {
         initials={initials}
         title="My Players"
         hasPendingCorrections={hasPendingCorrections}
+        associations={associations}
       />
       <div className="my-players-page">
         {myPlayers.length === 0 ? (

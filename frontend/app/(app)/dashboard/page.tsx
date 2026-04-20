@@ -1,6 +1,7 @@
 import { requireAssociation } from "@/lib/auth"
 import { DivisionSwitcher } from "@/components/layout/division-switcher"
 import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
+import { getAllAssociations } from "@/app/(app)/association/actions"
 import { getMyPlayersCount } from "@/app/(app)/annotations/actions"
 import { getPendingCorrectionsCount } from "@/app/(app)/corrections/actions"
 import { MyPlayersCard } from "@/components/dashboard/my-players-card"
@@ -23,7 +24,10 @@ export default async function DashboardPage() {
     : ""
   const activeDivision = savedDivision ?? defaultDivision
 
-  const myPlayersCount = await getMyPlayersCount(associationId)
+  const [myPlayersCount, associations] = await Promise.all([
+    getMyPlayersCount(associationId),
+    getAllAssociations(),
+  ])
   const hasPendingCorrections = (role === "group_admin" || role === "admin")
     ? (await getPendingCorrectionsCount(associationId)) > 0
     : false
@@ -38,6 +42,7 @@ export default async function DashboardPage() {
         initials={initials}
         title="Home"
         hasPendingCorrections={hasPendingCorrections}
+        associations={associations}
       />
       <div className="dashboard-page">
         <div className="dashboard-header">

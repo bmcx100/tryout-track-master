@@ -1,6 +1,7 @@
 import { requireAssociation } from "@/lib/auth"
 import { DivisionSwitcher } from "@/components/layout/division-switcher"
 import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
+import { getAllAssociations } from "@/app/(app)/association/actions"
 import { getPendingCorrectionsCount } from "@/app/(app)/corrections/actions"
 import { ContinuationsPageClient } from "@/components/continuations/continuations-page-client"
 import { getAllPublishedRounds, getPlayerAnnotations } from "./actions"
@@ -36,7 +37,10 @@ export default async function ContinuationsPage() {
   const rounds = await getAllPublishedRounds(associationId, activeDivision)
 
   // Fetch user's annotations
-  const annotations = await getPlayerAnnotations(associationId)
+  const [annotations, associations] = await Promise.all([
+    getPlayerAnnotations(associationId),
+    getAllAssociations(),
+  ])
   const hasPendingCorrections = (role === "group_admin" || role === "admin")
     ? (await getPendingCorrectionsCount(associationId)) > 0
     : false
@@ -51,6 +55,7 @@ export default async function ContinuationsPage() {
         initials={initials}
         title="Sessions"
         hasPendingCorrections={hasPendingCorrections}
+        associations={associations}
       />
       <ContinuationsPageClient
         players={players}
