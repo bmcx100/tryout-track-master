@@ -1,6 +1,7 @@
 import { requireAssociation } from "@/lib/auth"
 import { DivisionSwitcher } from "@/components/layout/division-switcher"
 import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
+import { getPlayerAnnotations } from "@/app/(app)/annotations/actions"
 import { TeamsPageClient } from "@/components/teams/teams-page-client"
 import type { TryoutPlayer, Team } from "@/types"
 
@@ -66,6 +67,9 @@ export default async function TeamsPage() {
     savedPreviousOrders[order.previous_team] = order.player_order
   }
 
+  // Fetch user's player annotations (hearts, names)
+  const annotations = await getPlayerAnnotations(associationId)
+
   return (
     <>
       <DivisionSwitcher
@@ -76,11 +80,13 @@ export default async function TeamsPage() {
         initials={initials}
       />
       <TeamsPageClient
+        key={activeDivision}
         players={allPlayers}
         teams={allTeams}
         savedOrders={savedOrders}
         savedPreviousOrders={savedPreviousOrders}
         associationId={associationId}
+        annotations={annotations}
       />
     </>
   )

@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { setActiveDivision } from "@/app/(app)/division/actions"
 
@@ -23,15 +24,18 @@ export function DivisionSwitcher({
   title = "Teams",
 }: DivisionSwitcherProps) {
   const [open, setOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
   const label = `${abbreviation}-${activeDivision}`
 
-  const handleSelect = async (division: string) => {
+  const handleSelect = (division: string) => {
     setOpen(false)
     if (division === activeDivision) return
-    await setActiveDivision(associationId, division)
-    router.refresh()
+    startTransition(async () => {
+      await setActiveDivision(associationId, division)
+      router.refresh()
+    })
   }
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -48,7 +52,8 @@ export function DivisionSwitcher({
   return (
     <>
       <header className="app-header">
-        <button className="division-badge" onClick={() => setOpen(true)}>
+        <button className="division-badge" onClick={() => setOpen(true)} disabled={isPending}>
+          {isPending ? <Loader2 className="division-badge-spinner" /> : null}
           {label}
         </button>
         <span className="app-header-title">{title}</span>

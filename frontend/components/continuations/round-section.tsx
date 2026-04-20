@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, Clock } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import type { ContinuationRound, TryoutPlayer } from "@/types"
 import { ContinuationPlayerRow } from "./continuation-player-row"
 
@@ -16,12 +16,10 @@ type SessionData = {
 type RoundSectionProps = {
   teamLevel: string
   division: string
-  latestRound: ContinuationRound
-  previousRound: ContinuationRound | null
+  allRounds: ContinuationRound[]
   playerMap: Record<string, TryoutPlayer>
   annotations: Record<string, { isFavorite: boolean, notes: string | null }>
   onToggleFavorite: (playerId: string) => void
-  onOpenHistory: (teamLevel: string) => void
 }
 
 const POSITION_ORDER: Record<string, number> = { F: 0, D: 1, G: 2 }
@@ -108,18 +106,31 @@ function buildPlayerList(
 export function RoundSection({
   teamLevel,
   division,
-  latestRound,
-  previousRound,
+  allRounds,
   playerMap,
   annotations,
   onToggleFavorite,
-  onOpenHistory,
 }: RoundSectionProps) {
-  const sessions = (latestRound.sessions ?? []) as SessionData[]
-  const sessionInfo = getSessionInfo(sessions)
-  const ipPlayers = latestRound.ip_players ?? []
+  // allRounds is sorted by round_number DESC — index 0 is the latest
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const activeRound = allRounds[selectedIndex]
+  const previousRound = allRounds[selectedIndex + 1] ?? null
+  const isHistorical = selectedIndex > 0
 
-  const totalContinuing = latestRound.jersey_numbers.length
+  const sessions = (activeRound.sessions ?? []) as SessionData[]
+  const sessionInfo = getSessionInfo(sessions)
+  const ipPlayers = activeRound.ip_players ?? []
+
+  const totalContinuing = activeRound.jersey_numbers.length
+
+  // Compute round-over-round stats
+  const newPlayers = previousRound
+    ? activeRound.jersey_numbers.filter((jn) => !previousRound.jersey_numbers.includes(jn))
+    : []
+  const ipCount = ipPlayers.length
+  const nonIpCount = totalContinuing - ipCount
+
+  const [summaryExpanded, setSummaryExpanded] = useState(false)
 
   // Build per-session player lists
   const sessionLists = sessions.map((s) => ({
@@ -127,21 +138,29 @@ export function RoundSection({
     players: buildPlayerList(s.jersey_numbers, playerMap, annotations, ipPlayers),
   }))
 
-  // Initial expanded state: all sessions + continuing + cuts expanded
+  // Expanded state: reset all to expanded when round changes
   const [continuingExpanded, setContinuingExpanded] = useState(true)
   const [sessionExpanded, setSessionExpanded] = useState<Record<number, boolean>>(
     () => Object.fromEntries(sessions.map((s) => [s.session_number, true]))
   )
   const [cutsExpanded, setCutsExpanded] = useState(true)
+  const [prevIndex, setPrevIndex] = useState(selectedIndex)
+  if (prevIndex !== selectedIndex) {
+    setPrevIndex(selectedIndex)
+    setContinuingExpanded(true)
+    setSessionExpanded(Object.fromEntries(sessions.map((s) => [s.session_number, true])))
+    setCutsExpanded(true)
+    setSummaryExpanded(false)
+  }
 
   // Compute cuts
   const cuts = previousRound
-    ? previousRound.jersey_numbers.filter((jn) => !latestRound.jersey_numbers.includes(jn))
+    ? previousRound.jersey_numbers.filter((jn) => !activeRound.jersey_numbers.includes(jn))
     : []
 
   const cutPlayers = buildPlayerList(cuts, playerMap, annotations, [])
 
-  const roundLabel = latestRound.is_final_team ? "Final Team" : `Round ${latestRound.round_number}`
+  const roundLabel = activeRound.is_final_team ? "Final Team" : `Round ${activeRound.round_number}`
 
   const toggleSession = (num: number) => {
     setSessionExpanded((prev) => ({ ...prev, [num]: !prev[num] }))
@@ -149,19 +168,68 @@ export function RoundSection({
 
   return (
     <div>
-      <button
-        className="continuations-header"
-        onClick={() => onOpenHistory(teamLevel)}
-      >
+      <div className={`continuations-header ${isHistorical ? "continuations-header-historical" : ""}`}>
         <div className="continuations-header-left">
-          <span className="continuations-header-title">
-            {division} {teamLevel} — {roundLabel}
+          <span className={`continuations-header-title ${isHistorical ? "continuations-header-title-historical" : ""}`}>
+            {division} {teamLevel} -
           </span>
-          <Clock size={14} className="continuations-header-icon" />
+          {allRounds.length > 1 ? (
+            <select
+              className={`continuations-round-select ${isHistorical ? "continuations-round-select-historical" : ""}`}
+              value={selectedIndex}
+              onChange={(e) => setSelectedIndex(Number(e.target.value))}
+            >
+              {allRounds.map((r, idx) => (
+                <option key={r.id} value={idx}>
+                  {r.is_final_team ? "Final Team" : `Round ${r.round_number}`}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="continuations-header-title">{roundLabel}</span>
+          )}
         </div>
-      </button>
+        {isHistorical && (
+          <span className="continuations-not-current">Not Current&nbsp;Round</span>
+        )}
+      </div>
       {sessionInfo && (
-        <div className="continuations-session-info">{sessionInfo}</div>
+        <div className="continuations-summary-wrap">
+          <button
+            className="continuations-session-info continuations-session-info-tap"
+            onClick={() => setSummaryExpanded(!summaryExpanded)}
+          >
+            <ChevronDown
+              size={12}
+              className="continuations-summary-chevron"
+              style={{ transform: summaryExpanded ? "rotate(0deg)" : "rotate(-90deg)" }}
+            />
+            <span>{sessionInfo}</span>
+          </button>
+          {summaryExpanded && (
+            <ul className="continuations-round-summary">
+              <li>
+                <strong>{totalContinuing} players</strong>{" "}
+                continuing{ipCount > 0 ? ` (${nonIpCount} + ${ipPlayers.join(", ")} IP)` : ""}
+              </li>
+              <li>
+                <strong>{cuts.length} cut{cuts.length !== 1 ? "s" : ""}</strong>{" "}
+                {previousRound ? `from Round ${previousRound.round_number}` : ""}
+              </li>
+              {newPlayers.length > 0 && (
+                <li>
+                  {newPlayers.length} new in Round {activeRound.round_number}:{" "}
+                  {newPlayers.sort((a, b) => Number(a) - Number(b)).join(", ")}
+                </li>
+              )}
+              {sessions.map((s) => (
+                <li key={s.session_number}>
+                  Session: {formatDate(s.date)}, {formatTime(s.start_time)}–{formatTime(s.end_time)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
 
       {/* Continuing section */}
@@ -230,7 +298,7 @@ export function RoundSection({
         <span>Cuts ({cutPlayers.length})</span>
       </button>
       {cutsExpanded && (
-        <div>
+        <div className="continuations-cuts-list">
           {cutPlayers.length === 0 ? (
             <p className="continuations-empty-cuts">No cuts yet</p>
           ) : (

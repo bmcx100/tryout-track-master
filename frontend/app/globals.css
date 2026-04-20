@@ -58,7 +58,7 @@
      --dm-parchment:   #111111   Near-black page background
      --dm-dune:        #1C1C1E   Dark gray card/surface
      --dm-dune-alt:    #151516   Slightly darker surface
-     --dm-umber:       #F0F0F0   Near-white primary text
+     --dm-umber:       oklch(0.80) Soft-white primary text
      --dm-dust:        #6B6B6B   Muted text, labels
    ============================================================ */
 
@@ -72,7 +72,7 @@
   --dm-parchment: oklch(0.12 0 0);
   --dm-dune: oklch(0.18 0 0);
   --dm-dune-alt: oklch(0.15 0 0);
-  --dm-umber: oklch(0.94 0 0);
+  --dm-umber: oklch(0.80 0 0);
   --dm-dust: oklch(0.48 0 0);
   --dm-official-green: oklch(0.65 0.15 144);
 
@@ -325,14 +325,14 @@
 
 .team-name {
   @apply text-sm font-bold;
-  color: oklch(0.94 0 0);
+  color: var(--dm-umber);
   letter-spacing: -0.01em;
 }
 
 .team-count {
   @apply text-xs;
   font-family: var(--font-mono);
-  color: oklch(0.55 0 0);
+  color: oklch(0.75 0 0);
   font-size: 11px;
   letter-spacing: 0.02em;
 }
@@ -355,13 +355,13 @@
 
 .team-name-label {
   @apply text-xs font-normal italic;
-  color: oklch(0.55 0 0);
+  color: oklch(0.75 0 0);
   margin-left: 0.4rem;
 }
 
 .team-chevron {
   @apply text-sm;
-  color: oklch(0.55 0 0);
+  color: oklch(0.75 0 0);
   transition: transform 200ms ease-out;
 }
 
@@ -410,14 +410,14 @@
 .player-name {
   @apply min-w-0 flex-1 truncate text-xs font-medium;
   font-size: 13px;
-  color: oklch(0.90 0 0);
+  color: var(--dm-umber);
 }
 
 .player-prev-team {
   @apply flex-shrink-0 text-xs font-medium;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: oklch(0.55 0 0);
+  color: oklch(0.75 0 0);
   letter-spacing: 0.02em;
 }
 
@@ -425,7 +425,7 @@
   @apply flex-shrink-0 text-xs font-medium;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: oklch(0.55 0 0);
+  color: oklch(0.75 0 0);
   letter-spacing: 0.02em;
 }
 
@@ -766,6 +766,44 @@
   color: var(--dm-gold);
 }
 
+.long-press-name-row {
+  @apply flex items-center gap-2 rounded-xl px-3 py-2;
+}
+
+.long-press-name-input {
+  @apply flex-1 rounded-lg border px-3 py-2 text-sm;
+  border-color: var(--dm-border);
+  background: oklch(0.12 0 0);
+  color: var(--dm-umber);
+  outline: none;
+}
+
+.long-press-name-input:focus {
+  border-color: var(--dm-gold);
+}
+
+.long-press-name-btn {
+  @apply flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg;
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.long-press-name-btn:hover {
+  background: oklch(0.76 0.14 85 / 25%);
+}
+
+.long-press-name-btn-clear {
+  background: oklch(0.65 0.20 25 / 15%);
+  color: oklch(0.65 0.20 25);
+}
+
+.long-press-name-btn-clear:hover {
+  background: oklch(0.65 0.20 25 / 25%);
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -781,7 +819,7 @@
    ============================================================ */
 
 .division-badge {
-  @apply rounded-full px-3 py-1 text-sm font-semibold;
+  @apply flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold;
   background: oklch(0.76 0.14 85 / 15%);
   color: var(--dm-gold);
   letter-spacing: -0.01em;
@@ -792,6 +830,17 @@
 
 .division-badge:hover {
   background: oklch(0.76 0.14 85 / 25%);
+}
+
+.division-badge:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.division-badge-spinner {
+  width: 14px;
+  height: 14px;
+  animation: spin 0.8s linear infinite;
 }
 
 .division-overlay {
@@ -1278,13 +1327,18 @@ body:has(.admin-shell) {
 }
 
 .continuations-header {
-  @apply flex w-full cursor-pointer items-center justify-between px-5 py-3;
+  @apply flex w-full items-center justify-between px-5 py-3;
   border-top: 1px solid oklch(1 0 0 / 5%);
   background: oklch(0.22 0 0);
 }
 
+.continuations-header-historical {
+  background: oklch(0.18 0.02 15);
+  border-top-color: oklch(0.55 0.20 25 / 20%);
+}
+
 .continuations-header-left {
-  @apply flex items-center gap-2;
+  @apply flex items-center gap-1.5;
 }
 
 .continuations-header-title {
@@ -1293,25 +1347,106 @@ body:has(.admin-shell) {
   letter-spacing: -0.01em;
 }
 
-.continuations-header-icon {
-  color: var(--dm-dust);
-  opacity: 0.6;
+.continuations-header-title-historical {
+  color: oklch(0.65 0.20 25);
+}
+
+.continuations-round-select {
+  @apply cursor-pointer rounded text-sm font-bold;
+  color: var(--dm-gold);
+  background: oklch(0.28 0 0);
+  border: 1px solid oklch(1 0 0 / 10%);
+  padding: 2px 6px;
+  letter-spacing: -0.01em;
+  outline: none;
+}
+
+.continuations-round-select:focus {
+  border-color: var(--dm-gold);
+}
+
+.continuations-round-select-historical {
+  color: oklch(0.65 0.20 25);
+  background: oklch(0.22 0.03 15);
+  border-color: oklch(0.55 0.20 25 / 30%);
+}
+
+.continuations-not-current {
+  @apply text-xs font-semibold;
+  color: oklch(0.65 0.20 25);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.continuations-summary-wrap {
+  background: oklch(0.19 0 0);
 }
 
 .continuations-session-info {
-  @apply px-5 py-1.5 text-xs;
+  @apply px-5 py-2 uppercase;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
   color: var(--dm-dust);
-  background: oklch(0.19 0 0);
+}
+
+.continuations-session-info-tap {
+  @apply flex w-full cursor-pointer items-center gap-1.5;
+  border: none;
+  background: none;
+  color: oklch(0.75 0 0);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.continuations-summary-chevron {
+  color: oklch(0.75 0 0);
+  opacity: 0.5;
+  transition: transform 200ms;
+  flex-shrink: 0;
+}
+
+.continuations-round-summary {
+  @apply pb-2;
+  padding-left: 32px;
+  padding-right: 20px;
+  color: var(--dm-dust);
+  font-size: 12px;
+  margin: 0;
+  padding-top: 2px;
+  line-height: 1.7;
+  list-style: none;
+}
+
+.continuations-round-summary li {
+  display: block;
+}
+
+.continuations-round-summary li::before {
+  content: "–  ";
+  opacity: 0.5;
+}
+
+.continuations-round-summary strong {
+  color: var(--dm-gold);
 }
 
 .continuations-section-label {
   @apply flex w-full cursor-pointer items-center gap-1.5 px-5 py-2 text-xs font-semibold uppercase;
   font-family: var(--font-mono);
-  color: var(--dm-dust);
+  color: oklch(0.75 0 0);
   letter-spacing: 0.04em;
   font-size: 11px;
-  background: oklch(0.16 0 0);
+  background: oklch(0.19 0 0);
   border-top: 1px solid oklch(1 0 0 / 5%);
+}
+
+.continuations-section-label svg {
+  color: oklch(0.75 0 0);
+  opacity: 0.5;
 }
 
 .continuations-session-subheader {
@@ -1334,8 +1469,13 @@ body:has(.admin-shell) {
   padding-left: 2.25rem;
 }
 
+.continuations-cuts-list .continuation-player-row {
+  padding-left: 40px;
+}
+
 .continuations-empty-cuts {
-  @apply px-5 py-3 text-xs italic;
+  @apply py-3 text-xs italic;
+  padding-left: 40px;
   color: var(--dm-dust);
 }
 
@@ -1402,6 +1542,49 @@ body:has(.admin-shell) {
   opacity: 0.8;
 }
 
+.custom-name-indicator {
+  @apply ml-1.5 text-xs;
+  color: var(--dm-dust);
+  opacity: 0.6;
+  font-style: italic;
+}
+
+/* -- My Players Page ---------------------------------------- */
+
+.my-players-page {
+  @apply px-4 pb-24 pt-2;
+}
+
+.my-players-empty {
+  @apply flex flex-col items-center gap-2 py-16 text-center;
+  color: var(--dm-dust);
+}
+
+.my-players-empty-hint {
+  @apply text-xs;
+  opacity: 0.7;
+}
+
+.my-players-division {
+  @apply mb-4;
+}
+
+.my-players-division-title {
+  @apply mb-1 mt-3 text-xs font-bold uppercase tracking-wider;
+  color: var(--dm-gold);
+}
+
+.my-players-row {
+  @apply flex items-center gap-2 rounded-lg px-3 py-2.5;
+  background: var(--dm-dune);
+  border-bottom: 1px solid oklch(1 0 0 / 4%);
+}
+
+.my-players-heart {
+  @apply flex w-5 flex-shrink-0 items-center justify-center;
+  color: oklch(0.65 0.20 25);
+}
+
 /* -- Round History Modal ------------------------------------ */
 
 .round-history-modal {
@@ -1465,4 +1648,306 @@ body:has(.admin-shell) {
 .round-history-stat {
   @apply text-xs font-medium;
   color: var(--dm-dust);
+}
+
+/* ============================================================
+   Settings Page
+   ============================================================ */
+
+.settings-page {
+  @apply px-5 py-6;
+}
+
+.settings-page-title {
+  @apply text-xl font-bold mb-5;
+  color: var(--dm-umber);
+}
+
+.settings-user-card {
+  @apply flex items-center gap-4 rounded-2xl px-5 py-4 mb-6;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+}
+
+.settings-avatar {
+  @apply flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-base font-bold;
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+}
+
+.settings-user-details {
+  @apply flex flex-col gap-0.5;
+}
+
+.settings-user-email {
+  @apply text-sm font-semibold;
+  color: var(--dm-umber);
+}
+
+.settings-user-assoc {
+  @apply text-xs;
+  color: var(--dm-dust);
+}
+
+.settings-section {
+  @apply mb-5;
+}
+
+.settings-section-title {
+  @apply mb-2 px-1 text-xs font-bold uppercase tracking-wider;
+  font-family: var(--font-mono);
+  color: var(--dm-dust);
+  letter-spacing: 0.06em;
+  font-size: 10px;
+}
+
+.settings-row {
+  @apply flex w-full items-center gap-3 rounded-xl px-4 py-3.5;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+  text-decoration: none;
+  transition: background 150ms ease-out;
+  margin-bottom: 0.5rem;
+}
+
+.settings-row:hover {
+  background: oklch(0.22 0 0);
+}
+
+.settings-row-icon {
+  @apply flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg;
+}
+
+.settings-row-icon-gold {
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+}
+
+.settings-row-icon-red {
+  background: oklch(0.55 0.20 25 / 15%);
+  color: oklch(0.65 0.20 25);
+}
+
+.settings-row-label {
+  @apply flex-1 text-sm font-medium;
+  color: var(--dm-umber);
+}
+
+.settings-row-danger .settings-row-label {
+  color: oklch(0.65 0.20 25);
+}
+
+.settings-row-chevron {
+  @apply flex-shrink-0;
+  color: var(--dm-dust);
+  opacity: 0.5;
+}
+
+/* ============================================================
+   Scrape Page
+   ============================================================ */
+
+.scrape-page {
+  @apply px-5 py-6;
+}
+
+.scrape-back-link {
+  @apply mb-4 flex items-center gap-1 text-sm font-medium;
+  color: var(--dm-gold);
+  text-decoration: none;
+}
+
+.scrape-page-title {
+  @apply text-xl font-bold mb-2;
+  color: var(--dm-umber);
+}
+
+.scrape-division-badge {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold mb-4;
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+}
+
+.scrape-source-link {
+  @apply flex items-center gap-1.5 text-xs font-medium mb-4;
+  color: var(--dm-gold);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.scrape-source-link:hover {
+  text-decoration: underline;
+}
+
+.scrape-no-url {
+  @apply text-sm mb-4;
+  color: var(--dm-dust);
+}
+
+.scrape-error {
+  @apply mb-4 rounded-lg px-4 py-3 text-sm;
+  background: oklch(0.20 0.06 25);
+  color: oklch(0.70 0.15 25);
+}
+
+.scrape-loading {
+  @apply flex items-center gap-2 py-4 text-sm;
+  color: var(--dm-dust);
+}
+
+.scrape-spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.scrape-preview {
+  @apply mt-4;
+}
+
+.scrape-summary-card {
+  @apply rounded-xl p-4 mb-4;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+}
+
+.scrape-summary-row {
+  @apply flex items-center justify-between py-1.5;
+  border-bottom: 1px solid var(--dm-border-subtle);
+}
+
+.scrape-summary-row:last-child {
+  border-bottom: none;
+}
+
+.scrape-summary-label {
+  @apply text-xs uppercase;
+  font-family: var(--font-mono);
+  color: var(--dm-dust);
+  letter-spacing: 0.04em;
+}
+
+.scrape-summary-value {
+  @apply text-sm font-medium;
+  color: var(--dm-gold);
+}
+
+.scrape-team-select {
+  @apply rounded-lg px-2 py-1 text-sm font-semibold;
+  background: oklch(0.22 0 0);
+  color: var(--dm-gold);
+  border: 1px solid oklch(0.3 0 0);
+  cursor: pointer;
+}
+
+.scrape-jersey-vertical {
+  @apply flex flex-col gap-0 mb-4 rounded-xl overflow-hidden;
+  background: oklch(0.15 0 0);
+}
+
+.scrape-jersey-row {
+  @apply flex items-center gap-3 px-4 py-2;
+  font-family: var(--font-mono);
+  color: var(--dm-umber);
+  border-bottom: 1px solid oklch(0.2 0 0);
+}
+
+.scrape-jersey-row:last-child {
+  border-bottom: none;
+}
+
+.scrape-jersey-row-ip {
+  color: var(--dm-umber);
+}
+
+.scrape-jersey-num {
+  @apply text-sm font-medium;
+  min-width: 3ch;
+}
+
+.scrape-ip-tag {
+  @apply font-bold uppercase;
+  font-size: 13px;
+  color: inherit;
+}
+
+.scrape-everyone-note {
+  @apply text-sm italic mb-4;
+  color: var(--dm-dust);
+}
+
+.scrape-actions {
+  @apply flex gap-3 mt-4;
+}
+
+.scrape-confirm-btn {
+  @apply flex flex-1 items-center justify-center gap-2 rounded-2xl px-10 py-3 text-sm font-semibold;
+  background: var(--dm-cinnabar);
+  color: oklch(0.12 0 0);
+  border: none;
+  cursor: pointer;
+  transition: all 200ms ease-out;
+}
+
+.scrape-confirm-btn:hover {
+  filter: brightness(1.05);
+}
+
+.scrape-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.scrape-discard-btn {
+  @apply flex flex-1 items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold;
+  background: oklch(0.22 0 0);
+  color: var(--dm-umber);
+  border: none;
+  cursor: pointer;
+  transition: all 200ms ease-out;
+}
+
+.scrape-discard-btn:hover {
+  background: oklch(0.26 0 0);
+}
+
+.scrape-discard-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.scrape-drafts {
+  @apply mt-6;
+}
+
+.scrape-draft-card {
+  @apply rounded-xl p-4 mb-3;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+}
+
+.scrape-draft-info {
+  @apply flex items-center justify-between mb-3;
+}
+
+.scrape-draft-level {
+  @apply text-sm font-medium;
+  color: var(--dm-umber);
+}
+
+.scrape-draft-count {
+  @apply text-xs;
+  font-family: var(--font-mono);
+  color: var(--dm-dust);
+}
+
+.scrape-draft-actions {
+  @apply flex gap-2;
+}
+
+.scrape-draft-btn {
+  @apply py-2 text-xs;
 }

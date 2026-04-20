@@ -138,14 +138,18 @@ function splitByPosition(players: TryoutPlayer[]) {
 
 /* ── Component ───────────────────────────────────────── */
 
+type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
+
 type PredictionBoardProps = {
   players: TryoutPlayer[]
   teams: Team[]
   savedOrders: Record<string, string[]>
   savedPreviousOrders: Record<string, string[]>
   positionFilter?: string | null
+  annotations?: Annotations
   onOrderChange?: (division: string, playerIds: string[]) => void
   onPlayerLongPress?: (player: TryoutPlayer) => void
+  onToggleFavorite?: (playerId: string) => void
 }
 
 export function PredictionBoard({
@@ -154,8 +158,10 @@ export function PredictionBoard({
   savedOrders,
   savedPreviousOrders,
   positionFilter,
+  annotations,
   onOrderChange,
   onPlayerLongPress,
+  onToggleFavorite,
 }: PredictionBoardProps) {
   const sorted = useMemo(() => sortTeams(teams), [teams])
 
@@ -386,7 +392,9 @@ export function PredictionBoard({
           players={section.players}
           isOfficial={section.isOfficial}
           index={i}
+          annotations={annotations}
           onPlayerLongPress={onPlayerLongPress}
+          onToggleFavorite={onToggleFavorite}
         />
       ))}
     </DndContext>

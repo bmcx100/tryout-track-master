@@ -132,7 +132,10 @@ export type Database = {
           is_final_team: boolean
           jersey_numbers: string[]
           round_number: number
+          scraped_at: string | null
           sessions: Json
+          source_url: string | null
+          status: string
           team_level: string
         }
         Insert: {
@@ -144,7 +147,10 @@ export type Database = {
           is_final_team?: boolean
           jersey_numbers: string[]
           round_number: number
+          scraped_at?: string | null
           sessions?: Json
+          source_url?: string | null
+          status?: string
           team_level: string
         }
         Update: {
@@ -156,12 +162,50 @@ export type Database = {
           is_final_team?: boolean
           jersey_numbers?: string[]
           round_number?: number
+          scraped_at?: string | null
           sessions?: Json
+          source_url?: string | null
+          status?: string
           team_level?: string
         }
         Relationships: [
           {
             foreignKeyName: "continuation_rounds_association_id_fkey"
+            columns: ["association_id"]
+            isOneToOne: false
+            referencedRelation: "associations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      continuations_urls: {
+        Row: {
+          association_id: string
+          created_at: string
+          division: string
+          id: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          association_id: string
+          created_at?: string
+          division: string
+          id?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          association_id?: string
+          created_at?: string
+          division?: string
+          id?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "continuations_urls_association_id_fkey"
             columns: ["association_id"]
             isOneToOne: false
             referencedRelation: "associations"
@@ -232,6 +276,7 @@ export type Database = {
       player_annotations: {
         Row: {
           created_at: string
+          custom_name: string | null
           id: string
           is_favorite: boolean
           notes: string | null
@@ -241,6 +286,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custom_name?: string | null
           id?: string
           is_favorite?: boolean
           notes?: string | null
@@ -250,6 +296,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custom_name?: string | null
           id?: string
           is_favorite?: boolean
           notes?: string | null

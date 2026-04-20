@@ -6,12 +6,16 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import type { TryoutPlayer } from "@/types"
 import { PlayerRow } from "./player-row"
 
+type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
+
 type TeamSectionProps = {
   teamName: string
   players: TryoutPlayer[]
   isOfficial: boolean
   index: number
+  annotations?: Annotations
   onPlayerLongPress?: (player: TryoutPlayer) => void
+  onToggleFavorite?: (playerId: string) => void
 }
 
 export function TeamSection({
@@ -19,7 +23,9 @@ export function TeamSection({
   players,
   isOfficial,
   index,
+  annotations,
   onPlayerLongPress,
+  onToggleFavorite,
 }: TeamSectionProps) {
   const [isExpanded, setIsExpanded] = useState(!isOfficial)
   const tones = ["team-header-tone-1", "team-header-tone-2", "team-header-tone-3"]
@@ -52,14 +58,20 @@ export function TeamSection({
           items={players.map((p) => p.id)}
           strategy={verticalListSortingStrategy}
         >
-          {players.map((player) => (
-            <PlayerRow
-              key={player.id}
-              player={player}
-              isLocked={isOfficial}
-              onLongPress={onPlayerLongPress}
-            />
-          ))}
+          {players.map((player) => {
+            const ann = annotations?.[player.id]
+            return (
+              <PlayerRow
+                key={player.id}
+                player={player}
+                isLocked={isOfficial}
+                isFavorite={ann?.isFavorite}
+                customName={ann?.customName}
+                onLongPress={onPlayerLongPress}
+                onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(player.id) : undefined}
+              />
+            )
+          })}
         </SortableContext>
       )}
     </div>

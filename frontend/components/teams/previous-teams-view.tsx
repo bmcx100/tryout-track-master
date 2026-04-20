@@ -102,12 +102,16 @@ function PreviousTeamSection({
   label,
   players,
   index,
+  annotations,
   onPlayerLongPress,
+  onToggleFavorite,
 }: {
   label: string
   players: TryoutPlayer[]
   index: number
+  annotations?: Annotations
   onPlayerLongPress?: (player: TryoutPlayer) => void
+  onToggleFavorite?: (playerId: string) => void
 }) {
   const [isExpanded, setIsExpanded] = useState(true)
   const tones = ["team-header-tone-1", "team-header-tone-2", "team-header-tone-3"]
@@ -136,14 +140,20 @@ function PreviousTeamSection({
           items={players.map((p) => p.id)}
           strategy={verticalListSortingStrategy}
         >
-          {players.map((player) => (
-            <PlayerRow
-              key={player.id}
-              player={player}
-              isLocked={false}
-              onLongPress={onPlayerLongPress}
-            />
-          ))}
+          {players.map((player) => {
+            const ann = annotations?.[player.id]
+            return (
+              <PlayerRow
+                key={player.id}
+                player={player}
+                isLocked={false}
+                isFavorite={ann?.isFavorite}
+                customName={ann?.customName}
+                onLongPress={onPlayerLongPress}
+                onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(player.id) : undefined}
+              />
+            )
+          })}
         </SortableContext>
       )}
     </div>
@@ -152,20 +162,26 @@ function PreviousTeamSection({
 
 /* ── Main component ──────────────────────────────────── */
 
+type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
+
 type PreviousTeamsViewProps = {
   players: TryoutPlayer[]
   savedOrders: Record<string, string[]>
   positionFilter?: string | null
+  annotations?: Annotations
   onOrderChange?: (previousTeam: string, playerIds: string[]) => void
   onPlayerLongPress?: (player: TryoutPlayer) => void
+  onToggleFavorite?: (playerId: string) => void
 }
 
 export function PreviousTeamsView({
   players,
   savedOrders,
   positionFilter,
+  annotations,
   onOrderChange,
   onPlayerLongPress,
+  onToggleFavorite,
 }: PreviousTeamsViewProps) {
   const groups = useMemo(() => groupByPreviousTeam(players), [players])
 
@@ -275,7 +291,9 @@ export function PreviousTeamsView({
           label={label}
           players={groupPlayers}
           index={i}
+          annotations={annotations}
           onPlayerLongPress={onPlayerLongPress}
+          onToggleFavorite={onToggleFavorite}
         />
       ))}
     </DndContext>

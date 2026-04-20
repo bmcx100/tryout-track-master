@@ -9,6 +9,7 @@ export type PlayerPrediction = Tables<"player_predictions">
 export type PlayerHeart = Tables<"player_hearts">
 export type ContinuationRound = Tables<"continuation_rounds">
 export type PlayerAnnotation = Tables<"player_annotations">
+export type ContinuationsUrl = Tables<"continuations_urls">
 
 // UI-specific display types (extend DB types with computed fields)
 export type PlayerWithTeam = TryoutPlayer & {

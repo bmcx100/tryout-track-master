@@ -13,6 +13,9 @@ import {
   resetPredictionOrders,
   resetPreviousTeamOrders,
 } from "@/app/(app)/teams/actions"
+import { toggleFavorite, saveCustomName } from "@/app/(app)/annotations/actions"
+
+type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
 
 type TeamsPageClientProps = {
   players: TryoutPlayer[]
@@ -20,6 +23,7 @@ type TeamsPageClientProps = {
   savedOrders: Record<string, string[]>
   savedPreviousOrders: Record<string, string[]>
   associationId: string
+  annotations: Annotations
 }
 
 export function TeamsPageClient({
@@ -28,6 +32,7 @@ export function TeamsPageClient({
   savedOrders,
   savedPreviousOrders,
   associationId,
+  annotations: initialAnnotations,
 }: TeamsPageClientProps) {
   const [activeView, setActiveView] = useState<"predictions" | "previous">("predictions")
   const [activePosition, setActivePosition] = useState<string | null>(null)
@@ -36,6 +41,7 @@ export function TeamsPageClient({
   const [currentPredictionOrders, setCurrentPredictionOrders] = useState(savedOrders)
   const [currentPreviousOrders, setCurrentPreviousOrders] = useState(savedPreviousOrders)
   const [isResetting, setIsResetting] = useState(false)
+  const [annotations, setAnnotations] = useState<Annotations>(initialAnnotations)
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   const savePreviousTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
@@ -75,6 +81,33 @@ export function TeamsPageClient({
     setResetKey((k) => k + 1)
   }, [activePosition, activeView, associationId])
 
+  const handleToggleFavorite = useCallback((playerId: string) => {
+    // Optimistic update
+    setAnnotations((prev) => {
+      const existing = prev[playerId]
+      if (existing) {
+        return { ...prev, [playerId]: { ...existing, isFavorite: !existing.isFavorite } }
+      }
+      return { ...prev, [playerId]: { isFavorite: true, notes: null, customName: null } }
+    })
+    // Server action (fire and forget)
+    toggleFavorite(playerId)
+  }, [])
+
+  const handleSaveName = useCallback((playerId: string, customName: string) => {
+    setAnnotations((prev) => {
+      const existing = prev[playerId]
+      const nameValue = customName || null
+      if (existing) {
+        return { ...prev, [playerId]: { ...existing, customName: nameValue } }
+      }
+      return { ...prev, [playerId]: { isFavorite: false, notes: null, customName: nameValue } }
+    })
+    saveCustomName(playerId, customName)
+  }, [])
+
+  const selectedAnn = selectedPlayer ? annotations[selectedPlayer.id] : null
+
   const instructionText = activePosition
     ? `Showing ${activePosition === "F" ? "forwards" : activePosition === "D" ? "defensemen" : "goalies"} only \u2014 drag to\u00a0reorder`
     : "Drag players up and down between\u00a0teams"
@@ -99,8 +132,10 @@ export function TeamsPageClient({
           savedOrders={currentPredictionOrders}
           savedPreviousOrders={currentPreviousOrders}
           positionFilter={activePosition}
+          annotations={annotations}
           onOrderChange={handleOrderChange}
           onPlayerLongPress={setSelectedPlayer}
+          onToggleFavorite={handleToggleFavorite}
         />
       ) : (
         <PreviousTeamsView
@@ -108,15 +143,21 @@ export function TeamsPageClient({
           players={players}
           savedOrders={currentPreviousOrders}
           positionFilter={activePosition}
+          annotations={annotations}
           onOrderChange={handlePreviousOrderChange}
           onPlayerLongPress={setSelectedPlayer}
+          onToggleFavorite={handleToggleFavorite}
         />
       )}
 
       {selectedPlayer && (
         <LongPressMenu
           player={selectedPlayer}
+          isFavorite={selectedAnn?.isFavorite ?? false}
+          customName={selectedAnn?.customName ?? null}
           onClose={() => setSelectedPlayer(null)}
+          onToggleFavorite={() => handleToggleFavorite(selectedPlayer.id)}
+          onSaveName={(name) => handleSaveName(selectedPlayer.id, name)}
         />
       )}
     </>

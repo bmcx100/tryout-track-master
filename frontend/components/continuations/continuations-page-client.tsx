@@ -3,12 +3,11 @@
 import { useState, useCallback } from "react"
 import type { ContinuationRound, TryoutPlayer } from "@/types"
 import { RoundSection } from "./round-section"
-import { RoundHistoryModal } from "./round-history-modal"
 import { toggleFavorite } from "@/app/(app)/continuations/actions"
 
 type ContinuationsPageClientProps = {
   players: TryoutPlayer[]
-  rounds: { teamLevel: string, latestRound: ContinuationRound, previousRound: ContinuationRound | null }[]
+  rounds: { teamLevel: string, allRounds: ContinuationRound[] }[]
   annotations: Record<string, { isFavorite: boolean, notes: string | null }>
   associationId: string
   division: string
@@ -22,7 +21,6 @@ export function ContinuationsPageClient({
   division,
 }: ContinuationsPageClientProps) {
   const [annotations, setAnnotations] = useState(initialAnnotations)
-  const [historyTeamLevel, setHistoryTeamLevel] = useState<string | null>(null)
 
   // Build jersey-number-to-player lookup (keyed by jersey_number)
   const playerMap: Record<string, TryoutPlayer> = {}
@@ -77,21 +75,12 @@ export function ContinuationsPageClient({
           key={r.teamLevel}
           teamLevel={r.teamLevel}
           division={division}
-          latestRound={r.latestRound}
-          previousRound={r.previousRound}
+          allRounds={r.allRounds}
           playerMap={playerMap}
           annotations={annotations}
           onToggleFavorite={handleToggleFavorite}
-          onOpenHistory={setHistoryTeamLevel}
         />
       ))}
-      <RoundHistoryModal
-        teamLevel={historyTeamLevel ?? ""}
-        division={division}
-        associationId={associationId}
-        isOpen={historyTeamLevel !== null}
-        onClose={() => setHistoryTeamLevel(null)}
-      />
     </div>
   )
 }

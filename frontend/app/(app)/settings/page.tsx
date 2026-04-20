@@ -1,8 +1,19 @@
-export default function SettingsPage() {
+import { requireAssociation } from "@/lib/auth"
+import { SettingsPageClient } from "@/components/settings/settings-page-client"
+
+export default async function SettingsPage() {
+  const { user, associationId, role, association } = await requireAssociation()
+
+  const email = user.email ?? ""
+  const initials = email.substring(0, 2).toUpperCase()
+
   return (
-    <div className="dashboard-placeholder">
-      <h1 className="dashboard-placeholder-title">Settings</h1>
-      <p className="dashboard-placeholder-text">Profile and preferences coming&nbsp;soon</p>
-    </div>
+    <SettingsPageClient
+      email={email}
+      initials={initials}
+      role={role}
+      associationName={association.name}
+      associationId={associationId}
+    />
   )
 }

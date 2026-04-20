@@ -8,7 +8,7 @@ const TEAM_TIER_ORDER = ["AA", "A", "BB", "B", "C"]
 export async function getLatestRounds(
   associationId: string,
   division: string
-): Promise<{ teamLevel: string, latestRound: ContinuationRound, previousRound: ContinuationRound | null }[]> {
+): Promise<{ teamLevel: string, allRounds: ContinuationRound[] }[]> {
   const supabase = await createClient()
 
   const { data: rounds } = await supabase
@@ -16,23 +16,21 @@ export async function getLatestRounds(
     .select("*")
     .eq("association_id", associationId)
     .eq("division", division)
+    .eq("status", "published")
     .order("round_number", { ascending: false })
 
   if (!rounds || rounds.length === 0) return []
 
-  // Group by team_level
+  // Group by team_level (already sorted by round_number DESC)
   const byTeam: Record<string, ContinuationRound[]> = {}
   for (const round of rounds) {
     if (!byTeam[round.team_level]) byTeam[round.team_level] = []
     byTeam[round.team_level].push(round)
   }
 
-  // For each team_level, get latest and previous
-  const result: { teamLevel: string, latestRound: ContinuationRound, previousRound: ContinuationRound | null }[] = []
+  const result: { teamLevel: string, allRounds: ContinuationRound[] }[] = []
   for (const [teamLevel, teamRounds] of Object.entries(byTeam)) {
-    const latest = teamRounds[0]
-    const previous = teamRounds.length > 1 ? teamRounds[1] : null
-    result.push({ teamLevel, latestRound: latest, previousRound: previous })
+    result.push({ teamLevel, allRounds: teamRounds })
   }
 
   // Sort by tier order
@@ -63,34 +61,10 @@ export async function getAllRoundsForTeam(
   return rounds ?? []
 }
 
-export async function toggleFavorite(playerId: string): Promise<{ isFavorite: boolean, error?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { isFavorite: false, error: "Not authenticated" }
-
-  // Check if annotation exists
-  const { data: existing } = await supabase
-    .from("player_annotations")
-    .select("id, is_favorite")
-    .eq("user_id", user.id)
-    .eq("player_id", playerId)
-    .maybeSingle()
-
-  if (existing) {
-    const newValue = !existing.is_favorite
-    const { error } = await supabase
-      .from("player_annotations")
-      .update({ is_favorite: newValue })
-      .eq("id", existing.id)
-    if (error) return { isFavorite: existing.is_favorite, error: error.message }
-    return { isFavorite: newValue }
-  } else {
-    const { error } = await supabase
-      .from("player_annotations")
-      .insert({ user_id: user.id, player_id: playerId, is_favorite: true })
-    if (error) return { isFavorite: false, error: error.message }
-    return { isFavorite: true }
-  }
+// Wrapper for shared annotation action (re-export doesn't work in "use server" files)
+import { toggleFavorite as _toggleFavorite } from "@/app/(app)/annotations/actions"
+export async function toggleFavorite(playerId: string) {
+  return _toggleFavorite(playerId)
 }
 
 export async function savePlayerNote(
@@ -116,25 +90,9 @@ export async function savePlayerNote(
   return {}
 }
 
-export async function getPlayerAnnotations(
-  associationId: string
-): Promise<Record<string, { isFavorite: boolean, notes: string | null }>> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return {}
-
-  // Fetch all annotations for current user where the player belongs to this association
-  const { data: annotations } = await supabase
-    .from("player_annotations")
-    .select("player_id, is_favorite, notes, tryout_players!inner(association_id)")
-    .eq("user_id", user.id)
-    .eq("tryout_players.association_id", associationId)
-
-  const result: Record<string, { isFavorite: boolean, notes: string | null }> = {}
-  for (const ann of annotations ?? []) {
-    result[ann.player_id] = { isFavorite: ann.is_favorite, notes: ann.notes }
-  }
-  return result
+import { getPlayerAnnotations as _getPlayerAnnotations } from "@/app/(app)/annotations/actions"
+export async function getPlayerAnnotations(associationId: string) {
+  return _getPlayerAnnotations(associationId)
 }
 
 export async function lockFinalTeam(roundId: string): Promise<{ error?: string, count?: number }> {

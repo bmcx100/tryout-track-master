@@ -1,6 +1,8 @@
 import { requireAssociation } from "@/lib/auth"
 import { DivisionSwitcher } from "@/components/layout/division-switcher"
 import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
+import { getMyPlayersCount } from "@/app/(app)/annotations/actions"
+import { MyPlayersCard } from "@/components/dashboard/my-players-card"
 import Link from "next/link"
 import { Home, Users, ListChecks } from "lucide-react"
 
@@ -19,6 +21,8 @@ export default async function DashboardPage() {
     ? divisions.reduce((a, b) => a.playerCount > b.playerCount ? a : b).division
     : ""
   const activeDivision = savedDivision ?? defaultDivision
+
+  const myPlayersCount = await getMyPlayersCount(associationId)
 
   return (
     <>
@@ -88,6 +92,7 @@ export default async function DashboardPage() {
             from each&nbsp;team&nbsp;level
           </p>
         </Link>
+        <MyPlayersCard count={myPlayersCount} />
       </div>
     </>
   )

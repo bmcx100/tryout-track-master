@@ -1,6 +1,6 @@
 "use client"
 
-import { GripVertical, Check } from "lucide-react"
+import { GripVertical, Check, Heart } from "lucide-react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import type { TryoutPlayer } from "@/types"
@@ -8,10 +8,20 @@ import type { TryoutPlayer } from "@/types"
 type PlayerRowProps = {
   player: TryoutPlayer
   isLocked: boolean
+  isFavorite?: boolean
+  customName?: string | null
   onLongPress?: (player: TryoutPlayer) => void
+  onToggleFavorite?: () => void
 }
 
-export function PlayerRow({ player, isLocked, onLongPress }: PlayerRowProps) {
+export function PlayerRow({
+  player,
+  isLocked,
+  isFavorite,
+  customName,
+  onLongPress,
+  onToggleFavorite,
+}: PlayerRowProps) {
   const {
     attributes,
     listeners,
@@ -29,6 +39,8 @@ export function PlayerRow({ player, isLocked, onLongPress }: PlayerRowProps) {
     transition,
     opacity: isDragging ? 0.5 : 1,
   }
+
+  const displayName = customName || player.name
 
   return (
     <div
@@ -50,7 +62,23 @@ export function PlayerRow({ player, isLocked, onLongPress }: PlayerRowProps) {
       {player.position && player.position !== "?" && (
         <span className="player-position">{player.position}</span>
       )}
-      <span className="player-name">{player.name}</span>
+      {onToggleFavorite && (
+        <button
+          className={isFavorite ? "favorite-btn favorite-btn-active" : "favorite-btn"}
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggleFavorite()
+          }}
+        >
+          <Heart size={14} fill={isFavorite ? "currentColor" : "none"} />
+        </button>
+      )}
+      <span className="player-name">
+        {displayName}
+        {customName && player.name && customName !== player.name && (
+          <span className="custom-name-indicator">{player.name}</span>
+        )}
+      </span>
       {player.previous_team && (
         <span className="player-prev-team">{player.previous_team}</span>
       )}
