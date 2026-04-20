@@ -1065,32 +1065,49 @@ body:has(.admin-shell) {
   text-wrap: balance;
 }
 
-.join-form {
-  @apply w-full max-w-sm flex flex-col gap-4;
+.join-list {
+  @apply w-full max-w-sm flex flex-col gap-3;
 }
 
-.join-input-group {
-  @apply flex flex-col gap-1;
-}
-
-.join-label {
-  @apply text-xs uppercase tracking-wider;
-  font-family: var(--font-ibm-plex-mono);
-  color: var(--dm-dust);
-}
-
-.join-input {
-  @apply rounded-md border px-3 py-2 text-center text-lg tracking-widest;
-  font-family: var(--font-ibm-plex-mono);
+.join-card {
+  @apply flex items-center gap-3 w-full rounded-lg border px-4 py-3 text-left;
   border-color: oklch(1 0 0 / 10%);
   background: var(--dm-dune);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.join-card:hover:not(:disabled) {
+  border-color: var(--dm-gold);
+  background: oklch(from var(--dm-dune) l c h / 80%);
+}
+
+.join-card:disabled {
+  @apply opacity-60 cursor-not-allowed;
+}
+
+.join-card-abbr {
+  @apply text-xs font-semibold uppercase tracking-wider shrink-0;
+  @apply flex items-center justify-center rounded-md;
+  width: 3rem;
+  height: 2.25rem;
+  font-family: var(--font-ibm-plex-mono);
+  background: var(--dm-gold);
+  color: var(--dm-parchment);
+}
+
+.join-card-name {
+  @apply text-sm font-medium flex-1;
   color: var(--dm-umber);
 }
 
-.join-input:focus {
-  @apply outline-none ring-2;
-  ring-color: var(--dm-gold);
-  border-color: var(--dm-gold);
+.join-card-loading {
+  @apply text-xs;
+  color: var(--dm-dust);
+}
+
+.join-empty {
+  @apply text-sm text-center;
+  color: var(--dm-dust);
 }
 
 .join-error {
