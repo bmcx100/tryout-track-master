@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, useCallback, useRef } from "react"
+import { Plus, Clock } from "lucide-react"
 import type { TryoutPlayer, Team } from "@/types"
 import { ViewToggle } from "./view-toggle"
 import { PositionFilter } from "./position-filter"
 import { PredictionBoard } from "./prediction-board"
 import { PreviousTeamsView } from "./previous-teams-view"
 import { LongPressMenu } from "./long-press-menu"
+import { AddPlayerSheet } from "./add-player-sheet"
 import {
   savePredictionOrder,
   savePreviousTeamOrder,
@@ -14,7 +16,7 @@ import {
   resetPreviousTeamOrders,
 } from "@/app/(app)/teams/actions"
 import { toggleFavorite, saveCustomName, savePlayerNote } from "@/app/(app)/annotations/actions"
-import { submitCorrection } from "@/app/(app)/corrections/actions"
+import { submitCorrection, suggestPlayer } from "@/app/(app)/corrections/actions"
 import { adminUpdatePlayer, adminDeletePlayer } from "@/app/(app)/players/actions"
 
 type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
@@ -25,6 +27,7 @@ type TeamsPageClientProps = {
   savedOrders: Record<string, string[]>
   savedPreviousOrders: Record<string, string[]>
   associationId: string
+  division: string
   annotations: Annotations
   role: string
 }
@@ -35,11 +38,13 @@ export function TeamsPageClient({
   savedOrders,
   savedPreviousOrders,
   associationId,
+  division,
   annotations: initialAnnotations,
   role,
 }: TeamsPageClientProps) {
   const isAdmin = role === "group_admin" || role === "admin"
   const [players, setPlayers] = useState(initialPlayers)
+  const [showAddPlayer, setShowAddPlayer] = useState(false)
   const [activeView, setActiveView] = useState<"predictions" | "previous">("previous")
   const [activePosition, setActivePosition] = useState<string | null>(null)
   const [resetKey, setResetKey] = useState(0)
@@ -145,6 +150,19 @@ export function TeamsPageClient({
     }
   }, [])
 
+  const handleSuggestPlayer = useCallback(async (
+    name: string,
+    jerseyNumber: string,
+    position: string,
+  ) => {
+    const result = await suggestPlayer(associationId, division, name, jerseyNumber, position)
+    if (result.player) {
+      setPlayers((prev) => [...prev, result.player!])
+      setShowAddPlayer(false)
+    }
+    return result
+  }, [associationId, division])
+
   const selectedAnn = selectedPlayer ? annotations[selectedPlayer.id] : null
 
   const instructionText = activePosition
@@ -186,6 +204,22 @@ export function TeamsPageClient({
           onOrderChange={handlePreviousOrderChange}
           onPlayerLongPress={setSelectedPlayer}
           onToggleFavorite={handleToggleFavorite}
+        />
+      )}
+
+      {!isAdmin && (
+        <button className="add-player-row" onClick={() => setShowAddPlayer(true)}>
+          <Plus size={14} />
+          <span>Add a player</span>
+          <Clock size={10} className="add-player-row-hint" />
+          <span className="add-player-row-hint">Requires approval</span>
+        </button>
+      )}
+
+      {showAddPlayer && (
+        <AddPlayerSheet
+          onClose={() => setShowAddPlayer(false)}
+          onSubmit={handleSuggestPlayer}
         />
       )}
 

@@ -23,7 +23,7 @@ export default async function TeamsPage() {
     : ""
   const activeDivision = savedDivision ?? defaultDivision
 
-  // Fetch players filtered by active division
+  // Fetch approved players
   const { data: playersData } = await supabase
     .from("tryout_players")
     .select("*")
@@ -31,6 +31,16 @@ export default async function TeamsPage() {
     .eq("division", activeDivision)
     .is("deleted_at", null)
     .is("suggested_by", null)
+    .order("name")
+
+  // Fetch the current user's suggested (pending) players
+  const { data: suggestedData } = await supabase
+    .from("tryout_players")
+    .select("*")
+    .eq("association_id", associationId)
+    .eq("division", activeDivision)
+    .is("deleted_at", null)
+    .eq("suggested_by", user.id)
     .order("name")
 
   // Fetch teams filtered by active division
@@ -42,7 +52,7 @@ export default async function TeamsPage() {
     .eq("is_archived", false)
     .order("display_order")
 
-  const allPlayers: TryoutPlayer[] = playersData ?? []
+  const allPlayers: TryoutPlayer[] = [...(playersData ?? []), ...(suggestedData ?? [])]
   const allTeams: Team[] = teamsData ?? []
 
   // Fetch user's saved predictions for active division
@@ -98,6 +108,7 @@ export default async function TeamsPage() {
         savedOrders={savedOrders}
         savedPreviousOrders={savedPreviousOrders}
         associationId={associationId}
+        division={activeDivision}
         annotations={annotations}
         role={role}
       />

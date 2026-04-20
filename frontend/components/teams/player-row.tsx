@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useCallback } from "react"
-import { GripVertical, Check, Heart, FileText } from "lucide-react"
+import { GripVertical, Check, Heart, FileText, Clock } from "lucide-react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import type { TryoutPlayer } from "@/types"
@@ -10,6 +10,7 @@ type PlayerRowProps = {
   player: TryoutPlayer
   isLocked: boolean
   isFavorite?: boolean
+  isSuggested?: boolean
   customName?: string | null
   noteText?: string | null
   onLongPress?: (player: TryoutPlayer) => void
@@ -23,6 +24,7 @@ export function PlayerRow({
   player,
   isLocked,
   isFavorite,
+  isSuggested,
   customName,
   noteText,
   onLongPress,
@@ -89,7 +91,7 @@ export function PlayerRow({
     <div
       ref={setNodeRef}
       style={style}
-      className="player-row"
+      className={isSuggested ? "player-row player-row-suggested" : "player-row"}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -142,9 +144,14 @@ export function PlayerRow({
           </span>
         )}
       </span>
-      {player.previous_team && (
+      {isSuggested ? (
+        <span className="player-pending-badge">
+          <Clock size={10} />
+          Pending
+        </span>
+      ) : player.previous_team ? (
         <span className="player-prev-team">{player.previous_team}</span>
-      )}
+      ) : null}
     </div>
   )
 }

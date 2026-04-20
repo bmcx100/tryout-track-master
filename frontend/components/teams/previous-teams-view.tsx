@@ -148,6 +148,7 @@ function PreviousTeamSection({
                 player={player}
                 isLocked={false}
                 isFavorite={ann?.isFavorite}
+                isSuggested={!!player.suggested_by}
                 customName={ann?.customName}
                 noteText={ann?.notes}
                 onLongPress={onPlayerLongPress}

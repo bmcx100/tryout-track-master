@@ -64,6 +64,7 @@ export function TeamSection({
                 player={player}
                 isLocked={isOfficial}
                 isFavorite={ann?.isFavorite}
+                isSuggested={!!player.suggested_by}
                 customName={ann?.customName}
                 noteText={ann?.notes}
                 onLongPress={onPlayerLongPress}

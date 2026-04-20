@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import type { TryoutPlayer } from "@/types"
 
 export async function submitCorrection(
   playerId: string,
@@ -190,6 +191,49 @@ export async function reviewCorrection(
 
   if (error) return { error: error.message }
   return {}
+}
+
+export async function suggestPlayer(
+  associationId: string,
+  division: string,
+  name: string,
+  jerseyNumber: string,
+  position: string,
+): Promise<{ error?: string, player?: TryoutPlayer }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { data: player, error: insertError } = await supabase
+    .from("tryout_players")
+    .insert({
+      association_id: associationId,
+      division,
+      name,
+      jersey_number: jerseyNumber,
+      position,
+      suggested_by: user.id,
+      status: "trying_out",
+    })
+    .select()
+    .single()
+
+  if (insertError) return { error: insertError.message }
+
+  const { error: correctionError } = await supabase
+    .from("corrections")
+    .insert({
+      player_id: player.id,
+      user_id: user.id,
+      association_id: associationId,
+      field_name: "add_player",
+      old_value: "",
+      new_value: `${name} #${jerseyNumber} (${position})`,
+      status: "pending",
+    })
+
+  if (correctionError) return { error: correctionError.message }
+  return { player: player as TryoutPlayer }
 }
 
 export async function reviewSuggestedPlayer(
