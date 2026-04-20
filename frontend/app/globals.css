@@ -2196,6 +2196,54 @@ body:has(.admin-shell) {
 }
 
 /* ============================================================
+   Jersey Warning Popup (admin — continuations context)
+   ============================================================ */
+
+.jersey-warning-popup {
+  @apply fixed bottom-0 left-0 right-0 z-40 rounded-t-3xl px-5 pb-8 pt-5;
+  background: oklch(0.18 0 0);
+  box-shadow: var(--dm-shadow-lg);
+  animation: slideUp 200ms ease-out;
+}
+
+@media (min-width: 640px) {
+  .jersey-warning-popup {
+    @apply absolute;
+    max-width: 393px;
+  }
+}
+
+.jersey-warning-popup-title {
+  @apply text-base font-bold mb-2;
+  color: var(--dm-umber);
+}
+
+.jersey-warning-popup-text {
+  @apply text-sm mb-4;
+  color: var(--dm-dust);
+}
+
+.jersey-warning-popup-actions {
+  @apply flex gap-3;
+}
+
+.jersey-warning-popup-confirm {
+  @apply flex-1 rounded-xl py-3 text-sm font-semibold;
+  background: var(--dm-cinnabar);
+  color: oklch(1 0 0);
+  border: none;
+  cursor: pointer;
+}
+
+.jersey-warning-popup-cancel {
+  @apply flex-1 rounded-xl py-3 text-sm font-semibold;
+  background: oklch(1 0 0 / 8%);
+  color: var(--dm-dust);
+  border: none;
+  cursor: pointer;
+}
+
+/* ============================================================
    Avatar Badge (red dot on profile avatar)
    ============================================================ */
 

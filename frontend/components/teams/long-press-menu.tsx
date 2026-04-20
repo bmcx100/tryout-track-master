@@ -15,8 +15,9 @@ type LongPressMenuProps = {
   onSaveNote: (note: string) => void
   onSubmitCorrection: (fieldName: string, oldValue: string, newValue: string) => void
   isAdmin?: boolean
-  onAdminUpdate?: (updates: { name?: string, jersey_number?: string, position?: string }) => Promise<{ error?: string }>
+  onAdminUpdate?: (updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string }) => Promise<{ error?: string }>
   onDelete?: () => void
+  context?: "teams" | "continuations"
 }
 
 const POSITIONS = ["F", "D", "G"]
@@ -34,22 +35,27 @@ export function LongPressMenu({
   isAdmin = false,
   onAdminUpdate,
   onDelete,
+  context = "teams",
 }: LongPressMenuProps) {
   const [nameValue, setNameValue] = useState(
     isAdmin ? (player.name ?? "") : (customName ?? player.name ?? "")
   )
   const [jerseyValue, setJerseyValue] = useState(player.jersey_number ?? "")
   const [positionValue, setPositionValue] = useState(player.position ?? "?")
+  const [previousTeamValue, setPreviousTeamValue] = useState(player.previous_team ?? "")
   const [noteValue, setNoteValue] = useState(note ?? "")
   const [showCorrectionPopup, setShowCorrectionPopup] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showJerseyWarning, setShowJerseyWarning] = useState(false)
   const [adminError, setAdminError] = useState<string | null>(null)
   const [pendingCorrections, setPendingCorrections] = useState<{ fieldName: string, oldValue: string, newValue: string }[]>([])
+  const [pendingAdminUpdates, setPendingAdminUpdates] = useState<Record<string, string> | null>(null)
   const noteSaved = useRef(false)
 
   // Capture values at mount time for correction detection
   const nameAtOpen = useRef(isAdmin ? (player.name ?? "") : (customName ?? player.name ?? ""))
   const jerseyAtOpen = useRef(player.jersey_number ?? "")
+  const previousTeamAtOpen = useRef(player.previous_team ?? "")
 
   // Official DB values for correction submission
   const officialName = player.name ?? ""
@@ -72,9 +78,10 @@ export function LongPressMenu({
 
     if (isAdmin && onAdminUpdate) {
       // Admin mode: collect changed fields and save directly
-      const updates: { name?: string, jersey_number?: string, position?: string } = {}
+      const updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string } = {}
       const trimmedName = nameValue.trim()
       const trimmedJersey = jerseyValue.trim()
+      const trimmedPreviousTeam = previousTeamValue.trim()
 
       if (trimmedName && trimmedName !== officialName) {
         updates.name = trimmedName
@@ -85,8 +92,18 @@ export function LongPressMenu({
       if (positionValue !== (player.position ?? "?")) {
         updates.position = positionValue
       }
+      if (trimmedPreviousTeam !== previousTeamAtOpen.current) {
+        updates.previous_team = trimmedPreviousTeam || undefined
+      }
 
       if (Object.keys(updates).length > 0) {
+        // In continuations context, warn if jersey number is changing
+        if (context === "continuations" && updates.jersey_number) {
+          setPendingAdminUpdates(updates as Record<string, string>)
+          setShowJerseyWarning(true)
+          return
+        }
+
         const result = await onAdminUpdate(updates)
         if (result.error) {
           setAdminError(result.error)
@@ -140,6 +157,24 @@ export function LongPressMenu({
     }
   }
 
+  const handleJerseyWarningConfirm = async () => {
+    if (pendingAdminUpdates && onAdminUpdate) {
+      const result = await onAdminUpdate(pendingAdminUpdates)
+      if (result.error) {
+        setShowJerseyWarning(false)
+        setAdminError(result.error)
+        return
+      }
+    }
+    setShowJerseyWarning(false)
+    onClose()
+  }
+
+  const handleJerseyWarningCancel = () => {
+    setShowJerseyWarning(false)
+    setPendingAdminUpdates(null)
+  }
+
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true)
   }
@@ -147,6 +182,31 @@ export function LongPressMenu({
   const handleDeleteConfirm = () => {
     setShowDeleteConfirm(false)
     onDelete?.()
+  }
+
+  // Jersey warning popup (admin in continuations context)
+  if (showJerseyWarning) {
+    return (
+      <>
+        <div className="long-press-overlay" onClick={handleJerseyWarningCancel} />
+        <div className="jersey-warning-popup">
+          <h3 className="jersey-warning-popup-title">Change jersey&nbsp;number?</h3>
+          <p className="jersey-warning-popup-text">
+            Changing the jersey number will cause this player to no longer
+            match #{officialJersey} on the imported
+            continuations&nbsp;list.
+          </p>
+          <div className="jersey-warning-popup-actions">
+            <button className="jersey-warning-popup-confirm" onClick={handleJerseyWarningConfirm}>
+              Change Anyway
+            </button>
+            <button className="jersey-warning-popup-cancel" onClick={handleJerseyWarningCancel}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </>
+    )
   }
 
   // Correction popup (parent only)
@@ -293,7 +353,13 @@ export function LongPressMenu({
             <>
               <div className="detail-sheet-field">
                 <label className="detail-sheet-field-label">Previous Team</label>
-                <span className="detail-sheet-value">{player.previous_team || "None"}</span>
+                <input
+                  className="detail-sheet-input"
+                  type="text"
+                  value={previousTeamValue}
+                  onChange={(e) => setPreviousTeamValue(e.target.value)}
+                  placeholder="e.g. U13 AA"
+                />
               </div>
 
               {player.status === "made_team" && (

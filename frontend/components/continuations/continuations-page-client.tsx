@@ -15,6 +15,7 @@ import {
 } from "@/app/(app)/continuations/actions"
 import { saveCustomName } from "@/app/(app)/annotations/actions"
 import { submitCorrection } from "@/app/(app)/corrections/actions"
+import { adminUpdatePlayer } from "@/app/(app)/players/actions"
 
 type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
 
@@ -36,6 +37,7 @@ export function ContinuationsPageClient({
   isAdmin,
 }: ContinuationsPageClientProps) {
   const router = useRouter()
+  const [localPlayers, setLocalPlayers] = useState(players)
   const [annotations, setAnnotations] = useState(initialAnnotations)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [selectedPlayer, setSelectedPlayer] = useState<TryoutPlayer | null>(null)
@@ -44,7 +46,7 @@ export function ContinuationsPageClient({
 
   // Build jersey-number-to-player lookup (keyed by jersey_number)
   const playerMap: Record<string, TryoutPlayer> = {}
-  for (const player of players) {
+  for (const player of localPlayers) {
     if (player.jersey_number) {
       playerMap[player.jersey_number] = player
     }
@@ -108,6 +110,16 @@ export function ContinuationsPageClient({
 
   const handleSubmitCorrection = useCallback((playerId: string, fieldName: string, oldValue: string, newValue: string) => {
     submitCorrection(playerId, fieldName, oldValue, newValue)
+  }, [])
+
+  const handleAdminUpdate = useCallback(async (playerId: string, updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string }) => {
+    const result = await adminUpdatePlayer(playerId, updates)
+    if (!result.error) {
+      setLocalPlayers((prev) =>
+        prev.map((p) => p.id === playerId ? { ...p, ...updates } : p)
+      )
+    }
+    return result
   }, [])
 
   const handleLinkUnknown = useCallback((jerseyNumber: string) => {
@@ -211,6 +223,9 @@ export function ContinuationsPageClient({
           onSubmitCorrection={(fieldName, oldValue, newValue) =>
             handleSubmitCorrection(selectedPlayer.id, fieldName, oldValue, newValue)
           }
+          isAdmin={isAdmin}
+          onAdminUpdate={isAdmin ? (updates) => handleAdminUpdate(selectedPlayer.id, updates) : undefined}
+          context="continuations"
         />
       )}
 
