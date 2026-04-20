@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useRef } from "react"
-import { Plus, Clock } from "lucide-react"
+import { Plus } from "lucide-react"
 import type { TryoutPlayer, Team } from "@/types"
 import { ViewToggle } from "./view-toggle"
 import { PositionFilter } from "./position-filter"
@@ -212,8 +212,6 @@ export function TeamsPageClient({
         <button className="add-player-row" onClick={() => setShowAddPlayer(true)}>
           <Plus size={14} />
           <span>Add a player</span>
-          <Clock size={10} className="add-player-row-hint" />
-          <span className="add-player-row-hint">Requires approval</span>
         </button>
       )}
 

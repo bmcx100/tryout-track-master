@@ -464,17 +464,6 @@
   color: var(--dm-gold);
 }
 
-.add-player-row-hint {
-  @apply ml-auto text-xs;
-  color: oklch(0.40 0 0);
-  font-size: 10px;
-}
-
-.add-player-row-hint:first-of-type {
-  margin-left: auto;
-  margin-right: 2px;
-}
-
 /* ── Add Player Sheet ────────────────────────── */
 
 .add-player-sheet-handle {
