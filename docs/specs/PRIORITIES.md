@@ -4,19 +4,19 @@ Last updated: 2026-04-20
 
 **Completed:** 001 (Previous teams sorting), 002 (Position filter), 003 (Continuations tracker), 004 (Division switcher), 005 (Continuations auto-scraper)
 
-**Specced (not yet implemented):** 006 (Player management — parent)
+**Specced (not yet implemented):** 006 v2 (Player management — parent: detail sheet, notes, corrections)
 
 | # | Feature | PRD Ref | Status |
 |---|---------|---------|--------|
 | 4 | Division switcher modal — tap NW-U15 badge to pick different age groups | — | Done ([004](004-division-switcher.md)) |
 | 5 | Continuations auto-scraper — scrape gowildcats.ca pages, draft/confirm workflow | FR-030 | Done ([005](005-continuations-auto-scraper.md)) |
-| 6 | Player management (parent) — hearts, private naming, My Players page | — | Specced ([006](006-player-management-parent.md)) |
+| 6 | Player management (parent) — detail sheet, notes, corrections, My Players regrouping | FR-025 | Specced v2 ([006](006-player-management-parent.md)) |
 | 7 | Admin player merge — change jersey numbers, merge with existing continuation records | — | Not started |
 | 8 | Admin player CRUD (add/edit/delete) | FR-021 | Not started |
 | 9 | Additional associations — onboard new associations beyond Nepean Wildcats. See [scraper onboarding notes](scraper-onboarding-notes.md) for handling different website structures | — | Not started |
 | 10 | Bulk status updates | FR-022 | Not started |
-| 11 | Correction submission (member) | FR-025 | Schema only |
-| 12 | Correction review queue (admin) | FR-026, FR-027 | Schema only |
+| 11 | Correction submission (member) | FR-025 | Partial (name/number via 006) |
+| 12 | Correction review queue (admin) | FR-026, FR-027 | Partial (name/number via 006) |
 | 13 | Team management (create/edit/archive) | FR-016 | Schema only |
 | 14 | Privacy notice + consent | NFR-012, NFR-013 | Not started |
 | 15 | 90-day data purge | NFR-015 | Not started |

@@ -13,6 +13,7 @@ type DivisionSwitcherProps = {
   abbreviation: string
   initials: string
   title?: string
+  hasPendingCorrections?: boolean
 }
 
 export function DivisionSwitcher({
@@ -22,6 +23,7 @@ export function DivisionSwitcher({
   abbreviation,
   initials,
   title = "Teams",
+  hasPendingCorrections,
 }: DivisionSwitcherProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -57,7 +59,9 @@ export function DivisionSwitcher({
           {label}
         </button>
         <span className="app-header-title">{title}</span>
-        <Link href="/settings" className="app-header-avatar">{initials}</Link>
+        <Link href="/settings" className={hasPendingCorrections ? "app-header-avatar avatar-badge" : "app-header-avatar"}>
+          {initials}
+        </Link>
       </header>
 
       {open && (

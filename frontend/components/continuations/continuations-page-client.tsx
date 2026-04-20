@@ -7,7 +7,7 @@ import { toggleFavorite } from "@/app/(app)/continuations/actions"
 
 type ContinuationsPageClientProps = {
   players: TryoutPlayer[]
-  rounds: { teamLevel: string, allRounds: ContinuationRound[] }[]
+  rounds: ContinuationRound[]
   annotations: Record<string, { isFavorite: boolean, notes: string | null }>
   associationId: string
   division: string
@@ -21,6 +21,7 @@ export function ContinuationsPageClient({
   division,
 }: ContinuationsPageClientProps) {
   const [annotations, setAnnotations] = useState(initialAnnotations)
+  const [selectedIndex, setSelectedIndex] = useState(0)
 
   // Build jersey-number-to-player lookup (keyed by jersey_number)
   const playerMap: Record<string, TryoutPlayer> = {}
@@ -68,19 +69,53 @@ export function ContinuationsPageClient({
     )
   }
 
+  const activeRound = rounds[selectedIndex]
+
+  // Find the previous round for the SAME team level (for computing cuts)
+  const previousRound = rounds.find(
+    (r, idx) => idx > selectedIndex && r.team_level === activeRound.team_level
+  ) ?? null
+
+  // Build dropdown label for each round
+  const getRoundLabel = (round: ContinuationRound) => {
+    const label = round.is_final_team ? "Final Team" : `Round ${round.round_number}`
+    return `${division} ${round.team_level} - ${label}`
+  }
+
   return (
     <div className="continuations-page">
-      {rounds.map((r) => (
-        <RoundSection
-          key={r.teamLevel}
-          teamLevel={r.teamLevel}
-          division={division}
-          allRounds={r.allRounds}
-          playerMap={playerMap}
-          annotations={annotations}
-          onToggleFavorite={handleToggleFavorite}
-        />
-      ))}
+      <div className="continuations-header">
+        <div className="continuations-header-left">
+          {rounds.length > 1 ? (
+            <select
+              className="continuations-round-select"
+              value={selectedIndex}
+              onChange={(e) => setSelectedIndex(Number(e.target.value))}
+            >
+              {rounds.map((r, idx) => (
+                <option key={r.id} value={idx}>
+                  {getRoundLabel(r)}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="continuations-header-title">
+              {getRoundLabel(activeRound)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <RoundSection
+        key={activeRound.id}
+        teamLevel={activeRound.team_level}
+        division={division}
+        activeRound={activeRound}
+        previousRound={previousRound}
+        playerMap={playerMap}
+        annotations={annotations}
+        onToggleFavorite={handleToggleFavorite}
+      />
     </div>
   )
 }

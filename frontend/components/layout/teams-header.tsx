@@ -5,16 +5,19 @@ type TeamsHeaderProps = {
   division?: string
   initials: string
   title?: string
+  hasPendingCorrections?: boolean
 }
 
-export function TeamsHeader({ groupLabel, division, initials, title = "Teams" }: TeamsHeaderProps) {
+export function TeamsHeader({ groupLabel, division, initials, title = "Teams", hasPendingCorrections }: TeamsHeaderProps) {
   const label = division ? `${groupLabel}-${division}` : groupLabel
 
   return (
     <header className="app-header">
       <span className="app-header-group-label">{label}</span>
       <span className="app-header-title">{title}</span>
-      <Link href="/settings" className="app-header-avatar">{initials}</Link>
+      <Link href="/settings" className={hasPendingCorrections ? "app-header-avatar avatar-badge" : "app-header-avatar"}>
+        {initials}
+      </Link>
     </header>
   )
 }

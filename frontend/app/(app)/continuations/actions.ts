@@ -3,12 +3,10 @@
 import { createClient } from "@/lib/supabase/server"
 import type { ContinuationRound } from "@/types"
 
-const TEAM_TIER_ORDER = ["AA", "A", "BB", "B", "C"]
-
-export async function getLatestRounds(
+export async function getAllPublishedRounds(
   associationId: string,
   division: string
-): Promise<{ teamLevel: string, allRounds: ContinuationRound[] }[]> {
+): Promise<ContinuationRound[]> {
   const supabase = await createClient()
 
   const { data: rounds } = await supabase
@@ -17,30 +15,9 @@ export async function getLatestRounds(
     .eq("association_id", associationId)
     .eq("division", division)
     .eq("status", "published")
-    .order("round_number", { ascending: false })
+    .order("created_at", { ascending: false })
 
-  if (!rounds || rounds.length === 0) return []
-
-  // Group by team_level (already sorted by round_number DESC)
-  const byTeam: Record<string, ContinuationRound[]> = {}
-  for (const round of rounds) {
-    if (!byTeam[round.team_level]) byTeam[round.team_level] = []
-    byTeam[round.team_level].push(round)
-  }
-
-  const result: { teamLevel: string, allRounds: ContinuationRound[] }[] = []
-  for (const [teamLevel, teamRounds] of Object.entries(byTeam)) {
-    result.push({ teamLevel, allRounds: teamRounds })
-  }
-
-  // Sort by tier order
-  result.sort((a, b) => {
-    const aIdx = TEAM_TIER_ORDER.indexOf(a.teamLevel)
-    const bIdx = TEAM_TIER_ORDER.indexOf(b.teamLevel)
-    return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx)
-  })
-
-  return result
+  return rounds ?? []
 }
 
 export async function getAllRoundsForTeam(
@@ -67,27 +44,9 @@ export async function toggleFavorite(playerId: string) {
   return _toggleFavorite(playerId)
 }
 
-export async function savePlayerNote(
-  playerId: string,
-  note: string
-): Promise<{ error?: string }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: "Not authenticated" }
-
-  const { error } = await supabase
-    .from("player_annotations")
-    .upsert(
-      {
-        user_id: user.id,
-        player_id: playerId,
-        notes: note || null,
-      },
-      { onConflict: "user_id,player_id" }
-    )
-
-  if (error) return { error: error.message }
-  return {}
+import { savePlayerNote as _savePlayerNote } from "@/app/(app)/annotations/actions"
+export async function savePlayerNote(playerId: string, note: string) {
+  return _savePlayerNote(playerId, note)
 }
 
 import { getPlayerAnnotations as _getPlayerAnnotations } from "@/app/(app)/annotations/actions"

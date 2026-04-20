@@ -16,7 +16,8 @@ type SessionData = {
 type RoundSectionProps = {
   teamLevel: string
   division: string
-  allRounds: ContinuationRound[]
+  activeRound: ContinuationRound
+  previousRound: ContinuationRound | null
   playerMap: Record<string, TryoutPlayer>
   annotations: Record<string, { isFavorite: boolean, notes: string | null }>
   onToggleFavorite: (playerId: string) => void
@@ -106,17 +107,12 @@ function buildPlayerList(
 export function RoundSection({
   teamLevel,
   division,
-  allRounds,
+  activeRound,
+  previousRound,
   playerMap,
   annotations,
   onToggleFavorite,
 }: RoundSectionProps) {
-  // allRounds is sorted by round_number DESC — index 0 is the latest
-  const [selectedIndex, setSelectedIndex] = useState(0)
-  const activeRound = allRounds[selectedIndex]
-  const previousRound = allRounds[selectedIndex + 1] ?? null
-  const isHistorical = selectedIndex > 0
-
   const sessions = (activeRound.sessions ?? []) as SessionData[]
   const sessionInfo = getSessionInfo(sessions)
   const ipPlayers = activeRound.ip_players ?? []
@@ -138,29 +134,19 @@ export function RoundSection({
     players: buildPlayerList(s.jersey_numbers, playerMap, annotations, ipPlayers),
   }))
 
-  // Expanded state: reset all to expanded when round changes
+  // Expanded state
   const [continuingExpanded, setContinuingExpanded] = useState(true)
   const [sessionExpanded, setSessionExpanded] = useState<Record<number, boolean>>(
     () => Object.fromEntries(sessions.map((s) => [s.session_number, true]))
   )
   const [cutsExpanded, setCutsExpanded] = useState(true)
-  const [prevIndex, setPrevIndex] = useState(selectedIndex)
-  if (prevIndex !== selectedIndex) {
-    setPrevIndex(selectedIndex)
-    setContinuingExpanded(true)
-    setSessionExpanded(Object.fromEntries(sessions.map((s) => [s.session_number, true])))
-    setCutsExpanded(true)
-    setSummaryExpanded(false)
-  }
 
-  // Compute cuts
+  // Compute cuts (players in previous round of same team level not in this round)
   const cuts = previousRound
     ? previousRound.jersey_numbers.filter((jn) => !activeRound.jersey_numbers.includes(jn))
     : []
 
   const cutPlayers = buildPlayerList(cuts, playerMap, annotations, [])
-
-  const roundLabel = activeRound.is_final_team ? "Final Team" : `Round ${activeRound.round_number}`
 
   const toggleSession = (num: number) => {
     setSessionExpanded((prev) => ({ ...prev, [num]: !prev[num] }))
@@ -168,31 +154,6 @@ export function RoundSection({
 
   return (
     <div>
-      <div className={`continuations-header ${isHistorical ? "continuations-header-historical" : ""}`}>
-        <div className="continuations-header-left">
-          <span className={`continuations-header-title ${isHistorical ? "continuations-header-title-historical" : ""}`}>
-            {division} {teamLevel} -
-          </span>
-          {allRounds.length > 1 ? (
-            <select
-              className={`continuations-round-select ${isHistorical ? "continuations-round-select-historical" : ""}`}
-              value={selectedIndex}
-              onChange={(e) => setSelectedIndex(Number(e.target.value))}
-            >
-              {allRounds.map((r, idx) => (
-                <option key={r.id} value={idx}>
-                  {r.is_final_team ? "Final Team" : `Round ${r.round_number}`}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <span className="continuations-header-title">{roundLabel}</span>
-          )}
-        </div>
-        {isHistorical && (
-          <span className="continuations-not-current">Not Current&nbsp;Round</span>
-        )}
-      </div>
       {sessionInfo && (
         <div className="continuations-summary-wrap">
           <button

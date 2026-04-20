@@ -1,6 +1,6 @@
 "use client"
 
-import { GripVertical, Check, Heart } from "lucide-react"
+import { GripVertical, Check, Heart, FileText } from "lucide-react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import type { TryoutPlayer } from "@/types"
@@ -10,6 +10,7 @@ type PlayerRowProps = {
   isLocked: boolean
   isFavorite?: boolean
   customName?: string | null
+  hasNotes?: boolean
   onLongPress?: (player: TryoutPlayer) => void
   onToggleFavorite?: () => void
 }
@@ -19,6 +20,7 @@ export function PlayerRow({
   isLocked,
   isFavorite,
   customName,
+  hasNotes,
   onLongPress,
   onToggleFavorite,
 }: PlayerRowProps) {
@@ -77,6 +79,11 @@ export function PlayerRow({
         {displayName}
         {customName && player.name && customName !== player.name && (
           <span className="custom-name-indicator">{player.name}</span>
+        )}
+        {hasNotes && (
+          <span className="notes-indicator">
+            <FileText size={10} />
+          </span>
         )}
       </span>
       {player.previous_team && (

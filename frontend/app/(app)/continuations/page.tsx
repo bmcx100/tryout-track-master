@@ -1,12 +1,13 @@
 import { requireAssociation } from "@/lib/auth"
 import { DivisionSwitcher } from "@/components/layout/division-switcher"
 import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
+import { getPendingCorrectionsCount } from "@/app/(app)/corrections/actions"
 import { ContinuationsPageClient } from "@/components/continuations/continuations-page-client"
-import { getLatestRounds, getPlayerAnnotations } from "./actions"
+import { getAllPublishedRounds, getPlayerAnnotations } from "./actions"
 import type { TryoutPlayer } from "@/types"
 
 export default async function ContinuationsPage() {
-  const { supabase, user, associationId, association } = await requireAssociation()
+  const { supabase, user, associationId, association, role } = await requireAssociation()
 
   const email = user.email ?? ""
   const initials = email.substring(0, 2).toUpperCase()
@@ -31,11 +32,14 @@ export default async function ContinuationsPage() {
 
   const players: TryoutPlayer[] = playersData ?? []
 
-  // Fetch latest rounds for the active division
-  const rounds = await getLatestRounds(associationId, activeDivision)
+  // Fetch all published rounds for the active division (newest first)
+  const rounds = await getAllPublishedRounds(associationId, activeDivision)
 
   // Fetch user's annotations
   const annotations = await getPlayerAnnotations(associationId)
+  const hasPendingCorrections = (role === "group_admin" || role === "admin")
+    ? (await getPendingCorrectionsCount(associationId)) > 0
+    : false
 
   return (
     <>
@@ -46,6 +50,7 @@ export default async function ContinuationsPage() {
         abbreviation={association.abbreviation}
         initials={initials}
         title="Sessions"
+        hasPendingCorrections={hasPendingCorrections}
       />
       <ContinuationsPageClient
         players={players}

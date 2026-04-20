@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, LogOut, Scan } from "lucide-react"
+import { ChevronRight, LogOut, Scan, FileCheck } from "lucide-react"
 
 type SettingsPageClientProps = {
   email: string
@@ -9,6 +9,7 @@ type SettingsPageClientProps = {
   role: string
   associationName: string
   associationId: string
+  pendingCorrectionsCount: number
 }
 
 export function SettingsPageClient({
@@ -16,6 +17,7 @@ export function SettingsPageClient({
   initials,
   role,
   associationName,
+  pendingCorrectionsCount,
 }: SettingsPageClientProps) {
   const isAdmin = role === "group_admin" || role === "admin"
 
@@ -36,6 +38,16 @@ export function SettingsPageClient({
       {isAdmin && (
         <section className="settings-section">
           <h2 className="settings-section-title">Admin</h2>
+          <Link href="/settings/corrections" className="settings-row">
+            <span className="settings-row-icon settings-row-icon-blue">
+              <FileCheck size={18} />
+            </span>
+            <span className="settings-row-label">Corrections</span>
+            {pendingCorrectionsCount > 0 && (
+              <span className="corrections-card-badge">{pendingCorrectionsCount}</span>
+            )}
+            <ChevronRight size={16} className="settings-row-chevron" />
+          </Link>
           <Link href="/settings/scrape" className="settings-row">
             <span className="settings-row-icon settings-row-icon-gold">
               <Scan size={18} />

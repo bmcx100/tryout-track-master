@@ -2,12 +2,13 @@ import { requireAssociation } from "@/lib/auth"
 import { DivisionSwitcher } from "@/components/layout/division-switcher"
 import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
 import { getMyPlayersCount } from "@/app/(app)/annotations/actions"
+import { getPendingCorrectionsCount } from "@/app/(app)/corrections/actions"
 import { MyPlayersCard } from "@/components/dashboard/my-players-card"
 import Link from "next/link"
 import { Home, Users, ListChecks } from "lucide-react"
 
 export default async function DashboardPage() {
-  const { user, associationId, association } = await requireAssociation()
+  const { user, associationId, association, role } = await requireAssociation()
 
   const email = user.email ?? ""
   const initials = email.substring(0, 2).toUpperCase()
@@ -23,6 +24,9 @@ export default async function DashboardPage() {
   const activeDivision = savedDivision ?? defaultDivision
 
   const myPlayersCount = await getMyPlayersCount(associationId)
+  const hasPendingCorrections = (role === "group_admin" || role === "admin")
+    ? (await getPendingCorrectionsCount(associationId)) > 0
+    : false
 
   return (
     <>
@@ -33,6 +37,7 @@ export default async function DashboardPage() {
         abbreviation={association.abbreviation}
         initials={initials}
         title="Home"
+        hasPendingCorrections={hasPendingCorrections}
       />
       <div className="dashboard-page">
         <div className="dashboard-header">

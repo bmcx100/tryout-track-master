@@ -2,11 +2,12 @@ import { requireAssociation } from "@/lib/auth"
 import { DivisionSwitcher } from "@/components/layout/division-switcher"
 import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
 import { getPlayerAnnotations } from "@/app/(app)/annotations/actions"
+import { getPendingCorrectionsCount } from "@/app/(app)/corrections/actions"
 import { TeamsPageClient } from "@/components/teams/teams-page-client"
 import type { TryoutPlayer, Team } from "@/types"
 
 export default async function TeamsPage() {
-  const { supabase, user, associationId, association } = await requireAssociation()
+  const { supabase, user, associationId, association, role } = await requireAssociation()
 
   const email = user.email ?? ""
   const initials = email.substring(0, 2).toUpperCase()
@@ -70,6 +71,10 @@ export default async function TeamsPage() {
   // Fetch user's player annotations (hearts, names)
   const annotations = await getPlayerAnnotations(associationId)
 
+  const hasPendingCorrections = (role === "group_admin" || role === "admin")
+    ? (await getPendingCorrectionsCount(associationId)) > 0
+    : false
+
   return (
     <>
       <DivisionSwitcher
@@ -78,6 +83,7 @@ export default async function TeamsPage() {
         associationId={associationId}
         abbreviation={association.abbreviation}
         initials={initials}
+        hasPendingCorrections={hasPendingCorrections}
       />
       <TeamsPageClient
         key={activeDivision}

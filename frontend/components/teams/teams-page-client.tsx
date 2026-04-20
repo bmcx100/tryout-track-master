@@ -13,7 +13,8 @@ import {
   resetPredictionOrders,
   resetPreviousTeamOrders,
 } from "@/app/(app)/teams/actions"
-import { toggleFavorite, saveCustomName } from "@/app/(app)/annotations/actions"
+import { toggleFavorite, saveCustomName, savePlayerNote } from "@/app/(app)/annotations/actions"
+import { submitCorrection } from "@/app/(app)/corrections/actions"
 
 type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
 
@@ -106,6 +107,22 @@ export function TeamsPageClient({
     saveCustomName(playerId, customName)
   }, [])
 
+  const handleSaveNote = useCallback((playerId: string, note: string) => {
+    setAnnotations((prev) => {
+      const existing = prev[playerId]
+      const noteValue = note || null
+      if (existing) {
+        return { ...prev, [playerId]: { ...existing, notes: noteValue } }
+      }
+      return { ...prev, [playerId]: { isFavorite: false, notes: noteValue, customName: null } }
+    })
+    savePlayerNote(playerId, note)
+  }, [])
+
+  const handleSubmitCorrection = useCallback((playerId: string, fieldName: string, oldValue: string, newValue: string) => {
+    submitCorrection(playerId, fieldName, oldValue, newValue)
+  }, [])
+
   const selectedAnn = selectedPlayer ? annotations[selectedPlayer.id] : null
 
   const instructionText = activePosition
@@ -155,9 +172,14 @@ export function TeamsPageClient({
           player={selectedPlayer}
           isFavorite={selectedAnn?.isFavorite ?? false}
           customName={selectedAnn?.customName ?? null}
+          note={selectedAnn?.notes ?? null}
           onClose={() => setSelectedPlayer(null)}
           onToggleFavorite={() => handleToggleFavorite(selectedPlayer.id)}
           onSaveName={(name) => handleSaveName(selectedPlayer.id, name)}
+          onSaveNote={(note) => handleSaveNote(selectedPlayer.id, note)}
+          onSubmitCorrection={(fieldName, oldValue, newValue) =>
+            handleSubmitCorrection(selectedPlayer.id, fieldName, oldValue, newValue)
+          }
         />
       )}
     </>

@@ -1435,7 +1435,9 @@ body:has(.admin-shell) {
 }
 
 .continuations-section-label {
-  @apply flex w-full cursor-pointer items-center gap-1.5 px-5 py-2 text-xs font-semibold uppercase;
+  @apply flex w-full cursor-pointer items-center gap-1.5 py-2 text-xs font-semibold uppercase;
+  padding-left: 23px;
+  padding-right: 1.25rem;
   font-family: var(--font-mono);
   color: oklch(0.75 0 0);
   letter-spacing: 0.04em;
@@ -1451,7 +1453,7 @@ body:has(.admin-shell) {
 
 .continuations-session-subheader {
   @apply flex w-full cursor-pointer items-center gap-1.5 py-1.5 text-xs font-medium;
-  padding-left: 2.25rem;
+  padding-left: calc(2.25rem + 3px);
   padding-right: 1.25rem;
   color: oklch(0.70 0 0);
   background: oklch(0.14 0 0);
@@ -1466,16 +1468,16 @@ body:has(.admin-shell) {
 }
 
 .continuations-session-players .continuation-player-row {
-  padding-left: 2.25rem;
+  padding-left: calc(2.25rem + 3px);
 }
 
 .continuations-cuts-list .continuation-player-row {
-  padding-left: 40px;
+  padding-left: 43px;
 }
 
 .continuations-empty-cuts {
   @apply py-3 text-xs italic;
-  padding-left: 40px;
+  padding-left: 43px;
   color: var(--dm-dust);
 }
 
@@ -1950,4 +1952,325 @@ body:has(.admin-shell) {
 
 .scrape-draft-btn {
   @apply py-2 text-xs;
+}
+
+/* ============================================================
+   Player Detail Sheet (replaces old long-press menu)
+   ============================================================ */
+
+.detail-sheet {
+  @apply fixed bottom-0 left-0 right-0 z-30 rounded-t-3xl px-5 pb-8 pt-2;
+  background: oklch(0.18 0 0);
+  box-shadow: var(--dm-shadow-lg);
+  animation: slideUp 200ms ease-out;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+@media (min-width: 640px) {
+  .detail-sheet {
+    @apply absolute;
+    max-width: 393px;
+  }
+}
+
+.detail-sheet-handle {
+  @apply mx-auto mb-3 h-1 w-10 rounded-full;
+  background: oklch(1 0 0 / 15%);
+}
+
+.detail-sheet-header {
+  @apply flex items-center justify-between mb-4 pb-3;
+  border-bottom: 1px solid var(--dm-border);
+}
+
+.detail-sheet-title {
+  @apply text-base font-bold;
+  color: var(--dm-umber);
+}
+
+.detail-sheet-close {
+  @apply flex h-8 w-8 items-center justify-center rounded-full;
+  color: var(--dm-dust);
+  background: oklch(1 0 0 / 5%);
+  border: none;
+  cursor: pointer;
+}
+
+.detail-sheet-editable {
+  @apply flex flex-col gap-4 mb-4;
+}
+
+.detail-sheet-readonly {
+  @apply flex flex-col gap-3 rounded-xl p-4;
+  background: var(--dm-sandstone);
+}
+
+.detail-sheet-field {
+  @apply flex flex-col gap-1;
+}
+
+.detail-sheet-field-label {
+  @apply text-xs font-semibold uppercase tracking-wider;
+  color: var(--dm-dust);
+}
+
+.detail-sheet-input {
+  @apply rounded-lg border px-3 py-2 text-sm;
+  border-color: var(--dm-border);
+  background: oklch(0.12 0 0);
+  color: var(--dm-umber);
+  outline: none;
+}
+
+.detail-sheet-input:focus {
+  border-color: var(--dm-gold);
+}
+
+.detail-sheet-textarea {
+  @apply rounded-lg border px-3 py-2 text-sm;
+  border-color: var(--dm-border);
+  background: oklch(0.12 0 0);
+  color: var(--dm-umber);
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.detail-sheet-textarea:focus {
+  border-color: var(--dm-gold);
+}
+
+.detail-sheet-heart {
+  @apply flex items-center gap-2 rounded-lg px-3 py-2 text-sm;
+  color: var(--dm-dust);
+  background: oklch(1 0 0 / 5%);
+  border: none;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+}
+
+.detail-sheet-heart-active {
+  color: oklch(0.65 0.20 25);
+  background: oklch(0.65 0.20 25 / 10%);
+}
+
+.detail-sheet-value {
+  @apply text-sm;
+  color: var(--dm-umber);
+}
+
+.detail-sheet-value-highlight {
+  color: var(--dm-gold);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Correction Popup
+   ============================================================ */
+
+.correction-popup {
+  @apply fixed bottom-0 left-0 right-0 z-40 rounded-t-3xl px-5 pb-8 pt-5;
+  background: oklch(0.18 0 0);
+  box-shadow: var(--dm-shadow-lg);
+  animation: slideUp 200ms ease-out;
+}
+
+@media (min-width: 640px) {
+  .correction-popup {
+    @apply absolute;
+    max-width: 393px;
+  }
+}
+
+.correction-popup-title {
+  @apply text-base font-bold mb-3;
+  color: var(--dm-umber);
+}
+
+.correction-popup-changes {
+  @apply mb-4;
+}
+
+.correction-popup-change {
+  @apply text-sm mb-1;
+  color: var(--dm-dust);
+}
+
+.correction-popup-actions {
+  @apply flex gap-3;
+}
+
+.correction-popup-submit {
+  @apply flex-1 rounded-xl py-3 text-sm font-semibold;
+  background: var(--dm-gold);
+  color: oklch(0.15 0 0);
+  border: none;
+  cursor: pointer;
+}
+
+.correction-popup-skip {
+  @apply flex-1 rounded-xl py-3 text-sm font-semibold;
+  background: oklch(1 0 0 / 8%);
+  color: var(--dm-dust);
+  border: none;
+  cursor: pointer;
+}
+
+/* ============================================================
+   Avatar Badge (red dot on profile avatar)
+   ============================================================ */
+
+.avatar-badge {
+  position: relative;
+}
+
+.avatar-badge::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: oklch(0.65 0.20 25);
+  border-radius: 50%;
+  border: 2px solid oklch(0.18 0 0);
+}
+
+/* ============================================================
+   Corrections Card Badge & Settings Icon
+   ============================================================ */
+
+.corrections-card-badge {
+  @apply ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold;
+  background: oklch(0.65 0.20 25);
+  color: white;
+}
+
+.settings-row-icon-blue {
+  background: oklch(0.60 0.15 250 / 15%);
+  color: oklch(0.70 0.15 250);
+}
+
+/* ============================================================
+   Admin Corrections List
+   ============================================================ */
+
+.corrections-page {
+  @apply px-4 pb-24 pt-4;
+}
+
+.corrections-page-header {
+  @apply flex items-center gap-2 mb-4;
+}
+
+.corrections-back {
+  @apply flex h-8 w-8 items-center justify-center rounded-full;
+  color: var(--dm-dust);
+  background: oklch(1 0 0 / 5%);
+}
+
+.corrections-page-title {
+  @apply text-lg font-bold;
+  color: var(--dm-umber);
+}
+
+.corrections-list {
+  @apply flex flex-col gap-3;
+}
+
+.corrections-empty {
+  @apply flex items-center justify-center py-16;
+  color: var(--dm-dust);
+}
+
+.corrections-error {
+  @apply mb-3 rounded-lg px-3 py-2 text-sm;
+  background: oklch(0.65 0.20 25 / 15%);
+  color: oklch(0.65 0.20 25);
+}
+
+.corrections-row {
+  @apply flex flex-col gap-2 rounded-xl p-4;
+  background: var(--dm-dune);
+}
+
+.corrections-row-info {
+  @apply flex items-center gap-2;
+}
+
+.corrections-player {
+  @apply text-sm font-semibold;
+  color: var(--dm-umber);
+}
+
+.corrections-division {
+  @apply text-xs;
+  color: var(--dm-dust);
+  font-family: var(--font-mono);
+}
+
+.corrections-field-change {
+  @apply flex items-center gap-2;
+}
+
+.corrections-field-label {
+  @apply text-xs font-semibold uppercase;
+  color: var(--dm-gold);
+}
+
+.corrections-change {
+  @apply text-sm;
+  color: var(--dm-umber);
+}
+
+.corrections-row-meta {
+  @apply flex items-center gap-2 text-xs;
+  color: var(--dm-dust);
+}
+
+.corrections-submitter {
+  font-family: var(--font-mono);
+}
+
+.corrections-date {
+  opacity: 0.7;
+}
+
+.corrections-actions {
+  @apply flex gap-2 mt-1;
+}
+
+.corrections-approve {
+  @apply flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-semibold;
+  background: oklch(0.55 0.15 145 / 15%);
+  color: oklch(0.65 0.15 145);
+  border: none;
+  cursor: pointer;
+}
+
+.corrections-approve:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.corrections-reject {
+  @apply flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-semibold;
+  background: oklch(0.65 0.20 25 / 15%);
+  color: oklch(0.65 0.20 25);
+  border: none;
+  cursor: pointer;
+}
+
+.corrections-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   My Players Team Gap
+   ============================================================ */
+
+.my-players-team-gap {
+  @apply mt-3;
 }

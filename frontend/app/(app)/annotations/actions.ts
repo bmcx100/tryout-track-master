@@ -119,6 +119,29 @@ export async function getMyPlayers(
   return result
 }
 
+export async function savePlayerNote(
+  playerId: string,
+  note: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { error } = await supabase
+    .from("player_annotations")
+    .upsert(
+      {
+        user_id: user.id,
+        player_id: playerId,
+        notes: note || null,
+      },
+      { onConflict: "user_id,player_id" }
+    )
+
+  if (error) return { error: error.message }
+  return {}
+}
+
 export async function getMyPlayersCount(
   associationId: string
 ): Promise<number> {
