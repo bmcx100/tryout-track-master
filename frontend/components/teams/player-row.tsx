@@ -40,6 +40,9 @@ export function PlayerRow({
   }, [])
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // Prevent browser from initiating native drag / text selection,
+    // which fires pointercancel and kills the long-press timer
+    e.preventDefault()
     firedRef.current = false
     startPos.current = { x: e.clientX, y: e.clientY }
     timerRef.current = setTimeout(() => {
