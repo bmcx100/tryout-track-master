@@ -149,7 +149,7 @@ function PreviousTeamSection({
                 isLocked={false}
                 isFavorite={ann?.isFavorite}
                 customName={ann?.customName}
-                hasNotes={!!ann?.notes}
+                noteText={ann?.notes}
                 onLongPress={onPlayerLongPress}
                 onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(player.id) : undefined}
               />

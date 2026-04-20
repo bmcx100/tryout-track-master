@@ -11,7 +11,7 @@ type PlayerRowProps = {
   isLocked: boolean
   isFavorite?: boolean
   customName?: string | null
-  hasNotes?: boolean
+  noteText?: string | null
   onLongPress?: (player: TryoutPlayer) => void
   onToggleFavorite?: () => void
 }
@@ -24,7 +24,7 @@ export function PlayerRow({
   isLocked,
   isFavorite,
   customName,
-  hasNotes,
+  noteText,
   onLongPress,
   onToggleFavorite,
 }: PlayerRowProps) {
@@ -129,8 +129,15 @@ export function PlayerRow({
         {customName && player.name && customName !== player.name && (
           <span className="custom-name-indicator">{player.name}</span>
         )}
-        {hasNotes && (
-          <span className="notes-indicator">
+        {noteText && (
+          <span
+            className="notes-indicator"
+            title={noteText}
+            onClick={(e) => {
+              e.stopPropagation()
+              onLongPress?.(player)
+            }}
+          >
             <FileText size={10} />
           </span>
         )}

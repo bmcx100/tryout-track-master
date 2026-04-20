@@ -8,7 +8,7 @@ type ContinuationPlayerRowProps = {
   jerseyNumber: string
   player: TryoutPlayer | null
   isFavorite: boolean
-  hasNotes: boolean
+  noteText?: string | null
   isInjured: boolean
   isCut: boolean
   customName?: string | null
@@ -23,7 +23,7 @@ export function ContinuationPlayerRow({
   jerseyNumber,
   player,
   isFavorite,
-  hasNotes,
+  noteText,
   isInjured,
   isCut,
   customName,
@@ -111,8 +111,15 @@ export function ContinuationPlayerRow({
         {customName && player && customName !== player.name && (
           <span className="custom-name-indicator">{player.name}</span>
         )}
-        {hasNotes && (
-          <span className="notes-indicator">
+        {noteText && (
+          <span
+            className="notes-indicator"
+            title={noteText}
+            onClick={(e) => {
+              e.stopPropagation()
+              if (player && onLongPress) onLongPress(player)
+            }}
+          >
             <FileText size={10} />
           </span>
         )}

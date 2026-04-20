@@ -82,7 +82,7 @@ type PlayerEntry = {
   jerseyNumber: string
   player: TryoutPlayer | null
   isFavorite: boolean
-  hasNotes: boolean
+  noteText: string | null
   isInjured: boolean
   customName: string | null
 }
@@ -100,7 +100,7 @@ function buildPlayerList(
       jerseyNumber: jn,
       player,
       isFavorite: ann?.isFavorite ?? false,
-      hasNotes: !!(ann?.notes),
+      noteText: ann?.notes ?? null,
       isInjured: ipPlayers.includes(jn),
       customName: ann?.customName ?? null,
     }
@@ -238,7 +238,7 @@ export function RoundSection({
                       jerseyNumber={p.jerseyNumber}
                       player={p.player}
                       isFavorite={p.isFavorite}
-                      hasNotes={p.hasNotes}
+                      noteText={p.noteText}
                       isInjured={p.isInjured}
                       isCut={false}
                       customName={p.customName}
@@ -277,7 +277,7 @@ export function RoundSection({
                 jerseyNumber={p.jerseyNumber}
                 player={p.player}
                 isFavorite={p.isFavorite}
-                hasNotes={p.hasNotes}
+                noteText={p.noteText}
                 isInjured={false}
                 isCut={true}
                 customName={p.customName}
