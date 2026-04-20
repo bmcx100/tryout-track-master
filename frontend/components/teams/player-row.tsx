@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef, useCallback } from "react"
 import { GripVertical, Check, Heart, FileText } from "lucide-react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -15,6 +16,9 @@ type PlayerRowProps = {
   onToggleFavorite?: () => void
 }
 
+const LONG_PRESS_MS = 500
+const MOVE_THRESHOLD = 10
+
 export function PlayerRow({
   player,
   isLocked,
@@ -24,6 +28,40 @@ export function PlayerRow({
   onLongPress,
   onToggleFavorite,
 }: PlayerRowProps) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const startPos = useRef<{ x: number; y: number } | null>(null)
+  const firedRef = useRef(false)
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+  }, [])
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    firedRef.current = false
+    startPos.current = { x: e.clientX, y: e.clientY }
+    timerRef.current = setTimeout(() => {
+      firedRef.current = true
+      onLongPress?.(player)
+    }, LONG_PRESS_MS)
+  }, [onLongPress, player])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!startPos.current) return
+    const dx = e.clientX - startPos.current.x
+    const dy = e.clientY - startPos.current.y
+    if (Math.abs(dx) > MOVE_THRESHOLD || Math.abs(dy) > MOVE_THRESHOLD) {
+      clearTimer()
+    }
+  }, [clearTimer])
+
+  const handlePointerUp = useCallback(() => {
+    clearTimer()
+    startPos.current = null
+  }, [clearTimer])
+
   const {
     attributes,
     listeners,
@@ -49,9 +87,17 @@ export function PlayerRow({
       ref={setNodeRef}
       style={style}
       className="player-row"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onPointerLeave={handlePointerUp}
       onContextMenu={(e) => {
         e.preventDefault()
-        onLongPress?.(player)
+        if (!firedRef.current) {
+          clearTimer()
+          onLongPress?.(player)
+        }
       }}
     >
       <span

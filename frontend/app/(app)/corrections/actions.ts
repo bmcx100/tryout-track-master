@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function submitCorrection(
   playerId: string,
@@ -79,6 +80,18 @@ export async function getPendingCorrections(
 
   if (!corrections || corrections.length === 0) return []
 
+  // Batch-fetch submitter emails via admin client
+  const uniqueUserIds = [...new Set(corrections.map((c) => c.user_id))]
+  const emailMap = new Map<string, string>()
+
+  const admin = createAdminClient()
+  for (const uid of uniqueUserIds) {
+    const { data } = await admin.auth.admin.getUserById(uid)
+    if (data?.user?.email) {
+      emailMap.set(uid, data.user.email)
+    }
+  }
+
   return corrections.map((c) => {
     const player = c.tryout_players as unknown as {
       jersey_number: string
@@ -97,7 +110,7 @@ export async function getPendingCorrections(
       player_jersey: player.jersey_number,
       player_name: player.name,
       player_division: player.division,
-      submitter_email: c.user_id.substring(0, 8),
+      submitter_email: emailMap.get(c.user_id) ?? c.user_id.substring(0, 8),
     }
   })
 }

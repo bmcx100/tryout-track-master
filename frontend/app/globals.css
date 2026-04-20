@@ -374,6 +374,8 @@
   background: oklch(0.15 0 0);
   border-bottom: 1px solid var(--dm-border-subtle);
   transition: background 200ms ease-out;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .player-row:nth-child(even) {
@@ -573,6 +575,31 @@
   @apply text-center text-2xl font-bold text-foreground;
 }
 
+.google-btn {
+  @apply flex w-full items-center justify-center gap-3 rounded-lg py-3 text-sm font-semibold;
+  background: white;
+  color: #1f1f1f;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease-out, box-shadow 150ms ease-out;
+  box-shadow: 0 1px 3px oklch(0 0 0 / 15%);
+}
+
+.google-btn:hover {
+  background: #f7f7f7;
+  box-shadow: 0 2px 6px oklch(0 0 0 / 20%);
+}
+
+.google-btn:active {
+  background: #efefef;
+}
+
+.google-btn-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
 .auth-divider {
   @apply relative flex items-center py-2;
 }
@@ -715,6 +742,7 @@
   @apply fixed inset-0 z-20;
   background: oklch(0 0 0 / 60%);
   animation: fadeIn 150ms ease-out;
+  overscroll-behavior: contain;
 }
 
 .long-press-sheet {

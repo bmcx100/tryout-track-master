@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Heart, X } from "lucide-react"
 import type { TryoutPlayer } from "@/types"
 
@@ -34,9 +34,22 @@ export function LongPressMenu({
   const [pendingCorrections, setPendingCorrections] = useState<{ fieldName: string, oldValue: string, newValue: string }[]>([])
   const noteSaved = useRef(false)
 
-  // Track originals for correction detection
-  const originalName = player.name ?? ""
-  const originalJersey = player.jersey_number ?? ""
+  // Capture values at mount time for correction detection
+  const nameAtOpen = useRef(customName ?? player.name ?? "")
+  const jerseyAtOpen = useRef(player.jersey_number ?? "")
+
+  // Official DB values for correction submission
+  const officialName = player.name ?? ""
+  const officialJersey = player.jersey_number ?? ""
+
+  // Lock body scroll while detail sheet is open
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [])
 
   const handleClose = () => {
     // Save note if changed
@@ -44,19 +57,20 @@ export function LongPressMenu({
       onSaveNote(noteValue.trim())
     }
 
-    // Save custom name if changed
+    // Save custom name if changed from what it was when opened
     const trimmedName = nameValue.trim()
-    if (trimmedName !== (customName ?? player.name ?? "")) {
-      onSaveName(trimmedName === originalName ? "" : trimmedName)
+    if (trimmedName !== nameAtOpen.current) {
+      onSaveName(trimmedName === officialName ? "" : trimmedName)
     }
 
-    // Detect corrections
+    // Detect corrections: user changed value during this session AND it differs from official
     const corrections: { fieldName: string, oldValue: string, newValue: string }[] = []
-    if (trimmedName && trimmedName !== originalName) {
-      corrections.push({ fieldName: "name", oldValue: originalName, newValue: trimmedName })
+    if (trimmedName !== nameAtOpen.current && trimmedName && trimmedName !== officialName) {
+      corrections.push({ fieldName: "name", oldValue: officialName, newValue: trimmedName })
     }
-    if (jerseyValue.trim() && jerseyValue.trim() !== originalJersey) {
-      corrections.push({ fieldName: "jersey_number", oldValue: originalJersey, newValue: jerseyValue.trim() })
+    const trimmedJersey = jerseyValue.trim()
+    if (trimmedJersey !== jerseyAtOpen.current && trimmedJersey && trimmedJersey !== officialJersey) {
+      corrections.push({ fieldName: "jersey_number", oldValue: officialJersey, newValue: trimmedJersey })
     }
 
     if (corrections.length > 0) {
