@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import type { ContinuationRound, TryoutPlayer } from "@/types"
 import { RoundSection } from "./round-section"
@@ -40,6 +40,10 @@ export function ContinuationsPageClient({
   const [localPlayers, setLocalPlayers] = useState(players)
   const [annotations, setAnnotations] = useState(initialAnnotations)
   const [selectedIndex, setSelectedIndex] = useState(0)
+
+  // Sync local state when server props change (e.g. division switch)
+  useEffect(() => { setLocalPlayers(players) }, [players])
+  useEffect(() => { setAnnotations(initialAnnotations) }, [initialAnnotations])
   const [selectedPlayer, setSelectedPlayer] = useState<TryoutPlayer | null>(null)
   const [linkingJerseyNumber, setLinkingJerseyNumber] = useState<string | null>(null)
   const [addingPlayer, setAddingPlayer] = useState<{ jerseyNumber: string } | null>(null)

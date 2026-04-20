@@ -40,7 +40,7 @@ export function TeamsPageClient({
 }: TeamsPageClientProps) {
   const isAdmin = role === "group_admin" || role === "admin"
   const [players, setPlayers] = useState(initialPlayers)
-  const [activeView, setActiveView] = useState<"predictions" | "previous">("predictions")
+  const [activeView, setActiveView] = useState<"predictions" | "previous">("previous")
   const [activePosition, setActivePosition] = useState<string | null>(null)
   const [resetKey, setResetKey] = useState(0)
   const [selectedPlayer, setSelectedPlayer] = useState<TryoutPlayer | null>(null)

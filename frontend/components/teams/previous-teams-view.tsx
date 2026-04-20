@@ -124,7 +124,7 @@ function PreviousTeamSection({
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="team-header-left">
-          <span className="team-name">From {label}</span>
+          <span className="team-name">Formerly {label}</span>
         </div>
         <div className="team-header-right">
           <span className="team-count">{players.length} Players</span>

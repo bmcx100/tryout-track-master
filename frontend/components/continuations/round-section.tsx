@@ -136,11 +136,13 @@ export function RoundSection({
 
   const [summaryExpanded, setSummaryExpanded] = useState(false)
 
-  // Build per-session player lists
-  const sessionLists = sessions.map((s) => ({
-    session: s,
-    players: buildPlayerList(s.jersey_numbers, playerMap, annotations, ipPlayers),
-  }))
+  // Build per-session player lists (guard against malformed session data)
+  const sessionLists = sessions
+    .filter((s) => Array.isArray(s.jersey_numbers) && s.session_number != null)
+    .map((s) => ({
+      session: s,
+      players: buildPlayerList(s.jersey_numbers, playerMap, annotations, ipPlayers),
+    }))
 
   // Expanded state
   const [continuingExpanded, setContinuingExpanded] = useState(true)

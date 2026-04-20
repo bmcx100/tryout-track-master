@@ -30,7 +30,6 @@ export function TeamSection({
   const [isExpanded, setIsExpanded] = useState(!isOfficial)
   const tones = ["team-header-tone-1", "team-header-tone-2", "team-header-tone-3"]
   const toneClass = tones[index % 3]
-  const label = isOfficial ? "Official" : "Prediction"
 
   return (
     <div>
@@ -40,8 +39,7 @@ export function TeamSection({
       >
         <div className="team-header-left">
           <span className="team-name">
-            {teamName}
-            <span className="team-name-label">{label}</span>
+            {isOfficial ? "Official" : "Predicted"} {teamName}
           </span>
         </div>
         <div className="team-header-right">
