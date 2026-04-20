@@ -154,8 +154,9 @@ export function TeamsPageClient({
     name: string,
     jerseyNumber: string,
     position: string,
+    previousTeam: string,
   ) => {
-    const result = await suggestPlayer(associationId, division, name, jerseyNumber, position)
+    const result = await suggestPlayer(associationId, division, name, jerseyNumber, position, previousTeam)
     if (result.player) {
       setPlayers((prev) => [...prev, result.player!])
       setShowAddPlayer(false)

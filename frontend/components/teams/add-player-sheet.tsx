@@ -5,7 +5,7 @@ import { X } from "lucide-react"
 
 type AddPlayerSheetProps = {
   onClose: () => void
-  onSubmit: (name: string, jerseyNumber: string, position: string) => Promise<{ error?: string }>
+  onSubmit: (name: string, jerseyNumber: string, position: string, previousTeam: string) => Promise<{ error?: string }>
 }
 
 const POSITIONS = ["F", "D", "G"]
@@ -14,6 +14,7 @@ export function AddPlayerSheet({ onClose, onSubmit }: AddPlayerSheetProps) {
   const [name, setName] = useState("")
   const [jersey, setJersey] = useState("")
   const [position, setPosition] = useState("")
+  const [previousTeam, setPreviousTeam] = useState("")
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
@@ -28,7 +29,7 @@ export function AddPlayerSheet({ onClose, onSubmit }: AddPlayerSheetProps) {
     if (!canSubmit) return
     setError("")
     setSubmitting(true)
-    const result = await onSubmit(name.trim(), jersey.trim(), position)
+    const result = await onSubmit(name.trim(), jersey.trim(), position, previousTeam.trim())
     if (result.error) {
       setError(result.error)
       setSubmitting(false)
@@ -90,6 +91,17 @@ export function AddPlayerSheet({ onClose, onSubmit }: AddPlayerSheetProps) {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="add-player-sheet-field">
+            <label className="add-player-sheet-label">Previous Team</label>
+            <input
+              className="add-player-sheet-input"
+              type="text"
+              placeholder="e.g. U13 AA"
+              value={previousTeam}
+              onChange={(e) => setPreviousTeam(e.target.value)}
+            />
           </div>
         </div>
 

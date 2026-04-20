@@ -199,6 +199,7 @@ export async function suggestPlayer(
   name: string,
   jerseyNumber: string,
   position: string,
+  previousTeam: string,
 ): Promise<{ error?: string, player?: TryoutPlayer }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -212,6 +213,7 @@ export async function suggestPlayer(
       name,
       jersey_number: jerseyNumber,
       position,
+      previous_team: previousTeam || null,
       suggested_by: user.id,
       status: "trying_out",
     })
