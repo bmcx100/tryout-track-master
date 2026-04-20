@@ -3,12 +3,17 @@
 import { useState, useCallback } from "react"
 import type { ContinuationRound, TryoutPlayer } from "@/types"
 import { RoundSection } from "./round-section"
-import { toggleFavorite } from "@/app/(app)/continuations/actions"
+import { LongPressMenu } from "@/components/teams/long-press-menu"
+import { toggleFavorite, savePlayerNote } from "@/app/(app)/continuations/actions"
+import { saveCustomName } from "@/app/(app)/annotations/actions"
+import { submitCorrection } from "@/app/(app)/corrections/actions"
+
+type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
 
 type ContinuationsPageClientProps = {
   players: TryoutPlayer[]
   rounds: ContinuationRound[]
-  annotations: Record<string, { isFavorite: boolean, notes: string | null }>
+  annotations: Annotations
   associationId: string
   division: string
 }
@@ -22,6 +27,7 @@ export function ContinuationsPageClient({
 }: ContinuationsPageClientProps) {
   const [annotations, setAnnotations] = useState(initialAnnotations)
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [selectedPlayer, setSelectedPlayer] = useState<TryoutPlayer | null>(null)
 
   // Build jersey-number-to-player lookup (keyed by jersey_number)
   const playerMap: Record<string, TryoutPlayer> = {}
@@ -40,6 +46,7 @@ export function ContinuationsPageClient({
         [playerId]: {
           isFavorite: existing ? !existing.isFavorite : true,
           notes: existing?.notes ?? null,
+          customName: existing?.customName ?? null,
         },
       }
     })
@@ -55,11 +62,42 @@ export function ContinuationsPageClient({
           [playerId]: {
             isFavorite: existing ? !existing.isFavorite : false,
             notes: existing?.notes ?? null,
+            customName: existing?.customName ?? null,
           },
         }
       })
     }
   }, [])
+
+  const handleSaveName = useCallback((playerId: string, customName: string) => {
+    setAnnotations((prev) => {
+      const existing = prev[playerId]
+      const nameValue = customName || null
+      if (existing) {
+        return { ...prev, [playerId]: { ...existing, customName: nameValue } }
+      }
+      return { ...prev, [playerId]: { isFavorite: false, notes: null, customName: nameValue } }
+    })
+    saveCustomName(playerId, customName)
+  }, [])
+
+  const handleSaveNote = useCallback((playerId: string, note: string) => {
+    setAnnotations((prev) => {
+      const existing = prev[playerId]
+      const noteValue = note || null
+      if (existing) {
+        return { ...prev, [playerId]: { ...existing, notes: noteValue } }
+      }
+      return { ...prev, [playerId]: { isFavorite: false, notes: noteValue, customName: null } }
+    })
+    savePlayerNote(playerId, note)
+  }, [])
+
+  const handleSubmitCorrection = useCallback((playerId: string, fieldName: string, oldValue: string, newValue: string) => {
+    submitCorrection(playerId, fieldName, oldValue, newValue)
+  }, [])
+
+  const selectedAnn = selectedPlayer ? annotations[selectedPlayer.id] : null
 
   if (rounds.length === 0) {
     return (
@@ -115,7 +153,24 @@ export function ContinuationsPageClient({
         playerMap={playerMap}
         annotations={annotations}
         onToggleFavorite={handleToggleFavorite}
+        onPlayerLongPress={setSelectedPlayer}
       />
+
+      {selectedPlayer && (
+        <LongPressMenu
+          player={selectedPlayer}
+          isFavorite={selectedAnn?.isFavorite ?? false}
+          customName={selectedAnn?.customName ?? null}
+          note={selectedAnn?.notes ?? null}
+          onClose={() => setSelectedPlayer(null)}
+          onToggleFavorite={() => handleToggleFavorite(selectedPlayer.id)}
+          onSaveName={(name) => handleSaveName(selectedPlayer.id, name)}
+          onSaveNote={(note) => handleSaveNote(selectedPlayer.id, note)}
+          onSubmitCorrection={(fieldName, oldValue, newValue) =>
+            handleSubmitCorrection(selectedPlayer.id, fieldName, oldValue, newValue)
+          }
+        />
+      )}
     </div>
   )
 }

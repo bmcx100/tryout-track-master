@@ -13,14 +13,17 @@ type SessionData = {
   jersey_numbers: string[]
 }
 
+type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
+
 type RoundSectionProps = {
   teamLevel: string
   division: string
   activeRound: ContinuationRound
   previousRound: ContinuationRound | null
   playerMap: Record<string, TryoutPlayer>
-  annotations: Record<string, { isFavorite: boolean, notes: string | null }>
+  annotations: Annotations
   onToggleFavorite: (playerId: string) => void
+  onPlayerLongPress?: (player: TryoutPlayer) => void
 }
 
 const POSITION_ORDER: Record<string, number> = { F: 0, D: 1, G: 2 }
@@ -81,12 +84,13 @@ type PlayerEntry = {
   isFavorite: boolean
   hasNotes: boolean
   isInjured: boolean
+  customName: string | null
 }
 
 function buildPlayerList(
   jerseyNumbers: string[],
   playerMap: Record<string, TryoutPlayer>,
-  annotations: Record<string, { isFavorite: boolean, notes: string | null }>,
+  annotations: Annotations,
   ipPlayers: string[]
 ): PlayerEntry[] {
   const list = jerseyNumbers.map((jn) => {
@@ -98,6 +102,7 @@ function buildPlayerList(
       isFavorite: ann?.isFavorite ?? false,
       hasNotes: !!(ann?.notes),
       isInjured: ipPlayers.includes(jn),
+      customName: ann?.customName ?? null,
     }
   })
   list.sort(sortByPositionThenTeam)
@@ -112,6 +117,7 @@ export function RoundSection({
   playerMap,
   annotations,
   onToggleFavorite,
+  onPlayerLongPress,
 }: RoundSectionProps) {
   const sessions = (activeRound.sessions ?? []) as SessionData[]
   const sessionInfo = getSessionInfo(sessions)
@@ -235,9 +241,11 @@ export function RoundSection({
                       hasNotes={p.hasNotes}
                       isInjured={p.isInjured}
                       isCut={false}
+                      customName={p.customName}
                       onToggleFavorite={() => {
                         if (p.player) onToggleFavorite(p.player.id)
                       }}
+                      onLongPress={onPlayerLongPress}
                     />
                   ))}
                 </div>
@@ -272,9 +280,11 @@ export function RoundSection({
                 hasNotes={p.hasNotes}
                 isInjured={false}
                 isCut={true}
+                customName={p.customName}
                 onToggleFavorite={() => {
                   if (p.player) onToggleFavorite(p.player.id)
                 }}
+                onLongPress={onPlayerLongPress}
               />
             ))
           )}
