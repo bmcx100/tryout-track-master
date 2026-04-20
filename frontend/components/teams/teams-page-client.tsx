@@ -15,6 +15,7 @@ import {
 } from "@/app/(app)/teams/actions"
 import { toggleFavorite, saveCustomName, savePlayerNote } from "@/app/(app)/annotations/actions"
 import { submitCorrection } from "@/app/(app)/corrections/actions"
+import { adminUpdatePlayer, adminDeletePlayer } from "@/app/(app)/players/actions"
 
 type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
 
@@ -25,16 +26,20 @@ type TeamsPageClientProps = {
   savedPreviousOrders: Record<string, string[]>
   associationId: string
   annotations: Annotations
+  role: string
 }
 
 export function TeamsPageClient({
-  players,
+  players: initialPlayers,
   teams,
   savedOrders,
   savedPreviousOrders,
   associationId,
   annotations: initialAnnotations,
+  role,
 }: TeamsPageClientProps) {
+  const isAdmin = role === "group_admin" || role === "admin"
+  const [players, setPlayers] = useState(initialPlayers)
   const [activeView, setActiveView] = useState<"predictions" | "previous">("predictions")
   const [activePosition, setActivePosition] = useState<string | null>(null)
   const [resetKey, setResetKey] = useState(0)
@@ -83,7 +88,6 @@ export function TeamsPageClient({
   }, [activePosition, activeView, associationId])
 
   const handleToggleFavorite = useCallback((playerId: string) => {
-    // Optimistic update
     setAnnotations((prev) => {
       const existing = prev[playerId]
       if (existing) {
@@ -91,7 +95,6 @@ export function TeamsPageClient({
       }
       return { ...prev, [playerId]: { isFavorite: true, notes: null, customName: null } }
     })
-    // Server action (fire and forget)
     toggleFavorite(playerId)
   }, [])
 
@@ -121,6 +124,25 @@ export function TeamsPageClient({
 
   const handleSubmitCorrection = useCallback((playerId: string, fieldName: string, oldValue: string, newValue: string) => {
     submitCorrection(playerId, fieldName, oldValue, newValue)
+  }, [])
+
+  const handleAdminUpdate = useCallback(async (playerId: string, updates: { name?: string, jersey_number?: string, position?: string }) => {
+    const result = await adminUpdatePlayer(playerId, updates)
+    if (!result.error) {
+      // Optimistic update of local player data
+      setPlayers((prev) =>
+        prev.map((p) => p.id === playerId ? { ...p, ...updates } : p)
+      )
+    }
+    return result
+  }, [])
+
+  const handleDelete = useCallback(async (playerId: string) => {
+    const result = await adminDeletePlayer(playerId)
+    if (!result.error) {
+      setPlayers((prev) => prev.filter((p) => p.id !== playerId))
+      setSelectedPlayer(null)
+    }
   }, [])
 
   const selectedAnn = selectedPlayer ? annotations[selectedPlayer.id] : null
@@ -180,6 +202,9 @@ export function TeamsPageClient({
           onSubmitCorrection={(fieldName, oldValue, newValue) =>
             handleSubmitCorrection(selectedPlayer.id, fieldName, oldValue, newValue)
           }
+          isAdmin={isAdmin}
+          onAdminUpdate={(updates) => handleAdminUpdate(selectedPlayer.id, updates)}
+          onDelete={() => handleDelete(selectedPlayer.id)}
         />
       )}
     </>

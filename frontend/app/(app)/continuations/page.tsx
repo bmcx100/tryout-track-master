@@ -63,6 +63,7 @@ export default async function ContinuationsPage() {
         annotations={annotations}
         associationId={associationId}
         division={activeDivision}
+        isAdmin={role === "group_admin" || role === "admin"}
       />
     </>
   )

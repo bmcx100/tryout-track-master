@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronRight, LogOut, Scan, FileCheck } from "lucide-react"
+import { ChevronRight, LogOut, Scan, FileCheck, UserPlus } from "lucide-react"
 
 type SettingsPageClientProps = {
   email: string
@@ -46,6 +46,13 @@ export function SettingsPageClient({
             {pendingCorrectionsCount > 0 && (
               <span className="corrections-card-badge">{pendingCorrectionsCount}</span>
             )}
+            <ChevronRight size={16} className="settings-row-chevron" />
+          </Link>
+          <Link href="/settings/add-player" className="settings-row">
+            <span className="settings-row-icon settings-row-icon-green">
+              <UserPlus size={18} />
+            </span>
+            <span className="settings-row-label">Add Player</span>
             <ChevronRight size={16} className="settings-row-chevron" />
           </Link>
           <Link href="/settings/scrape" className="settings-row">

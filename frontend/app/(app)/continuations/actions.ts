@@ -54,6 +54,156 @@ export async function getPlayerAnnotations(associationId: string) {
   return _getPlayerAnnotations(associationId)
 }
 
+export async function linkUnknownPlayer(
+  selectedPlayerId: string,
+  newJerseyNumber: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  // Fetch player to check association
+  const { data: player } = await supabase
+    .from("tryout_players")
+    .select("association_id, division")
+    .eq("id", selectedPlayerId)
+    .single()
+
+  if (!player) return { error: "Player not found" }
+
+  // Verify admin role
+  const { data: membership } = await supabase
+    .from("user_associations")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("association_id", player.association_id)
+    .single()
+
+  if (!membership || (membership.role !== "group_admin" && membership.role !== "admin")) {
+    return { error: "Unauthorized" }
+  }
+
+  // Check for duplicate jersey number
+  const { data: duplicate } = await supabase
+    .from("tryout_players")
+    .select("id")
+    .eq("association_id", player.association_id)
+    .eq("division", player.division)
+    .eq("jersey_number", newJerseyNumber)
+    .neq("id", selectedPlayerId)
+    .is("deleted_at", null)
+    .maybeSingle()
+
+  if (duplicate) {
+    return { error: `Jersey #${newJerseyNumber} already exists in this division` }
+  }
+
+  const { error } = await supabase
+    .from("tryout_players")
+    .update({ jersey_number: newJerseyNumber })
+    .eq("id", selectedPlayerId)
+
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function suggestPlayerLink(
+  selectedPlayerId: string,
+  newJerseyNumber: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  // Fetch player's current jersey number
+  const { data: player } = await supabase
+    .from("tryout_players")
+    .select("jersey_number, association_id")
+    .eq("id", selectedPlayerId)
+    .single()
+
+  if (!player) return { error: "Player not found" }
+
+  // Submit a correction
+  const { error } = await supabase
+    .from("corrections")
+    .insert({
+      player_id: selectedPlayerId,
+      user_id: user.id,
+      association_id: player.association_id,
+      field_name: "jersey_number",
+      old_value: player.jersey_number,
+      new_value: newJerseyNumber,
+      status: "pending",
+    })
+
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function createSuggestedPlayer(
+  data: {
+    association_id: string
+    division: string
+    jersey_number: string
+    name: string
+    position: string
+  }
+): Promise<{ error?: string, playerId?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { data: newPlayer, error } = await supabase
+    .from("tryout_players")
+    .insert({
+      association_id: data.association_id,
+      division: data.division,
+      jersey_number: data.jersey_number,
+      name: data.name,
+      position: data.position,
+      status: "registered",
+      suggested_by: user.id,
+    })
+    .select("id")
+    .single()
+
+  if (error) return { error: error.message }
+  return { playerId: newPlayer.id }
+}
+
+export async function submitSuggestedPlayer(
+  playerId: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  // Fetch player's association
+  const { data: player } = await supabase
+    .from("tryout_players")
+    .select("association_id")
+    .eq("id", playerId)
+    .single()
+
+  if (!player) return { error: "Player not found" }
+
+  const { error } = await supabase
+    .from("corrections")
+    .insert({
+      player_id: playerId,
+      user_id: user.id,
+      association_id: player.association_id,
+      field_name: "add_player",
+      old_value: "",
+      new_value: "suggested",
+      status: "pending",
+    })
+
+  if (error) return { error: error.message }
+  return {}
+}
+
 export async function lockFinalTeam(roundId: string): Promise<{ error?: string, count?: number }> {
   const supabase = await createClient()
 

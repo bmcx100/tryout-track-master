@@ -1,10 +1,18 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import type { ContinuationRound, TryoutPlayer } from "@/types"
 import { RoundSection } from "./round-section"
 import { LongPressMenu } from "@/components/teams/long-press-menu"
-import { toggleFavorite, savePlayerNote } from "@/app/(app)/continuations/actions"
+import { PlayerPicker } from "./player-picker"
+import { AddPlayerSheet } from "./add-player-sheet"
+import {
+  toggleFavorite,
+  savePlayerNote,
+  linkUnknownPlayer,
+  suggestPlayerLink,
+} from "@/app/(app)/continuations/actions"
 import { saveCustomName } from "@/app/(app)/annotations/actions"
 import { submitCorrection } from "@/app/(app)/corrections/actions"
 
@@ -16,6 +24,7 @@ type ContinuationsPageClientProps = {
   annotations: Annotations
   associationId: string
   division: string
+  isAdmin: boolean
 }
 
 export function ContinuationsPageClient({
@@ -24,10 +33,14 @@ export function ContinuationsPageClient({
   annotations: initialAnnotations,
   associationId,
   division,
+  isAdmin,
 }: ContinuationsPageClientProps) {
+  const router = useRouter()
   const [annotations, setAnnotations] = useState(initialAnnotations)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [selectedPlayer, setSelectedPlayer] = useState<TryoutPlayer | null>(null)
+  const [linkingJerseyNumber, setLinkingJerseyNumber] = useState<string | null>(null)
+  const [addingPlayer, setAddingPlayer] = useState<{ jerseyNumber: string } | null>(null)
 
   // Build jersey-number-to-player lookup (keyed by jersey_number)
   const playerMap: Record<string, TryoutPlayer> = {}
@@ -97,6 +110,34 @@ export function ContinuationsPageClient({
     submitCorrection(playerId, fieldName, oldValue, newValue)
   }, [])
 
+  const handleLinkUnknown = useCallback((jerseyNumber: string) => {
+    setLinkingJerseyNumber(jerseyNumber)
+  }, [])
+
+  const handleLinkPlayer = useCallback(async (playerId: string) => {
+    if (!linkingJerseyNumber) return
+    if (isAdmin) {
+      const result = await linkUnknownPlayer(playerId, linkingJerseyNumber)
+      if (result.error) return
+    } else {
+      const result = await suggestPlayerLink(playerId, linkingJerseyNumber)
+      if (result.error) return
+    }
+    setLinkingJerseyNumber(null)
+    router.refresh()
+  }, [linkingJerseyNumber, isAdmin, router])
+
+  const handleAddPlayer = useCallback(() => {
+    const jn = linkingJerseyNumber
+    setLinkingJerseyNumber(null)
+    if (jn) setAddingPlayer({ jerseyNumber: jn })
+  }, [linkingJerseyNumber])
+
+  const handlePlayerSaved = useCallback(() => {
+    setAddingPlayer(null)
+    router.refresh()
+  }, [router])
+
   const selectedAnn = selectedPlayer ? annotations[selectedPlayer.id] : null
 
   if (rounds.length === 0) {
@@ -154,6 +195,7 @@ export function ContinuationsPageClient({
         annotations={annotations}
         onToggleFavorite={handleToggleFavorite}
         onPlayerLongPress={setSelectedPlayer}
+        onLinkUnknown={handleLinkUnknown}
       />
 
       {selectedPlayer && (
@@ -169,6 +211,27 @@ export function ContinuationsPageClient({
           onSubmitCorrection={(fieldName, oldValue, newValue) =>
             handleSubmitCorrection(selectedPlayer.id, fieldName, oldValue, newValue)
           }
+        />
+      )}
+
+      {linkingJerseyNumber && (
+        <PlayerPicker
+          jerseyNumber={linkingJerseyNumber}
+          players={players}
+          onLinkPlayer={handleLinkPlayer}
+          onAddPlayer={handleAddPlayer}
+          onClose={() => setLinkingJerseyNumber(null)}
+        />
+      )}
+
+      {addingPlayer && (
+        <AddPlayerSheet
+          jerseyNumber={addingPlayer.jerseyNumber}
+          division={division}
+          associationId={associationId}
+          isAdmin={isAdmin}
+          onSave={handlePlayerSaved}
+          onClose={() => setAddingPlayer(null)}
         />
       )}
     </div>

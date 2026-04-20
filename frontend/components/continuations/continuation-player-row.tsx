@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useCallback } from "react"
-import { Heart, FileText } from "lucide-react"
+import { Heart, FileText, Link2 } from "lucide-react"
 import type { TryoutPlayer } from "@/types"
 
 type ContinuationPlayerRowProps = {
@@ -14,6 +14,7 @@ type ContinuationPlayerRowProps = {
   customName?: string | null
   onToggleFavorite: () => void
   onLongPress?: (player: TryoutPlayer) => void
+  onLinkUnknown?: () => void
 }
 
 const LONG_PRESS_MS = 500
@@ -29,6 +30,7 @@ export function ContinuationPlayerRow({
   customName,
   onToggleFavorite,
   onLongPress,
+  onLinkUnknown,
 }: ContinuationPlayerRowProps) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const startPos = useRef<{ x: number; y: number } | null>(null)
@@ -42,15 +44,21 @@ export function ContinuationPlayerRow({
   }, [])
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (!player || !onLongPress) return
+    // Support long-press for known players (detail sheet) and unknown players (link picker)
+    const hasHandler = (player && onLongPress) || (!player && onLinkUnknown)
+    if (!hasHandler) return
     e.preventDefault()
     firedRef.current = false
     startPos.current = { x: e.clientX, y: e.clientY }
     timerRef.current = setTimeout(() => {
       firedRef.current = true
-      onLongPress(player)
+      if (player && onLongPress) {
+        onLongPress(player)
+      } else if (!player && onLinkUnknown) {
+        onLinkUnknown()
+      }
     }, LONG_PRESS_MS)
-  }, [onLongPress, player])
+  }, [onLongPress, onLinkUnknown, player])
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!startPos.current) return
@@ -66,9 +74,12 @@ export function ContinuationPlayerRow({
     startPos.current = null
   }, [clearTimer])
 
-  const rowClass = isCut
-    ? "continuation-player-row continuation-player-row-cut"
-    : "continuation-player-row"
+  const isUnknownInteractive = !player && !!onLinkUnknown
+  const rowClass = [
+    "continuation-player-row",
+    isCut ? "continuation-player-row-cut" : "",
+    isUnknownInteractive ? "unknown-interactive" : "",
+  ].filter(Boolean).join(" ")
 
   const displayName = player
     ? (customName || player.name)
@@ -83,11 +94,16 @@ export function ContinuationPlayerRow({
       onPointerCancel={handlePointerUp}
       onPointerLeave={handlePointerUp}
       onContextMenu={(e) => {
-        if (!player || !onLongPress) return
+        const hasHandler = (player && onLongPress) || (!player && onLinkUnknown)
+        if (!hasHandler) return
         e.preventDefault()
         if (!firedRef.current) {
           clearTimer()
-          onLongPress(player)
+          if (player && onLongPress) {
+            onLongPress(player)
+          } else if (!player && onLinkUnknown) {
+            onLinkUnknown()
+          }
         }
       }}
     >
@@ -108,6 +124,9 @@ export function ContinuationPlayerRow({
       </button>
       <span className="player-name">
         {displayName}
+        {isUnknownInteractive && (
+          <Link2 size={10} className="unknown-link-icon" />
+        )}
         {customName && player && customName !== player.name && (
           <span className="custom-name-indicator">{player.name}</span>
         )}

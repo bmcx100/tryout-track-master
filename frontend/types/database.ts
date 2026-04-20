@@ -473,6 +473,7 @@ export type Database = {
           previous_team: string | null
           status: Database["public"]["Enums"]["player_status"]
           status_updated_at: string
+          suggested_by: string | null
           team_id: string | null
           updated_at: string
         }
@@ -488,6 +489,7 @@ export type Database = {
           previous_team?: string | null
           status?: Database["public"]["Enums"]["player_status"]
           status_updated_at?: string
+          suggested_by?: string | null
           team_id?: string | null
           updated_at?: string
         }
@@ -503,6 +505,7 @@ export type Database = {
           previous_team?: string | null
           status?: Database["public"]["Enums"]["player_status"]
           status_updated_at?: string
+          suggested_by?: string | null
           team_id?: string | null
           updated_at?: string
         }

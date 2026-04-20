@@ -580,14 +580,14 @@
 
 .google-btn {
   @apply gap-3 rounded-full px-8 h-11 text-sm font-medium;
-  background: var(--dm-parchment) !important;
-  color: var(--dm-dust) !important;
-  border: 1px solid var(--dm-border-subtle) !important;
+  background: oklch(0.96 0.01 85) !important;
+  color: #1f1f1f !important;
+  border: 1px solid #dadce0 !important;
   box-shadow: none;
 }
 
 .google-btn:hover {
-  background: oklch(0.16 0 0) !important;
+  background: oklch(0.93 0.01 85) !important;
 }
 
 .google-btn-icon {
@@ -2230,6 +2230,11 @@ body:has(.admin-shell) {
   color: oklch(0.70 0.15 250);
 }
 
+.settings-row-icon-green {
+  background: oklch(0.65 0.15 155 / 15%);
+  color: oklch(0.70 0.15 155);
+}
+
 /* ============================================================
    Admin Corrections List
    ============================================================ */
@@ -2351,4 +2356,419 @@ body:has(.admin-shell) {
 
 .my-players-team-gap {
   @apply mt-3;
+}
+
+/* ============================================================
+   Detail Sheet — Admin Mode
+   ============================================================ */
+
+.detail-sheet-header-actions {
+  @apply flex items-center gap-2;
+}
+
+.detail-sheet-delete-btn {
+  @apply flex h-8 w-8 items-center justify-center rounded-full;
+  color: var(--dm-cinnabar);
+  background: oklch(0.65 0.20 25 / 10%);
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.detail-sheet-delete-btn:hover {
+  background: oklch(0.65 0.20 25 / 20%);
+}
+
+.detail-sheet-error {
+  @apply mb-3 rounded-lg px-3 py-2 text-sm;
+  background: oklch(0.65 0.20 25 / 12%);
+  color: oklch(0.75 0.18 25);
+}
+
+.detail-sheet-position-selector {
+  @apply flex gap-2;
+}
+
+.detail-sheet-position-btn {
+  @apply flex h-9 w-12 items-center justify-center rounded-lg text-sm font-semibold;
+  background: oklch(1 0 0 / 5%);
+  color: var(--dm-dust);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+}
+
+.detail-sheet-position-btn:hover {
+  background: oklch(1 0 0 / 10%);
+}
+
+.detail-sheet-position-btn-active {
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+  border-color: var(--dm-gold);
+}
+
+.detail-sheet-delete-confirm {
+  @apply absolute inset-0 z-10 flex flex-col items-center justify-center rounded-t-3xl;
+  background: oklch(0.14 0 0 / 95%);
+}
+
+.detail-sheet-delete-confirm-text {
+  @apply mb-4 text-base font-bold;
+  color: var(--dm-umber);
+}
+
+.detail-sheet-delete-confirm-actions {
+  @apply flex gap-3;
+}
+
+.detail-sheet-delete-confirm-yes {
+  @apply rounded-xl px-6 py-3 text-sm font-semibold;
+  background: var(--dm-cinnabar);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.detail-sheet-delete-confirm-no {
+  @apply rounded-xl px-6 py-3 text-sm font-semibold;
+  background: oklch(1 0 0 / 8%);
+  color: var(--dm-dust);
+  border: none;
+  cursor: pointer;
+}
+
+/* ============================================================
+   Add Player Page
+   ============================================================ */
+
+.add-player-page {
+  @apply px-4 pb-24 pt-4;
+}
+
+.add-player-back {
+  @apply mb-4 flex items-center gap-1 text-sm;
+  color: var(--dm-dust);
+}
+
+.add-player-title {
+  @apply mb-6 text-xl font-semibold;
+  color: var(--dm-umber);
+}
+
+.add-player-form {
+  @apply flex flex-col gap-5;
+}
+
+.add-player-field {
+  @apply flex flex-col gap-1.5;
+}
+
+.add-player-label {
+  @apply text-xs font-semibold uppercase tracking-wider;
+  color: var(--dm-dust);
+}
+
+.add-player-input {
+  @apply rounded-lg border px-3 py-2.5 text-sm;
+  border-color: var(--dm-border);
+  background: oklch(0.12 0 0);
+  color: var(--dm-umber);
+  outline: none;
+}
+
+.add-player-input:focus {
+  border-color: var(--dm-gold);
+}
+
+.add-player-select {
+  @apply rounded-lg border px-3 py-2.5 text-sm;
+  border-color: var(--dm-border);
+  background: oklch(0.12 0 0);
+  color: var(--dm-umber);
+  outline: none;
+}
+
+.add-player-select:focus {
+  border-color: var(--dm-gold);
+}
+
+.add-player-position-selector {
+  @apply flex gap-2;
+}
+
+.add-player-position-btn {
+  @apply flex h-10 w-14 items-center justify-center rounded-lg text-sm font-semibold;
+  background: oklch(1 0 0 / 5%);
+  color: var(--dm-dust);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+}
+
+.add-player-position-btn:hover {
+  background: oklch(1 0 0 / 10%);
+}
+
+.add-player-position-btn-active {
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+  border-color: var(--dm-gold);
+}
+
+.add-player-error {
+  @apply text-sm;
+  color: oklch(0.75 0.18 25);
+}
+
+.add-player-submit {
+  @apply mt-2 w-full rounded-2xl py-3 text-sm font-semibold;
+  background: var(--dm-gold);
+  color: oklch(0.15 0 0);
+  border: none;
+  cursor: pointer;
+  transition: opacity 150ms ease-out;
+}
+
+.add-player-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   Player Picker (Continuations Linking)
+   ============================================================ */
+
+.player-picker-overlay {
+  @apply fixed inset-0 z-20;
+  background: oklch(0 0 0 / 60%);
+  animation: fadeIn 150ms ease-out;
+}
+
+.player-picker {
+  @apply fixed bottom-0 left-0 right-0 z-30 rounded-t-3xl px-5 pb-6 pt-2;
+  background: oklch(0.18 0 0);
+  box-shadow: var(--dm-shadow-lg);
+  animation: slideUp 200ms ease-out;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .player-picker-overlay {
+    @apply absolute;
+  }
+
+  .player-picker {
+    @apply absolute;
+    max-width: 393px;
+  }
+}
+
+.player-picker-header {
+  @apply flex items-center justify-between mb-3 pb-3;
+  border-bottom: 1px solid var(--dm-border);
+}
+
+.player-picker-title {
+  @apply text-base font-bold;
+  color: var(--dm-umber);
+}
+
+.player-picker-header-actions {
+  @apply flex items-center gap-2;
+}
+
+.player-picker-add-btn {
+  @apply flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold;
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.player-picker-add-btn:hover {
+  background: oklch(0.76 0.14 85 / 25%);
+}
+
+.player-picker-search-wrap {
+  @apply relative mb-3;
+}
+
+.player-picker-search-icon {
+  @apply absolute left-3 top-1/2 -translate-y-1/2;
+  color: var(--dm-dust);
+}
+
+.player-picker-search {
+  @apply w-full rounded-lg border py-2 pr-3 text-sm;
+  padding-left: 2.25rem;
+  border-color: var(--dm-border);
+  background: oklch(0.12 0 0);
+  color: var(--dm-umber);
+  outline: none;
+}
+
+.player-picker-search:focus {
+  border-color: var(--dm-gold);
+}
+
+.player-picker-list {
+  @apply flex flex-col overflow-y-auto;
+  flex: 1;
+  min-height: 0;
+  max-height: 50vh;
+}
+
+.player-picker-group {
+  @apply mb-2;
+}
+
+.player-picker-row {
+  @apply flex w-full items-center gap-1.5 px-3 py-2 text-left text-sm;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--dm-border-subtle);
+  color: var(--dm-umber);
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.player-picker-row:hover {
+  background: oklch(1 0 0 / 5%);
+}
+
+.player-picker-row:active {
+  background: oklch(1 0 0 / 8%);
+}
+
+.player-picker-row-name {
+  @apply flex-1 truncate;
+}
+
+.player-picker-empty {
+  @apply py-8 text-center text-sm;
+  color: var(--dm-dust);
+}
+
+.player-picker-confirm {
+  @apply absolute inset-x-0 bottom-0 rounded-t-3xl p-5;
+  background: oklch(0.15 0 0);
+  box-shadow: 0 -4px 20px oklch(0 0 0 / 40%);
+  animation: slideUp 150ms ease-out;
+}
+
+.player-picker-confirm-text {
+  @apply mb-4 text-sm;
+  color: var(--dm-umber);
+  text-wrap: balance;
+}
+
+.player-picker-confirm-actions {
+  @apply flex gap-3;
+}
+
+.player-picker-confirm-yes {
+  @apply flex-1 rounded-lg py-2.5 text-sm font-semibold;
+  background: var(--dm-gold);
+  color: oklch(0.12 0 0);
+  border: none;
+  cursor: pointer;
+}
+
+.player-picker-confirm-no {
+  @apply flex-1 rounded-lg py-2.5 text-sm font-semibold;
+  background: oklch(1 0 0 / 8%);
+  color: var(--dm-umber);
+  border: none;
+  cursor: pointer;
+}
+
+/* ============================================================
+   Add Player Sheet (Continuations)
+   ============================================================ */
+
+.add-player-sheet {
+  @apply fixed bottom-0 left-0 right-0 z-30 rounded-t-3xl px-5 pb-8 pt-2;
+  background: oklch(0.18 0 0);
+  box-shadow: var(--dm-shadow-lg);
+  animation: slideUp 200ms ease-out;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+@media (min-width: 640px) {
+  .add-player-sheet {
+    @apply absolute;
+    max-width: 393px;
+  }
+}
+
+/* ============================================================
+   Unknown Player Interactive Hint
+   ============================================================ */
+
+.unknown-interactive .player-name {
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--dm-dust);
+}
+
+.unknown-link-icon {
+  @apply ml-1 inline;
+  color: var(--dm-dust);
+  vertical-align: middle;
+}
+
+/* ============================================================
+   Corrections: Add Player Review
+   ============================================================ */
+
+.corrections-add-player .corrections-field-label {
+  color: oklch(0.70 0.15 145);
+}
+
+.corrections-review-btn {
+  @apply flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-semibold;
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+  border: none;
+  cursor: pointer;
+}
+
+.corrections-review-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.corrections-edit-fields {
+  @apply flex flex-col gap-2;
+}
+
+.corrections-edit-row {
+  @apply flex items-center gap-2;
+}
+
+.corrections-edit-label {
+  @apply w-16 text-xs font-semibold;
+  color: var(--dm-dust);
+}
+
+.corrections-edit-input {
+  @apply flex-1 rounded-lg border px-2 py-1.5 text-sm;
+  border-color: var(--dm-border);
+  background: oklch(0.12 0 0);
+  color: var(--dm-umber);
+  outline: none;
+}
+
+.corrections-edit-input:focus {
+  border-color: var(--dm-gold);
+}
+
+.corrections-edit-position {
+  @apply flex gap-1;
 }

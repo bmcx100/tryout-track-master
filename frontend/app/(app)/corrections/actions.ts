@@ -51,7 +51,7 @@ export async function getPendingCorrectionsCount(
   return count ?? 0
 }
 
-type CorrectionRow = {
+export type CorrectionRow = {
   id: string
   player_id: string
   field_name: string
@@ -63,6 +63,7 @@ type CorrectionRow = {
   player_jersey: string
   player_name: string
   player_division: string
+  player_position?: string
   submitter_email: string
 }
 
@@ -73,7 +74,7 @@ export async function getPendingCorrections(
 
   const { data: corrections } = await supabase
     .from("corrections")
-    .select("*, tryout_players!inner(jersey_number, name, division)")
+    .select("*, tryout_players!inner(jersey_number, name, division, position)")
     .eq("association_id", associationId)
     .eq("status", "pending")
     .order("created_at", { ascending: false })
@@ -97,6 +98,7 @@ export async function getPendingCorrections(
       jersey_number: string
       name: string
       division: string
+      position: string
     }
     return {
       id: c.id,
@@ -110,6 +112,7 @@ export async function getPendingCorrections(
       player_jersey: player.jersey_number,
       player_name: player.name,
       player_division: player.division,
+      player_position: player.position,
       submitter_email: emailMap.get(c.user_id) ?? c.user_id.substring(0, 8),
     }
   })
@@ -186,5 +189,92 @@ export async function reviewCorrection(
     .eq("id", correctionId)
 
   if (error) return { error: error.message }
+  return {}
+}
+
+export async function reviewSuggestedPlayer(
+  correctionId: string,
+  action: "approved" | "rejected",
+  updates?: { name?: string, jersey_number?: string, position?: string }
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  // Fetch the correction
+  const { data: correction } = await supabase
+    .from("corrections")
+    .select("*")
+    .eq("id", correctionId)
+    .single()
+
+  if (!correction) return { error: "Correction not found" }
+  if (correction.status !== "pending") return { error: "Correction already reviewed" }
+  if (correction.field_name !== "add_player") return { error: "Not an add_player correction" }
+
+  if (action === "approved") {
+    // Apply any edits the admin made
+    if (updates && Object.keys(updates).length > 0) {
+      // Check for duplicate jersey number if changing it
+      if (updates.jersey_number) {
+        const { data: player } = await supabase
+          .from("tryout_players")
+          .select("division, association_id")
+          .eq("id", correction.player_id)
+          .single()
+
+        if (player) {
+          const { data: duplicate } = await supabase
+            .from("tryout_players")
+            .select("id")
+            .eq("association_id", player.association_id)
+            .eq("division", player.division)
+            .eq("jersey_number", updates.jersey_number)
+            .neq("id", correction.player_id)
+            .is("deleted_at", null)
+            .maybeSingle()
+
+          if (duplicate) {
+            return { error: `Jersey #${updates.jersey_number} already exists in this division` }
+          }
+        }
+      }
+
+      const { error: updateError } = await supabase
+        .from("tryout_players")
+        .update(updates)
+        .eq("id", correction.player_id)
+
+      if (updateError) return { error: updateError.message }
+    }
+
+    // Clear suggested_by to make player visible to everyone
+    const { error: clearError } = await supabase
+      .from("tryout_players")
+      .update({ suggested_by: null })
+      .eq("id", correction.player_id)
+
+    if (clearError) return { error: clearError.message }
+  } else {
+    // Rejected: soft-delete the suggested player
+    const { error: deleteError } = await supabase
+      .from("tryout_players")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", correction.player_id)
+
+    if (deleteError) return { error: deleteError.message }
+  }
+
+  // Update correction status
+  const { error: statusError } = await supabase
+    .from("corrections")
+    .update({
+      status: action,
+      reviewed_by: user.id,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", correctionId)
+
+  if (statusError) return { error: statusError.message }
   return {}
 }

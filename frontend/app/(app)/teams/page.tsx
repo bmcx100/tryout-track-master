@@ -30,6 +30,7 @@ export default async function TeamsPage() {
     .eq("association_id", associationId)
     .eq("division", activeDivision)
     .is("deleted_at", null)
+    .is("suggested_by", null)
     .order("name")
 
   // Fetch teams filtered by active division
@@ -98,6 +99,7 @@ export default async function TeamsPage() {
         savedPreviousOrders={savedPreviousOrders}
         associationId={associationId}
         annotations={annotations}
+        role={role}
       />
     </>
   )

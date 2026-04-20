@@ -24,6 +24,7 @@ type RoundSectionProps = {
   annotations: Annotations
   onToggleFavorite: (playerId: string) => void
   onPlayerLongPress?: (player: TryoutPlayer) => void
+  onLinkUnknown?: (jerseyNumber: string) => void
 }
 
 const POSITION_ORDER: Record<string, number> = { F: 0, D: 1, G: 2 }
@@ -118,6 +119,7 @@ export function RoundSection({
   annotations,
   onToggleFavorite,
   onPlayerLongPress,
+  onLinkUnknown,
 }: RoundSectionProps) {
   const sessions = (activeRound.sessions ?? []) as SessionData[]
   const sessionInfo = getSessionInfo(sessions)
@@ -246,6 +248,10 @@ export function RoundSection({
                         if (p.player) onToggleFavorite(p.player.id)
                       }}
                       onLongPress={onPlayerLongPress}
+                      onLinkUnknown={!p.player && onLinkUnknown
+                        ? () => onLinkUnknown(p.jerseyNumber)
+                        : undefined
+                      }
                     />
                   ))}
                 </div>
@@ -285,6 +291,10 @@ export function RoundSection({
                   if (p.player) onToggleFavorite(p.player.id)
                 }}
                 onLongPress={onPlayerLongPress}
+                onLinkUnknown={!p.player && onLinkUnknown
+                  ? () => onLinkUnknown(p.jerseyNumber)
+                  : undefined
+                }
               />
             ))
           )}

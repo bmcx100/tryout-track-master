@@ -27,7 +27,7 @@ export async function requireAssociation() {
     .eq("user_id", user.id)
 
   // Determine active association ID
-  let activeAssociationId = activeGroup?.association_id
+  const activeAssociationId = activeGroup?.association_id
     ?? memberships?.[0]?.association_id
     ?? null
 
