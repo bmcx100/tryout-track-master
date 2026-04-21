@@ -24,14 +24,29 @@ import { PlayerRow } from "./player-row"
 const TIER_RANK: Record<string, number> = { AA: 0, A: 1, BB: 2, B: 3, C: 4 }
 const POSITION_RANK: Record<string, number> = { F: 0, D: 1, G: 2 }
 
-/** Rank a previous_team label: AA first, then higher division (U15 before U13) */
-function previousTeamRank(label: string): number {
-  const match = label.match(/^U(\d+)(AA|BB|A|B|C)$/i)
-  if (!match) return 999
+/** Parse a previous_team label like "U15AA" or "U15A-NGHA" */
+function parsePreviousTeam(label: string): { rank: number, suffix: string } {
+  const match = label.match(/^U(\d+)(AA|BB|A|B|C)(?:-(.+))?$/i)
+  if (!match) return { rank: 999, suffix: label }
   const divNum = parseInt(match[1], 10)
   const tier = match[2].toUpperCase()
   const tierRank = TIER_RANK[tier] ?? 99
-  return tierRank * 100 + (99 - divNum)
+  const rank = tierRank * 100 + (99 - divNum)
+  const suffix = match[3] ?? ""
+  return { rank, suffix }
+}
+
+/** Compare two previous_team labels: same rank grouped together, current assoc first, then external alphabetically */
+function comparePreviousTeams(a: string, b: string): number {
+  const pa = parsePreviousTeam(a)
+  const pb = parsePreviousTeam(b)
+  if (pa.rank !== pb.rank) return pa.rank - pb.rank
+  // Current association (no suffix) comes before external (has suffix)
+  const aExternal = pa.suffix ? 1 : 0
+  const bExternal = pb.suffix ? 1 : 0
+  if (aExternal !== bExternal) return aExternal - bExternal
+  // Both external: sort suffix alphabetically
+  return pa.suffix.localeCompare(pb.suffix)
 }
 
 function positionRank(p: TryoutPlayer): number {
@@ -139,7 +154,7 @@ function PreviousTeamSection({
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="team-header-left">
-          <span className="team-name">Formerly {label}</span>
+          <span className="team-name">Previously {label}</span>
           <span
             role="button"
             className={`team-heart-btn ${allHearted ? "team-heart-btn-active" : ""}`}
@@ -293,7 +308,7 @@ export function PreviousTeamsView({
 
   const groupEntries = useMemo(
     () => Array.from(groups.keys())
-      .sort((a, b) => previousTeamRank(a) - previousTeamRank(b))
+      .sort(comparePreviousTeams)
       .map((key) => [key, orderedGroups[key] ?? []] as const),
     [groups, orderedGroups],
   )

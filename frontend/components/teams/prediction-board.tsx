@@ -34,15 +34,35 @@ function sortTeams(teams: Team[]): Team[] {
   })
 }
 
-/** Rank a previous_team string: U15AA=0, U13AA=1, U15A=2, ... */
-function previousTeamRank(prevTeam: string | null | undefined): number {
-  if (!prevTeam) return 999
-  const match = prevTeam.match(/^U(\d+)(AA|BB|A|B|C)$/i)
-  if (!match) return 999
+/** Parse a previous_team label like "U15AA" or "U15A-NGHA" */
+function parsePreviousTeam(label: string): { rank: number, suffix: string } {
+  const match = label.match(/^U(\d+)(AA|BB|A|B|C)(?:-(.+))?$/i)
+  if (!match) return { rank: 999, suffix: label }
   const divNum = parseInt(match[1], 10)
   const tier = match[2].toUpperCase()
   const tierRank = TIER_RANK[tier] ?? 99
-  return tierRank * 100 + (99 - divNum)
+  const rank = tierRank * 100 + (99 - divNum)
+  const suffix = match[3] ?? ""
+  return { rank, suffix }
+}
+
+/** Compare two previous_team labels: same rank grouped, current assoc first, then external alphabetically */
+function comparePreviousTeams(a: string, b: string): number {
+  const pa = parsePreviousTeam(a)
+  const pb = parsePreviousTeam(b)
+  if (pa.rank !== pb.rank) return pa.rank - pb.rank
+  const aExternal = pa.suffix ? 1 : 0
+  const bExternal = pb.suffix ? 1 : 0
+  if (aExternal !== bExternal) return aExternal - bExternal
+  return pa.suffix.localeCompare(pb.suffix)
+}
+
+/** Rank a previous_team for player sorting within predictions */
+function previousTeamRank(prevTeam: string | null | undefined): number {
+  if (!prevTeam) return 999
+  const parsed = parsePreviousTeam(prevTeam)
+  // External teams sort after same-rank internal teams
+  return parsed.rank * 2 + (parsed.suffix ? 1 : 0)
 }
 
 /** Sort players by position within a team slice: F → D → G → ? */
@@ -83,10 +103,8 @@ function sortByPreviousTeamOrders(
     groups.set(key, existing)
   }
 
-  // Sort group keys by previous team rank
-  const sortedKeys = Array.from(groups.keys()).sort(
-    (a, b) => previousTeamRank(a) - previousTeamRank(b),
-  )
+  // Sort group keys: same rank grouped, current assoc first, then external
+  const sortedKeys = Array.from(groups.keys()).sort(comparePreviousTeams)
 
   // Within each group, apply saved previous team order or fall back to jersey
   const result: TryoutPlayer[] = []
