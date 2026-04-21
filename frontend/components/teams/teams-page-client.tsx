@@ -15,7 +15,7 @@ import {
   resetPredictionOrders,
   resetPreviousTeamOrders,
 } from "@/app/(app)/teams/actions"
-import { toggleFavorite, saveCustomName, savePlayerNote } from "@/app/(app)/annotations/actions"
+import { toggleFavorite, bulkToggleFavorite, saveCustomName, savePlayerNote } from "@/app/(app)/annotations/actions"
 import { submitCorrection, suggestPlayer } from "@/app/(app)/corrections/actions"
 import { adminUpdatePlayer, adminDeletePlayer } from "@/app/(app)/players/actions"
 
@@ -101,6 +101,22 @@ export function TeamsPageClient({
       return { ...prev, [playerId]: { isFavorite: true, notes: null, customName: null } }
     })
     toggleFavorite(playerId)
+  }, [])
+
+  const handleBulkToggleFavorite = useCallback((playerIds: string[], setFavorite: boolean) => {
+    setAnnotations((prev) => {
+      const next = { ...prev }
+      for (const id of playerIds) {
+        const existing = next[id]
+        if (existing) {
+          next[id] = { ...existing, isFavorite: setFavorite }
+        } else {
+          next[id] = { isFavorite: setFavorite, notes: null, customName: null }
+        }
+      }
+      return next
+    })
+    bulkToggleFavorite(playerIds, setFavorite)
   }, [])
 
   const handleSaveName = useCallback((playerId: string, customName: string) => {
@@ -205,6 +221,7 @@ export function TeamsPageClient({
           onOrderChange={handlePreviousOrderChange}
           onPlayerLongPress={setSelectedPlayer}
           onToggleFavorite={handleToggleFavorite}
+          onBulkToggleFavorite={handleBulkToggleFavorite}
         />
       )}
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useMemo } from "react"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, Heart } from "lucide-react"
 import {
   DndContext,
   closestCenter,
@@ -101,21 +101,36 @@ function groupByPreviousTeam(players: TryoutPlayer[]): Map<string, TryoutPlayer[
 function PreviousTeamSection({
   label,
   players,
+  allPlayers,
   index,
   annotations,
   onPlayerLongPress,
   onToggleFavorite,
+  onBulkToggleFavorite,
 }: {
   label: string
   players: TryoutPlayer[]
+  allPlayers: TryoutPlayer[]
   index: number
   annotations?: Annotations
   onPlayerLongPress?: (player: TryoutPlayer) => void
   onToggleFavorite?: (playerId: string) => void
+  onBulkToggleFavorite?: (playerIds: string[], setFavorite: boolean) => void
 }) {
   const [isExpanded, setIsExpanded] = useState(true)
   const tones = ["team-header-tone-1", "team-header-tone-2", "team-header-tone-3"]
   const toneClass = tones[index % 3]
+
+  const allHearted = allPlayers.length > 0 && allPlayers.every(
+    (p) => annotations?.[p.id]?.isFavorite === true
+  )
+
+  const handleHeartClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!onBulkToggleFavorite) return
+    const ids = allPlayers.map((p) => p.id)
+    onBulkToggleFavorite(ids, !allHearted)
+  }
 
   return (
     <div>
@@ -125,9 +140,16 @@ function PreviousTeamSection({
       >
         <div className="team-header-left">
           <span className="team-name">Formerly {label}</span>
+          <span
+            role="button"
+            className={`team-heart-btn ${allHearted ? "team-heart-btn-active" : ""}`}
+            onClick={handleHeartClick}
+          >
+            <Heart size={16} fill={allHearted ? "currentColor" : "none"} />
+          </span>
         </div>
         <div className="team-header-right">
-          <span className="team-count">{players.length} Players</span>
+          <span className="team-count">{allPlayers.length} Players</span>
           <ChevronDown
             size={16}
             className="team-chevron"
@@ -174,6 +196,7 @@ type PreviousTeamsViewProps = {
   onOrderChange?: (previousTeam: string, playerIds: string[]) => void
   onPlayerLongPress?: (player: TryoutPlayer) => void
   onToggleFavorite?: (playerId: string) => void
+  onBulkToggleFavorite?: (playerIds: string[], setFavorite: boolean) => void
 }
 
 export function PreviousTeamsView({
@@ -184,6 +207,7 @@ export function PreviousTeamsView({
   onOrderChange,
   onPlayerLongPress,
   onToggleFavorite,
+  onBulkToggleFavorite,
 }: PreviousTeamsViewProps) {
   const groups = useMemo(() => groupByPreviousTeam(players), [players])
 
@@ -274,6 +298,15 @@ export function PreviousTeamsView({
     [groups, orderedGroups],
   )
 
+  // Unfiltered lookup for bulk heart (includes all positions)
+  const allPlayersByGroup = useMemo(() => {
+    const map: Record<string, TryoutPlayer[]> = {}
+    for (const [label, gp] of groupEntries) {
+      map[label] = gp
+    }
+    return map
+  }, [groupEntries])
+
   // Apply position filter at display level (after ordering)
   const displayEntries = positionFilter
     ? groupEntries
@@ -292,10 +325,12 @@ export function PreviousTeamsView({
           key={label}
           label={label}
           players={groupPlayers}
+          allPlayers={allPlayersByGroup[label] ?? groupPlayers}
           index={i}
           annotations={annotations}
           onPlayerLongPress={onPlayerLongPress}
           onToggleFavorite={onToggleFavorite}
+          onBulkToggleFavorite={onBulkToggleFavorite}
         />
       ))}
     </DndContext>

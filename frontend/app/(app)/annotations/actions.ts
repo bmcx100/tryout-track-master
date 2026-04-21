@@ -56,6 +56,28 @@ export async function getPlayerAnnotations(
   return result
 }
 
+export async function bulkToggleFavorite(
+  playerIds: string[],
+  setFavorite: boolean,
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const rows = playerIds.map((playerId) => ({
+    user_id: user.id,
+    player_id: playerId,
+    is_favorite: setFavorite,
+  }))
+
+  const { error } = await supabase
+    .from("player_annotations")
+    .upsert(rows, { onConflict: "user_id,player_id", ignoreDuplicates: false })
+
+  if (error) return { error: error.message }
+  return {}
+}
+
 export async function saveCustomName(
   playerId: string,
   customName: string

@@ -316,7 +316,28 @@
 }
 
 .team-header-left {
-  @apply flex items-center gap-2;
+  @apply flex items-center gap-2.5;
+}
+
+.team-heart-btn {
+  @apply flex items-center justify-center;
+  color: var(--dm-dust);
+  opacity: 0.4;
+  transition: all 150ms ease-out;
+  cursor: pointer;
+}
+
+.team-heart-btn:hover {
+  opacity: 0.7;
+}
+
+.team-heart-btn-active {
+  color: oklch(0.65 0.20 25);
+  opacity: 1;
+}
+
+.team-heart-btn-active:hover {
+  opacity: 0.8;
 }
 
 .team-header-right {
