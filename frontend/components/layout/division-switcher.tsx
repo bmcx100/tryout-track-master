@@ -69,8 +69,6 @@ export function DivisionSwitcher({
     }
   }, [open, handleKeyDown])
 
-  const showAssociations = associations.length > 1
-
   return (
     <>
       <header className="app-header">
@@ -90,27 +88,23 @@ export function DivisionSwitcher({
           <div className="division-sheet">
             <div className="division-sheet-handle" />
 
-            {showAssociations && (
-              <>
-                <h2 className="division-sheet-title">Select Association</h2>
-                <div className="division-options">
-                  {associations.map((a) => (
-                    <button
-                      key={a.id}
-                      className={`division-option ${a.id === associationId ? "division-option-active" : ""}`}
-                      onClick={() => handleSelectAssociation(a.id)}
-                    >
-                      <div className="division-option-info">
-                        <span className="assoc-option-abbr">{a.abbreviation}</span>
-                        <span className="division-option-count">{a.name}</span>
-                      </div>
-                      <div className={`division-option-radio ${a.id === associationId ? "division-option-radio-checked" : ""}`} />
-                    </button>
-                  ))}
-                </div>
-                <div className="division-sheet-divider" />
-              </>
-            )}
+            <h2 className="division-sheet-title">Select Association</h2>
+            <div className="division-options">
+              {associations.map((a) => (
+                <button
+                  key={a.id}
+                  className={`division-option ${a.id === associationId ? "division-option-active" : ""}`}
+                  onClick={() => handleSelectAssociation(a.id)}
+                >
+                  <div className="division-option-info">
+                    <span className="assoc-option-abbr">{a.abbreviation}</span>
+                    <span className="division-option-count">{a.name}</span>
+                  </div>
+                  <div className={`division-option-radio ${a.id === associationId ? "division-option-radio-checked" : ""}`} />
+                </button>
+              ))}
+            </div>
+            <div className="division-sheet-divider" />
 
             <h2 className="division-sheet-title">Select Division</h2>
             <div className="division-options">
