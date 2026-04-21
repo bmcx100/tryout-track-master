@@ -1,11 +1,19 @@
 "use client"
 
 import { useState, useEffect, useCallback, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
 import { setActiveDivision } from "@/app/(app)/division/actions"
 import { setActiveAssociation } from "@/app/(app)/association/actions"
+
+const TITLE_MAP: Record<string, string> = {
+  "/dashboard": "Home",
+  "/teams": "Teams",
+  "/continuations": "Sessions",
+  "/my-players": "My Players",
+  "/settings": "Settings",
+}
 
 type Association = {
   id: string
@@ -19,7 +27,6 @@ type DivisionSwitcherProps = {
   associationId: string
   abbreviation: string
   initials: string
-  title?: string
   hasPendingCorrections?: boolean
   associations: Association[]
 }
@@ -30,15 +37,16 @@ export function DivisionSwitcher({
   associationId,
   abbreviation,
   initials,
-  title = "Teams",
   hasPendingCorrections,
   associations,
 }: DivisionSwitcherProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const pathname = usePathname()
 
   const label = `${abbreviation}-${activeDivision}`
+  const title = TITLE_MAP[Object.keys(TITLE_MAP).find((key) => pathname.startsWith(key)) ?? ""] ?? "Teams"
 
   const handleSelectDivision = (division: string) => {
     setOpen(false)

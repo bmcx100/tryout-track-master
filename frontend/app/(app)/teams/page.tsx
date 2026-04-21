@@ -1,17 +1,11 @@
 import { requireAssociation } from "@/lib/auth"
-import { DivisionSwitcher } from "@/components/layout/division-switcher"
 import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
-import { getAllAssociations } from "@/app/(app)/association/actions"
 import { getPlayerAnnotations } from "@/app/(app)/annotations/actions"
-import { getPendingCorrectionsCount } from "@/app/(app)/corrections/actions"
 import { TeamsPageClient } from "@/components/teams/teams-page-client"
 import type { TryoutPlayer, Team } from "@/types"
 
 export default async function TeamsPage() {
-  const { supabase, user, associationId, association, role } = await requireAssociation()
-
-  const email = user.email ?? ""
-  const initials = email.substring(0, 2).toUpperCase()
+  const { supabase, user, associationId, role } = await requireAssociation()
 
   // Fetch divisions with player counts
   const divisions = await getDivisions(associationId)
@@ -81,26 +75,10 @@ export default async function TeamsPage() {
   }
 
   // Fetch user's player annotations (hearts, names)
-  const [annotations, associations] = await Promise.all([
-    getPlayerAnnotations(associationId),
-    getAllAssociations(),
-  ])
-
-  const hasPendingCorrections = (role === "group_admin" || role === "admin")
-    ? (await getPendingCorrectionsCount(associationId)) > 0
-    : false
+  const annotations = await getPlayerAnnotations(associationId)
 
   return (
     <>
-      <DivisionSwitcher
-        divisions={divisions}
-        activeDivision={activeDivision}
-        associationId={associationId}
-        abbreviation={association.abbreviation}
-        initials={initials}
-        hasPendingCorrections={hasPendingCorrections}
-        associations={associations}
-      />
       <TeamsPageClient
         key={`${associationId}-${activeDivision}`}
         players={allPlayers}
