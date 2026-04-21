@@ -75,6 +75,8 @@
   --dm-umber: oklch(0.80 0 0);
   --dm-dust: oklch(0.48 0 0);
   --dm-official-green: oklch(0.65 0.15 144);
+  --dm-red: oklch(0.65 0.18 25);
+  --dm-orange: oklch(0.72 0.15 55);
 
   /* Border base: light at low alpha */
   --dm-border: oklch(1 0 0 / 8%);
@@ -169,7 +171,7 @@
    ============================================================ */
 
 .app-header {
-  @apply sticky top-0 z-10 flex h-14 items-center px-5;
+  @apply sticky top-0 z-10 flex h-14 items-center px-5 mb-4;
   background: oklch(0.12 0 0 / 85%);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--dm-border);
@@ -1284,6 +1286,7 @@ body:has(.admin-shell) {
 
 .dashboard-page {
   @apply px-4 pb-20;
+  user-select: none;
 }
 
 .dashboard-header {
@@ -1354,21 +1357,27 @@ body:has(.admin-shell) {
   @apply mb-6;
 }
 
+.dashboard-section:first-child {
+  margin-top: 12px;
+}
+
 .dashboard-section-header {
-  @apply flex items-center gap-2 text-sm font-semibold px-1 mb-3;
-  color: var(--dm-dust);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-family: var(--font-ibm-plex-mono);
+  @apply flex items-center gap-2 font-semibold px-1 mb-3;
+  font-size: 13px;
+  color: var(--dm-umber);
+  font-family: var(--font-body);
+  text-decoration: none;
 }
 
 .dashboard-section-count {
-  @apply inline-flex items-center justify-center rounded-full text-xs font-bold;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  padding: 0 0.35rem;
-  background: var(--dm-gold);
-  color: oklch(0.12 0 0);
+  color: var(--dm-umber);
+  font-weight: 600;
+}
+
+.dashboard-section-arrow {
+  @apply ml-auto;
+  color: var(--dm-dust);
+  font-size: 16px;
 }
 
 .dashboard-activity-list {
@@ -1382,6 +1391,7 @@ body:has(.admin-shell) {
   text-decoration: none;
   color: inherit;
   transition: background 200ms ease-out;
+  margin-left: 10px;
 }
 
 .dashboard-activity-card:hover {
@@ -1394,8 +1404,8 @@ body:has(.admin-shell) {
 
 .dashboard-activity-badge {
   @apply inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-bold;
-  background: oklch(0.76 0.14 85 / 15%);
-  color: var(--dm-gold);
+  background: oklch(1 0 0 / 8%);
+  color: var(--dm-umber);
   font-family: var(--font-ibm-plex-mono);
 }
 
@@ -1433,69 +1443,97 @@ body:has(.admin-shell) {
   color: var(--dm-dust);
 }
 
-.dashboard-fav-list {
-  @apply flex flex-col;
+/* Status cards */
+.dashboard-status-card {
+  @apply rounded-lg px-3.5 py-2.5;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  margin-left: 10px;
+  border-left: 3px solid transparent;
 }
 
-.dashboard-fav-row {
-  @apply flex items-center gap-2 px-3 py-2.5;
-  border-bottom: 1px solid var(--dm-border);
+.dashboard-status-card-continuing {
+  border-left-color: var(--dm-official-green);
 }
 
-.dashboard-fav-row:last-child {
-  border-bottom: none;
+.dashboard-status-card-cut {
+  border-left-color: var(--dm-red);
 }
 
-.dashboard-fav-jersey {
-  @apply text-sm font-bold flex-shrink-0;
-  color: var(--dm-gold);
+.dashboard-status-card-missing {
+  border-left-color: var(--dm-orange);
+  background: oklch(0.72 0.15 55 / 6%);
+  border-color: oklch(0.72 0.15 55 / 15%);
+  border-left-color: var(--dm-orange);
+}
+
+.dashboard-status-card-made_team {
+  border-left-color: var(--dm-gold);
+}
+
+.dashboard-status-card-registered {
+  border-left-color: var(--dm-dust);
+}
+
+.dashboard-status-heading {
+  @apply font-semibold;
+  font-size: 13px;
   font-family: var(--font-ibm-plex-mono);
-  min-width: 2.5rem;
+  margin-bottom: 4px;
 }
 
-.dashboard-fav-position {
-  @apply text-xs rounded-sm px-1 py-0.5 flex-shrink-0;
-  background: oklch(1 0 0 / 6%);
-  color: var(--dm-dust);
-  font-family: var(--font-ibm-plex-mono);
-}
-
-.dashboard-fav-name {
-  @apply text-sm truncate;
-  color: var(--dm-umber);
-}
-
-.dashboard-fav-spacer {
-  @apply flex-1;
-}
-
-.dashboard-fav-status {
-  @apply text-xs flex-shrink-0 text-right flex items-center gap-1;
-  font-family: var(--font-ibm-plex-mono);
-}
-
-.dashboard-fav-status-continuing {
+.dashboard-status-heading-continuing {
   color: var(--dm-official-green);
 }
 
-.dashboard-fav-status-cut {
-  color: oklch(0.65 0.18 25);
+.dashboard-status-heading-cut {
+  color: var(--dm-red);
 }
 
-.dashboard-fav-status-made_team {
+.dashboard-status-heading-missing {
+  color: var(--dm-orange);
+}
+
+.dashboard-status-heading-made_team {
   color: var(--dm-gold);
 }
 
-.dashboard-fav-status-missing {
-  color: oklch(0.72 0.15 55);
-}
-
-.dashboard-fav-status-registered {
+.dashboard-status-heading-registered {
   color: var(--dm-dust);
 }
 
-.dashboard-fav-alert {
-  @apply flex-shrink-0;
+.dashboard-status-names {
+  font-size: 12px;
+  color: var(--dm-dust);
+  font-family: var(--font-ibm-plex-mono);
+  user-select: text;
+}
+
+.dashboard-results-link {
+  @apply block text-center;
+  font-size: 12px;
+  font-family: var(--font-ibm-plex-mono);
+  color: var(--dm-gold);
+  padding: 8px 0 0;
+  text-decoration: none;
+}
+
+.dashboard-see-all-link {
+  @apply block text-center;
+  font-size: 12px;
+  font-family: var(--font-ibm-plex-mono);
+  color: var(--dm-gold);
+  padding: 12px 0;
+  text-decoration: none;
+}
+
+.dashboard-divider {
+  height: 1px;
+  background: var(--dm-border);
+  margin: 16px 0;
 }
 
 .dashboard-empty {
@@ -1882,38 +1920,156 @@ body:has(.admin-shell) {
 
 /* -- My Players Page ---------------------------------------- */
 
-.my-players-page {
-  @apply px-4 pb-24 pt-2;
+/* -- My Favourites Page ------------------------------------ */
+
+.my-favourites-page {
+  @apply pb-24;
 }
 
-.my-players-empty {
-  @apply flex flex-col items-center gap-2 py-16 text-center;
+.my-favourites-header {
+  @apply flex items-center gap-2;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--dm-border);
+}
+
+.my-favourites-back {
+  color: var(--dm-gold);
+  text-decoration: none;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.my-favourites-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dm-umber);
+  font-family: var(--font-body);
+}
+
+.my-favourites-count {
   color: var(--dm-dust);
+  font-weight: 400;
 }
 
-.my-players-empty-hint {
-  @apply text-xs;
-  opacity: 0.7;
+.my-favourites-group {
+  margin-bottom: 0;
 }
 
-.my-players-division {
-  @apply mb-4;
+.my-favourites-group-header {
+  @apply flex items-center gap-2;
+  padding: 12px 16px 8px;
+  font-size: 13px;
+  font-family: var(--font-ibm-plex-mono);
+  font-weight: 600;
 }
 
-.my-players-division-title {
-  @apply mb-1 mt-3 text-xs font-bold uppercase tracking-wider;
+.my-favourites-group-header-continuing {
+  color: var(--dm-official-green);
+}
+
+.my-favourites-group-header-cut {
+  color: var(--dm-red);
+}
+
+.my-favourites-group-header-missing {
+  color: var(--dm-orange);
+}
+
+.my-favourites-group-header-made_team {
   color: var(--dm-gold);
 }
 
-.my-players-row {
-  @apply flex items-center gap-2 rounded-lg px-3 py-2.5;
-  background: var(--dm-dune);
-  border-bottom: 1px solid oklch(1 0 0 / 4%);
+.my-favourites-group-header-registered {
+  color: var(--dm-dust);
 }
 
-.my-players-heart {
-  @apply flex w-5 flex-shrink-0 items-center justify-center;
-  color: oklch(0.65 0.20 25);
+.my-favourites-group-dot {
+  @apply flex-shrink-0 rounded-full;
+  width: 6px;
+  height: 6px;
+}
+
+.my-favourites-group-dot-continuing {
+  background: var(--dm-official-green);
+}
+
+.my-favourites-group-dot-cut {
+  background: var(--dm-red);
+}
+
+.my-favourites-group-dot-missing {
+  background: var(--dm-orange);
+}
+
+.my-favourites-group-dot-made_team {
+  background: var(--dm-gold);
+}
+
+.my-favourites-group-dot-registered {
+  background: var(--dm-dust);
+}
+
+.my-favourites-row {
+  @apply flex items-center gap-1.5;
+  padding: 9px 16px 9px 20px;
+  border-bottom: 1px solid oklch(1 0 0 / 5%);
+  transition: background 200ms ease-out;
+  cursor: pointer;
+}
+
+.my-favourites-row:last-child {
+  border-bottom: none;
+}
+
+.my-favourites-row-even {
+  background: oklch(0.15 0 0);
+}
+
+.my-favourites-row-odd {
+  background: oklch(0.17 0 0);
+}
+
+.my-favourites-row-cut {
+  opacity: 0.5;
+}
+
+.my-favourites-row-missing {
+  background: oklch(0.72 0.15 55 / 4%) !important;
+}
+
+.my-favourites-row-unhearted {
+  opacity: 0.5;
+}
+
+.my-favourites-row-unhearted .favorite-btn {
+  opacity: 1;
+}
+
+.my-favourites-jersey-cut {
+  text-decoration: line-through;
+}
+
+.my-favourites-missing-level {
+  @apply flex-shrink-0;
+  font-size: 11px;
+  font-family: var(--font-ibm-plex-mono);
+  color: var(--dm-orange);
+  font-weight: 500;
+}
+
+.my-favourites-group-divider {
+  height: 1px;
+  background: var(--dm-border);
+  margin: 0;
+}
+
+.my-favourites-footer {
+  @apply text-center;
+  padding: 16px;
+  font-size: 12px;
+  color: var(--dm-dust);
+  font-family: var(--font-ibm-plex-mono);
 }
 
 /* -- Round History Modal ------------------------------------ */
@@ -2658,13 +2814,7 @@ body:has(.admin-shell) {
   cursor: not-allowed;
 }
 
-/* ============================================================
-   My Players Team Gap
-   ============================================================ */
-
-.my-players-team-gap {
-  @apply mt-3;
-}
+/* (my-players-team-gap removed — replaced by my-favourites) */
 
 /* ============================================================
    Detail Sheet — Admin Mode
