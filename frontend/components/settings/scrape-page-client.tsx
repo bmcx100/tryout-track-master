@@ -9,6 +9,7 @@ import {
   saveDraftRound,
   confirmDraft,
   discardDraft,
+  getNextRoundNumber,
   type ScrapeResult,
 } from "@/app/(app)/continuations/scraper-actions"
 import type { ContinuationRound } from "@/types"
@@ -45,6 +46,7 @@ export function ScrapePageClient({
   const [error, setError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
   const [drafts, setDrafts] = useState(existingDrafts)
+  const [roundNumber, setRoundNumber] = useState<number | null>(null)
 
   const handleScrape = async () => {
     setError(null)
@@ -63,6 +65,8 @@ export function ScrapePageClient({
 
       setResult(scrapeResult)
       setTeamLevelOverride(scrapeResult.teamLevel)
+      const nextRound = await getNextRoundNumber(associationId, division, scrapeResult.teamLevel ?? "AA")
+      setRoundNumber(nextRound)
       setScraping(false)
     } catch {
       setError("An unexpected error occurred")
@@ -80,7 +84,8 @@ export function ScrapePageClient({
       const { draftId: newDraftId, error: saveErr } = await saveDraftRound(
         associationId,
         division,
-        resultToSave
+        resultToSave,
+        roundNumber ?? undefined
       )
 
       if (saveErr || !newDraftId) {
@@ -110,6 +115,7 @@ export function ScrapePageClient({
     setResult(null)
     setDraftId(null)
     setTeamLevelOverride(null)
+    setRoundNumber(null)
     setError(null)
   }
 
@@ -205,7 +211,12 @@ export function ScrapePageClient({
                 <select
                   className="scrape-team-select"
                   value={teamLevelOverride ?? "AA"}
-                  onChange={(e) => setTeamLevelOverride(e.target.value)}
+                  onChange={async (e) => {
+                    const level = e.target.value
+                    setTeamLevelOverride(level)
+                    const nextRound = await getNextRoundNumber(associationId, division, level)
+                    setRoundNumber(nextRound)
+                  }}
                 >
                   {TEAM_LEVELS.map((level) => (
                     <option key={level} value={level}>
@@ -213,6 +224,18 @@ export function ScrapePageClient({
                     </option>
                   ))}
                 </select>
+              </span>
+            </div>
+            <div className="scrape-summary-row">
+              <span className="scrape-summary-label">Round</span>
+              <span className="scrape-summary-value">
+                <input
+                  type="number"
+                  min={1}
+                  className="scrape-round-input"
+                  value={roundNumber ?? ""}
+                  onChange={(e) => setRoundNumber(parseInt(e.target.value, 10) || 1)}
+                />
               </span>
             </div>
             <div className="scrape-summary-row">

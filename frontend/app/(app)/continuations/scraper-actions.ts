@@ -213,16 +213,13 @@ export async function scrapeContinuationsPage(
   }
 }
 
-export async function saveDraftRound(
+export async function getNextRoundNumber(
   associationId: string,
   division: string,
-  scrapeResult: ScrapeResult
-): Promise<{ draftId: string, error?: string }> {
+  teamLevel: string
+): Promise<number> {
   const supabase = await createClient()
 
-  const teamLevel = scrapeResult.teamLevel ?? "AA"
-
-  // Get max round number for this team level
   const { data: existing } = await supabase
     .from("continuation_rounds")
     .select("round_number")
@@ -232,7 +229,20 @@ export async function saveDraftRound(
     .order("round_number", { ascending: false })
     .limit(1)
 
-  const nextRound = (existing?.[0]?.round_number ?? 0) + 1
+  return (existing?.[0]?.round_number ?? 0) + 1
+}
+
+export async function saveDraftRound(
+  associationId: string,
+  division: string,
+  scrapeResult: ScrapeResult,
+  roundNumberOverride?: number
+): Promise<{ draftId: string, error?: string }> {
+  const supabase = await createClient()
+
+  const teamLevel = scrapeResult.teamLevel ?? "AA"
+
+  const nextRound = roundNumberOverride ?? await getNextRoundNumber(associationId, division, teamLevel)
 
   let jerseyNumbers = scrapeResult.jerseyNumbers
   let ipPlayers = scrapeResult.ipPlayers
