@@ -4,282 +4,246 @@
 **Priority:** Must Have
 **Depends on:** 003 (Continuations tracker), 006 (Player management — parent)
 
-## What This Feature Does
+## Revision History
 
-The Home page is replaced with a real dashboard that gives parents at-a-glance value: which levels just posted results, what happened to the players they're tracking, and whether any tracked player is missing from the next level down after being cut. Parents no longer need to manually navigate to Sessions to check for updates — the dashboard surfaces the most important information immediately.
+- **v1 (2026-04-21):** Original spec — implemented and committed as `5329622`. Replaced nav menu dashboard with activity cards + full player list.
+- **v2 (2026-04-21):** Redesign the My Players section into a summary with status cards. Replace the full player-by-player list with grouped status cards (continuing, cut, missing) showing counts and 1–2 sample names. Links to `/my-players` for full detail. Design approved via interactive mockup session.
 
-## Current State
+**This spec describes ONLY the v2 changes.** The v1 implementation is already live. A fresh session should read this spec and modify the existing committed code.
 
-### Dashboard page (will be rewritten)
-- `frontend/app/(app)/dashboard/page.tsx` — currently a navigation menu with cards explaining what each button does ("Header Buttons", "Menu Buttons"). No actual data.
-- `frontend/components/dashboard/my-players-card.tsx` — a link card showing tracked-player count. Used only on the dashboard.
+---
 
-### Data sources that already exist
-- **Continuation rounds:** `continuation_rounds` table stores published round results per team level. Each round has `jersey_numbers` (text[]) of continuing players, `round_number`, `team_level`, `division`, `status` (draft/published), `created_at`. Queried via `getAllPublishedRounds()` in `frontend/app/(app)/continuations/actions.ts`.
-- **Player annotations:** `player_annotations` table stores per-user favorites (`is_favorite`), custom names, and notes. Queried via `getMyPlayers()` and `getPlayerAnnotations()` in `frontend/app/(app)/annotations/actions.ts`.
-- **Player data:** `tryout_players` table has `jersey_number`, `division`, `status`, `team_id`, `previous_team`, `position`, `name`. Status enum includes: registered, trying_out, cut, made_team, moved_up, moved_down, withdrew.
-- **Teams:** `teams` table has `name` (e.g., "AA", "A"), `division`, `association_id`.
+## What This Feature Does (v2)
 
-### Navigation
-- Bottom nav in `frontend/components/layout/bottom-nav.tsx` has 3 tabs: Home (`/dashboard`), Teams (`/teams`), Sessions (`/continuations`).
-- Division switcher header is reused on every page via `frontend/components/layout/division-switcher.tsx`.
+The dashboard's "My Players" section (which currently shows every hearted player in a flat list) is replaced with a compact "My Favourites" summary. Instead of listing every player, it groups them by status (continuing, cut, missing) as colour-coded cards with counts and 1–2 sample names. A "See All My Favourites ›" link navigates to `/my-players` for the full list. This keeps the dashboard focused on at-a-glance value.
 
-### Existing patterns to follow
-- Server component page fetches data, passes to client component (see `frontend/app/(app)/teams/page.tsx`).
-- CSS classes use `@apply` in `frontend/app/globals.css` — never inline more than 1 Tailwind class.
-- The continuations page derives cuts by comparing consecutive rounds: `previousRound.jersey_numbers.filter(jn => !activeRound.jersey_numbers.includes(jn))` (see `frontend/components/continuations/round-section.tsx:154-157`).
+## Current State (post-v1 implementation)
+
+### Files that exist now (committed)
+- `frontend/app/(app)/dashboard/page.tsx` — Server component. Calls `getDashboardData()`, passes `activityCards` and `favoriteStatuses` to `DashboardClient`.
+- `frontend/app/(app)/dashboard/actions.ts` — Server action with `getDashboardData()` returning `ActivityCard[]` and `FavoriteStatus[]`. Includes `derivePlayerStatus()` helper.
+- `frontend/components/dashboard/dashboard-client.tsx` — Client component rendering activity cards + full player list. **This file is the primary target of v2 changes.**
+- `frontend/app/globals.css` — Dashboard styles under `/* -- Dashboard Redesign -- */` comment block (lines ~1351–1514).
+
+### Data already available from `getDashboardData()`
+The server action already returns everything needed for the summary. No changes needed to actions.ts.
+
+`FavoriteStatus` fields per player:
+- `playerId`, `playerName`, `jerseyNumber`, `position`, `division`
+- `statusText` — e.g., "Continuing R3 (AA)", "Cut R3 (AA)", "Cut R3 (AA) · Not at A"
+- `statusType` — "continuing" | "cut" | "made_team" | "missing" | "registered"
+- `originalName` — original DB name when custom name is set
+
+`ActivityCard` fields per team level:
+- `teamLevel`, `roundNumber`, `continuingCount`, `cutCount`, `publishedAt`, `isFinalTeam`
+
+## Approved Design
+
+**Mockup file:** `frontend/public/mockups/011-dashboard-summary.html` — open in browser to see the approved design.
+
+### Design Rules (apply to entire dashboard)
+
+1. **Gold (`--dm-gold`) is ONLY for clickable/interactive elements.** Never use gold for badges, jersey numbers, or stat counts.
+2. **Section headings use title case**, not uppercase. Font: Inter (body font), 13px, semi-bold, `--dm-umber` colour.
+3. **Canadian spelling**: "Favourites" not "Favorites".
+
+### Recent Results section (minor tweaks)
+
+- Section header: "Recent Results" (title case, not uppercase)
+- Activity cards: **add left margin** matching the favourites status cards (`margin-left: 10px`)
+- AA badge: neutral background (`oklch(1 0 0 / 8%)`), text colour `--dm-umber` — **NOT gold**
+- Cut/continuing stat numbers: use status colours (red `--dm-red` / green `--dm-official-green`), not gold
+- **Add "Results Details ›"** link in gold, **centered** below the activity cards (same alignment as "See All My Favourites ›")
+- "Results Details ›" navigates to `/continuations`
+
+### My Favourites section (replaces full player list)
+
+**Header:** "My Favourites (N)" where N is total hearted player count. Same font as heading (13px, semi-bold, `--dm-umber`). Count in parentheses, same style — no badge, no heart icon. "›" arrow on the far right.
+
+**Status cards** — one card per status group, shown in this order:
+1. **Continuing** (green left border, `--dm-official-green`)
+   - Heading: "3 continuing" — 13px mono, semi-bold, green
+   - Body: 1–2 player names like `#7 Lee, #15 Davis +1` — 12px mono, `--dm-dust`
+   - "+N" shown when more than 2 players in this group
+2. **Cut** (red left border, `--dm-red`)
+   - Heading: "1 cut" — 13px mono, semi-bold, red
+   - Body: player names only, NO round/level info (already obvious from Recent Results)
+3. **Missing** (orange left border, `--dm-orange`, warm tinted background `oklch(0.72 0.15 55 / 6%)`)
+   - Heading: "⚠ 1 missing at A" — the level is part of the heading text
+   - Body: player names
+   - **Only shown when missing count > 0**
+4. **Made team** (gold left border, `--dm-gold`) — if any players have `statusType === "made_team"`
+   - Heading: "1 made team"
+   - Body: player names with team name
+5. **Registered/fallback** — only show if players have no rounds data
+   - Heading: "N registered" — muted colour (`--dm-dust`)
+
+**Card styling (all status cards):**
+- Background: `--dm-dune`
+- Border: `1px solid --dm-border`
+- Border-radius: 10px
+- Padding: 10px 14px
+- **Left margin: 10px** (matching activity cards)
+- Left border: 3px solid (status colour)
+- Margin-bottom: 8px between cards
+
+**Jersey numbers in card bodies:** Use `--dm-umber` (NOT gold — they're not links here).
+
+**"See All My Favourites ›"** — centered, gold, 12px mono. Navigates to `/my-players`.
+
+### Empty state (no changes)
+
+Keep the current empty state: centered Heart icon + "Heart players on the Teams page to track them here." with "Teams" as a gold link to `/teams`.
+
+### What to do with multiple missing levels
+
+If players are missing at different levels (e.g., 1 missing at A, 1 missing at BB), show separate missing cards per level OR group them as "2 missing" with individual "Not at X" in the body. Implementer's choice — whichever is cleaner.
 
 ## Changes Required
 
 ### Database
-
-No database changes needed. All data exists in `continuation_rounds`, `player_annotations`, and `tryout_players`.
+No changes.
 
 ### Server Actions / API Routes
+No changes needed — `getDashboardData()` already returns all data. The `FavoriteStatus` type already has `statusType` and `statusText` fields.
 
-**New file: `frontend/app/(app)/dashboard/actions.ts`**
-
-One main server action:
-
-`getDashboardData(associationId: string, division: string)` — returns:
+The action may need a small addition: return **summary counts** grouped by statusType so the client doesn't have to re-derive them. Consider adding to the return type:
 
 ```
-{
-  activityCards: ActivityCard[]
-  favoriteStatuses: FavoriteStatus[]
+statusSummary: {
+  continuing: { count: number, sampleNames: string[] }
+  cut: { count: number, sampleNames: string[] }
+  missing: { count: number, sampleNames: string[], levels: string[] }
+  made_team: { count: number, sampleNames: string[] }
+  registered: { count: number, sampleNames: string[] }
 }
 ```
 
-**ActivityCard** — one per team level with a recent round (published within the last 5 days):
-- `teamLevel` (string) — e.g., "AA", "A"
-- `roundNumber` (number)
-- `continuingCount` (number) — jersey_numbers.length of latest round
-- `cutCount` (number) — jerseys in previous round NOT in latest round
-- `publishedAt` (string) — created_at of the latest round
-- `isFinalTeam` (boolean) — whether this round is marked as final team
-
-Activity cards should be sorted by team level rank: AA, A, BB, B, C.
-
-**FavoriteStatus** — one per hearted player:
-- `playerId` (string)
-- `playerName` (string) — annotation custom_name or player.name
-- `jerseyNumber` (string)
-- `position` (string)
-- `statusText` (string) — the derived human-readable status (see logic below)
-- `statusType` ("continuing" | "cut" | "made_team" | "missing" | "registered")
-- `division` (string)
-
-**Status derivation logic** (per hearted player):
-
-1. If `tryout_players.status` is `made_team` → statusText = "Made {team.name}", statusType = "made_team"
-2. Otherwise, look at all published rounds in the player's division. For each team level (ordered AA → A → BB → B → C), find rounds where the player's jersey_number appears:
-   - Find the **latest round** where the jersey appears → that's the player's current level and round
-   - Check if a **later round exists** at that level where the jersey does NOT appear → player was cut
-3. Most recent change wins:
-   - If cut from level X at round N → statusText = "Cut R{N} ({X})"
-   - If continuing at level X through round N → statusText = "Continuing R{N} ({X})"
-   - If cut from level X and NOT seen in any round at the next level down → append to statusText: " · Not at {nextLevel}", statusType = "missing"
-4. If no rounds data at all → statusText = player's status field from tryout_players (e.g., "Registered", "Trying Out"), statusType = "registered"
-
-**Level hierarchy for "missing" detection:** AA → A → BB → B → C. If a player was cut from AA, the next level is A. If cut from B, the next level is C. If cut from C, there is no next level (skip the check).
+Alternatively, derive this in the client component from the existing `favoriteStatuses` array — implementer's choice.
 
 ### Pages
-
-**Modified: `frontend/app/(app)/dashboard/page.tsx`** (rewrite)
-
-Server component that:
-1. Calls `requireAssociation()` for auth context
-2. Fetches divisions and active division (same pattern as other pages)
-3. Calls `getDashboardData(associationId, activeDivision)`
-4. Renders `DivisionSwitcher` header (same as current)
-5. Passes data to a new `DashboardClient` component
+No changes to `page.tsx` — it already passes `activityCards` and `favoriteStatuses` to `DashboardClient`.
 
 ### Components
 
-**New: `frontend/components/dashboard/dashboard-client.tsx`**
+**Modified: `frontend/components/dashboard/dashboard-client.tsx`**
 
-Client component (needs `"use client"` for tapping player rows to open detail sheet). Props:
-- `activityCards: ActivityCard[]`
-- `favoriteStatuses: FavoriteStatus[]`
-
-Renders three sections in order:
-
-1. **Activity section** — If `activityCards` is non-empty, show a section header "Recent Results" and one card per team level. Each card shows:
-   - Team level badge + "Round {N}"
-   - "{cutCount} cuts · {continuingCount} continuing"
-   - If `isFinalTeam` is true, show "Final Roster" instead of cut/continuing counts
-   - Entire card is tappable → navigates to `/continuations`
-   - If no activity cards (nothing in last 5 days), show a muted line: "No results in the last 5 days"
-
-2. **Favorites section** — If `favoriteStatuses` is non-empty, show section header "My Players" with a count badge, then a list of player rows. Each row shows:
-   - Jersey number
-   - Position badge (if not "?")
-   - Player name (custom name if set, original name in muted text if different)
-   - Status text on the right side, color-coded:
-     - "Continuing R{N}" — green/positive
-     - "Cut R{N}" — red/negative
-     - "Made {Team}" — gold/highlight
-     - "Not at {Level}" — orange/warning (appended after cut text)
-     - Fallback statuses (Registered, etc.) — muted/neutral
-   - Players with statusType "missing" should be visually distinguished (e.g., a small alert icon or the "Not at {Level}" text in orange)
-   - Rows are sorted: "missing" players first, then by division → team level rank → jersey number
-
-3. **Empty state** — If `favoriteStatuses` is empty (user has no hearts), show a centered prompt with a Heart icon: "Heart players on the Teams page to track them here." The word "Teams" should be a link to `/teams`.
-
-**Delete: `frontend/components/dashboard/my-players-card.tsx`** — no longer needed (replaced by the favorites section above). Remove the import from the dashboard page.
+Replace the full player list (current lines ~61–99) with the status card summary described above. The activity section (lines ~24–58) stays but gets minor tweaks (margin, badge colour, centered "Results Details ›" link).
 
 ### Styles
 
-New CSS classes in `frontend/app/globals.css` under a `/* -- Dashboard Redesign -- */` comment block. Replace the existing dashboard link-card styles (`.dashboard-link-card`, `.dashboard-link-card-icon`, etc.) with new dashboard styles. Keep `.dashboard-page` and `.dashboard-header` classes.
+**Modified: `frontend/app/globals.css`**
 
-New classes needed:
-- `.dashboard-section-header` — section title ("Recent Results", "My Players")
-- `.dashboard-activity-card` — tappable card for each team level's latest round
-- `.dashboard-activity-badge` — team level badge within the card
-- `.dashboard-activity-stats` — cut/continuing text
-- `.dashboard-activity-empty` — "No results in the last 5 days" muted text
-- `.dashboard-fav-row` — player row in favorites section
-- `.dashboard-fav-status` — status text (right-aligned)
-- `.dashboard-fav-status-continuing` — green color variant
-- `.dashboard-fav-status-cut` — red color variant
-- `.dashboard-fav-status-made` — gold color variant
-- `.dashboard-fav-status-missing` — orange color variant
-- `.dashboard-fav-status-neutral` — muted color variant
-- `.dashboard-empty` — empty state container (centered, muted)
-
-Use existing design tokens from globals.css: `--dm-gold`, `--dm-cinnabar` (red), `--dm-dust` (muted), `--dm-umber`, `--dm-dune`, `--dm-parchment`.
+Update existing dashboard styles. Key changes:
+- `.dashboard-section-header` — change from uppercase to title case, update font
+- `.dashboard-activity-card` — add `margin-left: 10px`
+- `.dashboard-activity-badge` — change from gold to neutral
+- Remove `.dashboard-fav-row`, `.dashboard-fav-jersey`, `.dashboard-fav-position`, `.dashboard-fav-name`, `.dashboard-fav-spacer`, `.dashboard-fav-status`, `.dashboard-fav-status-*`, `.dashboard-fav-alert` (all replaced by status cards)
+- Add new classes:
+  - `.dashboard-status-card` — base card style with left border
+  - `.dashboard-status-card-continuing`, `.dashboard-status-card-cut`, `.dashboard-status-card-missing`, `.dashboard-status-card-made`, `.dashboard-status-card-registered` — colour variants
+  - `.dashboard-status-heading` — status count text (13px mono bold)
+  - `.dashboard-status-names` — player name list (12px mono muted)
+  - `.dashboard-results-link` — centered gold link for "Results Details ›"
+- Update `.dashboard-section-header` to use title case, body font, 13px
+- Update `.dashboard-section-count` — remove gold badge, use plain parenthetical text
 
 ## Key Implementation Details
 
-1. **Division-scoped data:** The dashboard shows data for the user's active division only. When the user switches divisions via the DivisionSwitcher, the page reloads with new data (same pattern as Teams and Continuations pages).
+1. **Group `favoriteStatuses` by `statusType`** to build the summary cards. For each group, pick the first 2 players as sample names. If more than 2, append "+N".
 
-2. **5-day window for activity cards:** Compare `created_at` of the latest published round against `Date.now() - 5 * 24 * 60 * 60 * 1000`. Do this server-side in the action, not client-side.
+2. **Missing level extraction:** Parse the level from `statusText` — it contains "Not at {level}" after the "·" separator. Or check the `statusText` for the pattern. The heading should read "N missing at {level}".
 
-3. **Cut computation between rounds:** For each team level, fetch the two most recent published rounds (ordered by `round_number` desc, limit 2). Cuts = jerseys in round N-1 but not in round N. If only one round exists, cut count is 0.
+3. **The "Results Details ›" link** and "See All My Favourites ›" link should both be centered `<Link>` components (not buttons).
 
-4. **Cross-level "missing" detection:** After determining a player was cut from level X, check if their jersey_number appears in ANY published round at the next level down. The level order is hard-coded: `["AA", "A", "BB", "B", "C"]`. Use `indexOf` to find the next level. If the player is cut from the lowest level (C), skip the check.
+4. **Empty states:**
+   - If `favoriteStatuses` is empty → show existing heart empty state
+   - If a status group has 0 players → don't render that card (especially missing)
+   - If `activityCards` is empty → keep existing "No results in the last 5 days" text
 
-5. **Annotation custom names:** When displaying a hearted player, prefer `player_annotations.custom_name` over `tryout_players.name`. Show the original name in muted text if a custom name is set (same pattern as My Players page — see `frontend/app/(app)/my-players/page.tsx:89-91`).
-
-6. **No client-side data fetching:** All data is fetched server-side in the page component and passed as props. No `useEffect` data loading on the dashboard.
-
-7. **Performance:** The `getDashboardData` action should make as few database queries as possible. Suggested approach:
-   - 1 query: all published rounds for the division
-   - 1 query: user's favorite annotations (joined with tryout_players)
-   - 1 query: teams (for "made team" display names)
-   - Derive everything else in memory
-
-8. **Existing page boilerplate:** Follow the exact same pattern as `frontend/app/(app)/teams/page.tsx` for the page component structure: `requireAssociation()`, division fetching, `DivisionSwitcher` rendering, pending corrections count, etc.
+5. **The `/my-players` page is NOT changed in this spec.** A future spec will enhance it. For now, "See All My Favourites ›" links to the existing `/my-players` page as-is.
 
 ## Acceptance Criteria
 
-- [ ] Dashboard shows activity cards for team levels with rounds published in the last 5 days
-- [ ] Activity cards show correct continuing and cut counts
-- [ ] Activity cards are tappable and navigate to `/continuations`
-- [ ] Activity cards sorted by team level rank (AA first, C last)
-- [ ] "No results in the last 5 days" shown when no recent rounds exist
-- [ ] Hearted players shown with correct derived status (continuing, cut, made team)
-- [ ] "Not at {Level}" shown for players cut from a higher level but not seen at the next level
-- [ ] Missing players are sorted to the top of the favorites list
-- [ ] Players with custom names show the custom name (with original in muted text)
-- [ ] Empty state prompts user to heart players on the Teams page
-- [ ] Division switcher changes the dashboard data (same as other pages)
-- [ ] `my-players-card.tsx` deleted, no dead imports
+- [ ] "Recent Results" heading is title case (not uppercase)
+- [ ] Activity cards have left margin matching status cards
+- [ ] AA badge is neutral coloured, not gold
+- [ ] "Results Details ›" link appears centered below activity cards, navigates to `/continuations`
+- [ ] Section heading reads "My Favourites (N)" with count in parentheses, same font style
+- [ ] Continuing status card shows count + 1–2 player names with green left border
+- [ ] Cut status card shows count + player names with red left border (no round info)
+- [ ] Missing status card shows "⚠ N missing at {level}" with orange left border and warm background
+- [ ] Missing card only renders when missing count > 0
+- [ ] "See All My Favourites ›" link centered in gold, navigates to `/my-players`
+- [ ] No gold used on non-clickable elements (badges, jersey numbers, stats)
+- [ ] Empty state unchanged (heart icon + prompt to heart on Teams page)
+- [ ] Full player list is gone — no individual player rows on dashboard
 - [ ] Build passes (`npm run build`)
 - [ ] No lint errors (`npm run lint`)
 
 ## Playwright Test Plan
 
 **CRITICAL — Live Data Safety:**
-Tests run against the real database with real user data. Follow these rules:
+Tests run against the real database with real user data. Follow the standard rules (read-only preferred, log mutations, revert after).
 
-1. **Prefer read-only tests.** Verify by navigating and taking snapshots — do not modify data unless the test absolutely requires it.
-2. **When a test MUST write data** (e.g., heart a player, set a custom name), log every mutation in the "Test Mutations Log" at the end of this section.
-3. **Revert all test mutations after testing.** After all tests pass, undo every write operation listed in "Test Mutations Log".
-4. **Confirm with the user.** Before finishing, present the list of any remaining data changes and ask the user to verify everything was restored.
-5. **Never delete real player records or change real player statuses during testing.**
+**Setup:** Log in as `testparent@test.com` / `testpass123` (member role, Nepean Wildcats). Dev server at `http://localhost:3000`. Active division U15. User should already have hearted players.
 
-**Setup:** Log in as `testparent@test.com` / `testpass123` (member role, association Nepean Wildcats). The dev server should be running at `http://localhost:3000`. The test user should already have hearted players from previous sessions. If not, navigate to `/teams` and heart 3-4 players — but **log each hearted player in the Test Mutations Log** below so they can be un-hearted after testing. The active division should be U15 (default).
-
-### Test 1: Dashboard loads with activity cards
-1. Navigate to `http://localhost:3000/dashboard`
-2. Take a snapshot of the page
-3. **Verify:** The page shows a "Recent Results" section (if any continuation rounds were published in the last 5 days for U15). If recent rounds exist, each card shows a team level, round number, and cut/continuing stats. If no recent rounds, verify "No results in the last 5 days" text appears.
-
-### Test 2: Activity card navigation
-1. Navigate to `http://localhost:3000/dashboard`
-2. If an activity card is visible, click/tap it
-3. **Verify:** The browser navigates to `/continuations`
-
-### Test 3: Favorites section shows hearted players
-1. Navigate to `http://localhost:3000/dashboard`
-2. Take a snapshot of the page
-3. **Verify:** A "My Players" section appears with the user's hearted players listed. Each row shows jersey number, name, and a status text on the right.
-
-### Test 4: Favorite player status display — continuing
-1. Navigate to `http://localhost:3000/dashboard`
-2. Find a hearted player whose jersey appears in the latest round for their team level
-3. **Verify:** Their status shows "Continuing R{N} ({level})" in green-tinted text
-
-### Test 5: Favorite player status display — cut
-1. Navigate to `http://localhost:3000/dashboard`
-2. Find a hearted player whose jersey was in a previous round but not the latest
-3. **Verify:** Their status shows "Cut R{N} ({level})" in red-tinted text
-
-### Test 6: Missing from next level alert
-1. Navigate to `http://localhost:3000/dashboard`
-2. Find a hearted player who was cut from a higher level (e.g., AA) and whose jersey does not appear in any round at the next level (e.g., A)
-3. **Verify:** Their status includes "Not at {nextLevel}" text in orange, and they appear near the top of the favorites list
-
-### Test 7: Made team status
-1. Navigate to `http://localhost:3000/dashboard`
-2. If any hearted player has `status = made_team`, verify their row shows "Made {team name}" in gold text
-
-### Test 8: Empty state — no favorites
-1. Log in as `testparent2@test.com` / `TestParent1234` (or a user with no hearted players)
-2. Navigate to `http://localhost:3000/dashboard`
-3. **Verify:** The page shows a centered empty state with a Heart icon and text prompting to heart players on the Teams page. The word "Teams" is a link to `/teams`.
-
-### Test 9: Division switch changes dashboard data
-1. Navigate to `http://localhost:3000/dashboard`
-2. Note the current content (activity cards and/or favorites)
-3. Tap the division badge (e.g., "NW-U15") in the header to open the division switcher
-4. Select a different division (e.g., U13 or U18)
-5. **Verify:** The dashboard reloads with data for the new division. Activity cards reflect that division's rounds. Favorites show only players from that division.
-
-### Test 10: Custom name display
-1. Check if any hearted player already has a custom name set (visible on the My Players page or Teams page detail sheet). If none do, set a custom name on one player via the detail sheet — **log this in the Test Mutations Log** so it can be reverted.
-2. Navigate to `http://localhost:3000/dashboard`
-3. **Verify:** The player row shows the custom name, with the original database name in muted/smaller text
-
-### Test 11: No old dashboard content remains
+### Test 1: Recent Results styling
 1. Navigate to `http://localhost:3000/dashboard`
 2. Take a snapshot
-3. **Verify:** There are no "Header Buttons" or "Menu Buttons" section headers. No link cards explaining what each nav button does. The page shows real data or the empty state — not a navigation menu.
+3. **Verify:** "Recent Results" heading is title case. Activity card has left margin. AA badge is NOT gold (should be neutral/muted). "Results Details ›" link appears centered below cards.
 
-### Test 12: Admin sees same dashboard (no role-specific differences)
-1. Log in as `testadmin@test.com` / `TestAdmin1234` (group_admin role)
-2. Navigate to `http://localhost:3000/dashboard`
-3. **Verify:** The dashboard displays the same structure: activity cards, favorites (if any hearted), or empty state. No admin-only content on the dashboard itself.
+### Test 2: Results Details link
+1. Click "Results Details ›"
+2. **Verify:** Navigates to `/continuations`
+3. Navigate back to `/dashboard`
+
+### Test 3: My Favourites summary renders
+1. Navigate to `http://localhost:3000/dashboard`
+2. Take a snapshot
+3. **Verify:** "My Favourites (N)" heading with count in parentheses. No individual player rows. Status cards visible with coloured left borders.
+
+### Test 4: Continuing status card
+1. **Verify:** A green-bordered card shows "N continuing" with 1–2 player names. Jersey numbers shown but NOT in gold.
+
+### Test 5: Cut status card
+1. **Verify:** A red-bordered card shows "N cut" with player names. No round or level info in the card.
+
+### Test 6: Missing status card (if applicable)
+1. **Verify:** If any hearted players are missing, an orange-bordered card shows "⚠ N missing at {level}" with a warm background tint. If no missing players, this card should NOT appear.
+
+### Test 7: See All My Favourites link
+1. Click "See All My Favourites ›"
+2. **Verify:** Navigates to `/my-players`
+3. Navigate back to `/dashboard`
+
+### Test 8: Empty state
+1. Log in as `testparent2@test.com` / `TestParent1234` (no hearted players)
+2. Navigate to `/dashboard`
+3. **Verify:** Heart icon and "Heart players on the Teams page" prompt. "Teams" is a link to `/teams`. No status cards visible.
+
+### Test 9: No gold on non-interactive elements
+1. Navigate to `/dashboard` as `testparent@test.com`
+2. Take a snapshot
+3. **Verify:** Gold colour only appears on "Results Details ›" and "See All My Favourites ›" links. AA badge, jersey numbers, and stat counts are neutral colours.
+
+### Test 10: Division switch
+1. Open division switcher, select a different division
+2. **Verify:** Dashboard reloads. Favourites summary updates to reflect players in the new division.
 
 ### Test Mutations Log
 
-Log every write operation performed during testing. Revert all after tests pass.
-
 | Test | What Changed | How to Revert |
 |------|-------------|---------------|
-| Setup | (if needed) Hearted player #XX (id: ...) | Un-heart via long-press detail sheet |
-| Test 10 | (if needed) Set custom name on player #XX | Clear custom name in detail sheet |
-
-**After all tests pass, revert every mutation above and confirm with the user that the data is clean.**
+| (none expected — all tests are read-only) | | |
 
 ## Files to Touch
 
-1. `frontend/app/(app)/dashboard/actions.ts` — **CREATE** (new server action)
-2. `frontend/app/(app)/dashboard/page.tsx` — **REWRITE** (replace nav menu with data-driven dashboard)
-3. `frontend/components/dashboard/dashboard-client.tsx` — **CREATE** (client component for interactivity)
-4. `frontend/components/dashboard/my-players-card.tsx` — **DELETE** (replaced by favorites section)
-5. `frontend/app/globals.css` — **MODIFY** (replace old dashboard link-card styles with new dashboard styles)
+1. `frontend/components/dashboard/dashboard-client.tsx` — **MODIFY** (replace full player list with status card summary, tweak activity section)
+2. `frontend/app/globals.css` — **MODIFY** (update dashboard styles: remove player row classes, add status card classes, fix heading/badge styles)
+
+Optionally:
+3. `frontend/app/(app)/dashboard/actions.ts` — **MODIFY** (add `statusSummary` to return type if preferred over client-side grouping)
 
 ## Implementation Checklist
 
@@ -290,4 +254,4 @@ After implementing the changes above, you MUST complete these steps in order bef
 3. **Start dev server:** Run `cd frontend && npm run dev` to start the local dev server on port 3000.
 4. **Run every Playwright test above.** Open the browser, follow each test's steps exactly, and verify each expected result using browser snapshots. If a test fails, fix the code and re-run it.
 5. **Do not skip any test.** Every test in the Playwright Test Plan must pass before this spec is considered complete.
-6. **Revert all test mutations.** Check the Test Mutations Log and undo every data change made during testing (un-heart players, restore names, etc.). Confirm with the user that all test data has been cleaned up.
+6. **Revert all test mutations.** Check the Test Mutations Log and undo every data change made during testing. Confirm with the user that all test data has been cleaned up.

@@ -11,7 +11,7 @@ const TITLE_MAP: Record<string, string> = {
   "/dashboard": "Home",
   "/teams": "Teams",
   "/continuations": "Sessions",
-  "/my-players": "My Players",
+  "/my-favourites": "My Favourites",
   "/settings": "Settings",
 }
 

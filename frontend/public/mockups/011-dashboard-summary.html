@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spec 011 — Dashboard My Favourites — Option C Refined</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --dm-parchment: oklch(0.95 0.02 85);
+    --dm-gold: oklch(0.76 0.14 85);
+    --dm-cinnabar: oklch(0.55 0.22 25);
+    --dm-umber: oklch(0.85 0.04 85);
+    --dm-dust: oklch(0.55 0.02 85);
+    --dm-dune: oklch(0.18 0.01 85);
+    --dm-border: oklch(1 0 0 / 8%);
+    --dm-official-green: oklch(0.65 0.18 145);
+    --dm-orange: oklch(0.72 0.15 55);
+    --dm-red: oklch(0.65 0.18 25);
+    --bg: oklch(0.12 0 0);
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  body {
+    background: #111;
+    color: var(--dm-umber);
+    font-family: var(--font-body);
+    display: flex;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .wrapper {
+    max-width: 393px;
+    width: 100%;
+  }
+
+  h1 {
+    color: var(--dm-gold);
+    font-size: 16px;
+    text-align: center;
+    margin-bottom: 6px;
+    font-family: var(--font-mono);
+  }
+  .subtitle {
+    color: var(--dm-dust);
+    font-size: 12px;
+    text-align: center;
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+
+  .phone-frame {
+    background: var(--bg);
+    border: 1px solid var(--dm-border);
+    border-radius: 20px;
+    padding: 20px 16px;
+  }
+
+  /* Section headers — title case */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dm-umber);
+    font-family: var(--font-body);
+    margin-bottom: 12px;
+    padding: 0 2px;
+  }
+
+  /* Heart with count */
+  .heart-count {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .heart-count svg {
+    color: var(--dm-cinnabar);
+  }
+  .heart-count-num {
+    position: absolute;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--dm-umber);
+    font-family: var(--font-mono);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -42%);
+  }
+
+  .section-arrow {
+    margin-left: auto;
+    color: var(--dm-dust);
+    font-size: 16px;
+  }
+
+  /* Activity card */
+  .activity-card {
+    background: var(--dm-dune);
+    border: 1px solid var(--dm-border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    margin-left: 10px;
+  }
+  .activity-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .activity-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    background: oklch(1 0 0 / 8%);
+    color: var(--dm-umber);
+    font-family: var(--font-mono);
+  }
+  .activity-round {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dm-umber);
+  }
+  .activity-time {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--dm-dust);
+  }
+  .activity-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--dm-dust);
+    font-family: var(--font-mono);
+  }
+  .stat-cuts { color: var(--dm-red); }
+  .stat-continuing { color: var(--dm-official-green); }
+
+  /* Results Details — centered like Favourites link */
+  .results-link {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--dm-gold);
+    padding: 8px 0 0;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--dm-border);
+    margin: 16px 0;
+  }
+
+  /* Status cards */
+  .status-card {
+    background: var(--dm-dune);
+    border: 1px solid var(--dm-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    margin-left: 10px;
+    border-left: 3px solid transparent;
+  }
+  .status-card.continuing { border-left-color: var(--dm-official-green); }
+  .status-card.cut { border-left-color: var(--dm-red); }
+  .status-card.missing {
+    border-left-color: var(--dm-orange);
+    background: oklch(0.72 0.15 55 / 6%);
+    border-color: oklch(0.72 0.15 55 / 15%);
+    border-left-color: var(--dm-orange);
+  }
+
+  .status-card-heading {
+    font-size: 13px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .status-card-heading.continuing { color: var(--dm-official-green); }
+  .status-card-heading.cut { color: var(--dm-red); }
+  .status-card-heading.missing { color: var(--dm-orange); }
+
+  .status-card-names {
+    font-size: 12px;
+    color: var(--dm-dust);
+    font-family: var(--font-mono);
+  }
+
+  /* See all link */
+  .see-all {
+    text-align: center;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--dm-gold);
+    font-family: var(--font-mono);
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <h1>Option C — Refined</h1>
+  <p class="subtitle">Status cards with left margin, larger subheadings, simplified text, heart&nbsp;in&nbsp;off-white</p>
+
+  <div class="phone-frame">
+
+    <!-- Recent Results -->
+    <div class="section-header">Recent Results</div>
+    <div class="activity-card">
+      <div class="activity-top">
+        <span class="activity-badge">AA</span>
+        <span class="activity-round">Round 3</span>
+        <span class="activity-time">2h ago</span>
+      </div>
+      <div class="activity-stats">
+        <span class="stat-cuts">4 cuts</span>
+        <span style="color: var(--dm-dust)">·</span>
+        <span class="stat-continuing">12 continuing</span>
+      </div>
+    </div>
+    <span class="results-link">Results Details ›</span>
+
+    <div class="divider"></div>
+
+    <!-- My Favourites -->
+    <div class="section-header">
+      My Favourites (5)
+      <span class="section-arrow">›</span>
+    </div>
+
+    <div class="status-card continuing">
+      <div class="status-card-heading continuing">3 continuing</div>
+      <div class="status-card-names">#7 Lee, #15 Davis +1</div>
+    </div>
+
+    <div class="status-card cut">
+      <div class="status-card-heading cut">1 cut</div>
+      <div class="status-card-names">#18 Jones</div>
+    </div>
+
+    <div class="status-card missing">
+      <div class="status-card-heading missing">⚠ 1 missing at A</div>
+      <div class="status-card-names">#42 Smith</div>
+    </div>
+
+    <div class="see-all">See All My Favourites ›</div>
+
+  </div>
+</div>
+
+</body>
+</html>

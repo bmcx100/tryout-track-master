@@ -20,13 +20,8 @@ export async function getDivisions(
     counts[row.division] = (counts[row.division] ?? 0) + 1
   }
 
-  // Always include all standard age groups
-  const allDivisions = ["U11", "U13", "U15", "U18"]
-  for (const div of allDivisions) {
-    if (!(div in counts)) counts[div] = 0
-  }
-
   return Object.entries(counts)
+    .filter(([, count]) => count > 0)
     .map(([division, playerCount]) => ({ division, playerCount }))
     .sort((a, b) => a.division.localeCompare(b.division))
 }

@@ -22,6 +22,7 @@ export type FavoriteStatus = {
   statusType: "continuing" | "cut" | "made_team" | "missing" | "registered"
   division: string
   originalName: string | null
+  previousTeam: string | null
 }
 
 export async function getDashboardData(
@@ -49,7 +50,7 @@ export async function getDashboardData(
   // 2. User's favorite annotations joined with players
   const { data: favData } = await supabase
     .from("player_annotations")
-    .select("player_id, is_favorite, custom_name, tryout_players!inner(id, name, jersey_number, position, division, status, team_id, association_id, deleted_at)")
+    .select("player_id, is_favorite, custom_name, notes, tryout_players!inner(id, name, jersey_number, position, division, status, team_id, association_id, deleted_at, previous_team)")
     .eq("user_id", user.id)
     .eq("is_favorite", true)
     .eq("tryout_players.association_id", associationId)
@@ -114,6 +115,7 @@ export async function getDashboardData(
       team_id: string | null
       association_id: string
       deleted_at: string | null
+      previous_team: string | null
     }
 
     const displayName = fav.custom_name || player.name
@@ -133,6 +135,7 @@ export async function getDashboardData(
         statusType: "made_team",
         division: player.division,
         originalName,
+        previousTeam: player.previous_team,
       })
       continue
     }
@@ -153,6 +156,7 @@ export async function getDashboardData(
       statusType: playerStatus.statusType,
       division: player.division,
       originalName,
+      previousTeam: player.previous_team,
     })
   }
 
@@ -267,4 +271,108 @@ function derivePlayerStatus(
     statusText: `Continuing R${latestAppearance.roundNumber} (${latestAppearance.level})`,
     statusType: "continuing",
   }
+}
+
+export type FavouritePagePlayer = FavoriteStatus & {
+  notes: string | null
+  customName: string | null
+  playerRawName: string
+}
+
+export async function getMyFavouritesPageData(
+  associationId: string,
+  division: string
+): Promise<FavouritePagePlayer[]> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  // 1. All published rounds for this division
+  const { data: rounds } = await supabase
+    .from("continuation_rounds")
+    .select("*")
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .eq("status", "published")
+    .order("round_number", { ascending: false })
+
+  const allRounds = rounds ?? []
+
+  // 2. User's favourite annotations joined with players
+  const { data: favData } = await supabase
+    .from("player_annotations")
+    .select("player_id, is_favorite, custom_name, notes, tryout_players!inner(id, name, jersey_number, position, division, status, team_id, association_id, deleted_at, previous_team)")
+    .eq("user_id", user.id)
+    .eq("is_favorite", true)
+    .eq("tryout_players.association_id", associationId)
+    .eq("tryout_players.division", division)
+    .is("tryout_players.deleted_at", null)
+
+  // 3. Teams for made_team display names
+  const { data: teamsData } = await supabase
+    .from("teams")
+    .select("id, name, division")
+    .eq("association_id", associationId)
+    .eq("division", division)
+
+  const teamsMap = new Map((teamsData ?? []).map((t) => [t.id, t]))
+
+  const result: FavouritePagePlayer[] = []
+
+  for (const fav of favData ?? []) {
+    const player = fav.tryout_players as unknown as {
+      id: string
+      name: string
+      jersey_number: string
+      position: string
+      division: string
+      status: string
+      team_id: string | null
+      association_id: string
+      deleted_at: string | null
+      previous_team: string | null
+    }
+
+    const displayName = fav.custom_name || player.name
+    const originalName = fav.custom_name && fav.custom_name !== player.name
+      ? player.name
+      : null
+
+    let statusText: string
+    let statusType: FavoriteStatus["statusType"]
+
+    if (player.status === "made_team" && player.team_id) {
+      const team = teamsMap.get(player.team_id)
+      statusText = `Made ${team?.name ?? "Team"}`
+      statusType = "made_team"
+    } else {
+      const derived = derivePlayerStatus(player.jersey_number, allRounds, player.status)
+      statusText = derived.statusText
+      statusType = derived.statusType
+    }
+
+    result.push({
+      playerId: player.id,
+      playerName: displayName,
+      jerseyNumber: player.jersey_number,
+      position: player.position ?? "?",
+      statusText,
+      statusType,
+      division: player.division,
+      originalName,
+      previousTeam: player.previous_team,
+      notes: fav.notes ?? null,
+      customName: fav.custom_name ?? null,
+      playerRawName: player.name,
+    })
+  }
+
+  // Sort by jersey number within each status group
+  result.sort((a, b) => {
+    const jA = parseInt(a.jerseyNumber ?? "999", 10)
+    const jB = parseInt(b.jerseyNumber ?? "999", 10)
+    return jA - jB
+  })
+
+  return result
 }
