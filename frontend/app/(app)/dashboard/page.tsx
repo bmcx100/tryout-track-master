@@ -44,7 +44,7 @@ export default async function DashboardPage() {
         associations={associations}
       />
       <DashboardClient
-        key={activeDivision}
+        key={`${associationId}-${activeDivision}`}
         activityCards={activityCards}
         favoriteStatuses={favoriteStatuses}
       />

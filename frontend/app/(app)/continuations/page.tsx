@@ -58,6 +58,7 @@ export default async function ContinuationsPage() {
         associations={associations}
       />
       <ContinuationsPageClient
+        key={`${associationId}-${activeDivision}`}
         players={players}
         rounds={rounds}
         annotations={annotations}

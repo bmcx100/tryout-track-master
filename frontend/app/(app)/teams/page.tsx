@@ -102,7 +102,7 @@ export default async function TeamsPage() {
         associations={associations}
       />
       <TeamsPageClient
-        key={activeDivision}
+        key={`${associationId}-${activeDivision}`}
         players={allPlayers}
         teams={allTeams}
         savedOrders={savedOrders}
