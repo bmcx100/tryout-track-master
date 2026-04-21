@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useTransition } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
-import { setActiveDivision } from "@/app/(app)/division/actions"
+import { getDivisions, setActiveDivision } from "@/app/(app)/division/actions"
 import { setActiveAssociation } from "@/app/(app)/association/actions"
 
 const TITLE_MAP: Record<string, string> = {
@@ -42,26 +42,54 @@ export function DivisionSwitcher({
 }: DivisionSwitcherProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [pendingAssocId, setPendingAssocId] = useState(associationId)
+  const [pendingDivision, setPendingDivision] = useState(activeDivision)
+  const [visibleDivisions, setVisibleDivisions] = useState(divisions)
+  const [loadingDivisions, setLoadingDivisions] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
   const label = `${abbreviation}-${activeDivision}`
   const title = TITLE_MAP[Object.keys(TITLE_MAP).find((key) => pathname.startsWith(key)) ?? ""] ?? "Teams"
 
-  const handleSelectDivision = (division: string) => {
-    setOpen(false)
-    if (division === activeDivision) return
-    startTransition(async () => {
-      await setActiveDivision(associationId, division)
-      router.refresh()
-    })
+  const handleOpen = () => {
+    setPendingAssocId(associationId)
+    setPendingDivision(activeDivision)
+    setVisibleDivisions(divisions)
+    setOpen(true)
   }
 
-  const handleSelectAssociation = (assocId: string) => {
-    if (assocId === associationId) return
+  const handleSelectDivision = (division: string) => {
+    setPendingDivision(division)
+  }
+
+  const handleSelectAssociation = async (assocId: string) => {
+    if (assocId === pendingAssocId) return
+    setPendingAssocId(assocId)
+    if (assocId === associationId) {
+      setVisibleDivisions(divisions)
+      setPendingDivision(activeDivision)
+      return
+    }
+    setLoadingDivisions(true)
+    const fetched = await getDivisions(assocId)
+    setVisibleDivisions(fetched)
+    setPendingDivision(fetched.length > 0 ? fetched[0].division : "")
+    setLoadingDivisions(false)
+  }
+
+  const handleConfirm = () => {
     setOpen(false)
+    const assocChanged = pendingAssocId !== associationId
+    const divChanged = pendingDivision !== activeDivision
+    if (!assocChanged && !divChanged) return
     startTransition(async () => {
-      await setActiveAssociation(assocId)
+      if (assocChanged) {
+        await setActiveAssociation(pendingAssocId)
+      }
+      if (pendingDivision && (divChanged || assocChanged)) {
+        await setActiveDivision(pendingAssocId, pendingDivision)
+      }
       router.refresh()
     })
   }
@@ -80,7 +108,7 @@ export function DivisionSwitcher({
   return (
     <>
       <header className="app-header">
-        <button className="division-badge" onClick={() => setOpen(true)} disabled={isPending}>
+        <button className="division-badge" onClick={handleOpen} disabled={isPending}>
           {isPending ? <Loader2 className="division-badge-spinner" /> : null}
           {label}
         </button>
@@ -101,14 +129,14 @@ export function DivisionSwitcher({
               {associations.map((a) => (
                 <button
                   key={a.id}
-                  className={`division-option ${a.id === associationId ? "division-option-active" : ""}`}
+                  className={`division-option ${a.id === pendingAssocId ? "division-option-active" : ""}`}
                   onClick={() => handleSelectAssociation(a.id)}
                 >
                   <div className="division-option-info">
                     <span className="assoc-option-abbr">{a.abbreviation}</span>
                     <span className="division-option-count">{a.name}</span>
                   </div>
-                  <div className={`division-option-radio ${a.id === associationId ? "division-option-radio-checked" : ""}`} />
+                  <div className={`division-option-radio ${a.id === pendingAssocId ? "division-option-radio-checked" : ""}`} />
                 </button>
               ))}
             </div>
@@ -116,10 +144,14 @@ export function DivisionSwitcher({
 
             <h2 className="division-sheet-title">Select Division</h2>
             <div className="division-options">
-              {divisions.map((d) => (
+              {loadingDivisions ? (
+                <div className="division-option-loading">
+                  <Loader2 className="division-badge-spinner" />
+                </div>
+              ) : visibleDivisions.map((d) => (
                 <button
                   key={d.division}
-                  className={`division-option ${d.division === activeDivision ? "division-option-active" : ""}`}
+                  className={`division-option ${d.division === pendingDivision ? "division-option-active" : ""}`}
                   onClick={() => handleSelectDivision(d.division)}
                 >
                   <div className="division-option-info">
@@ -128,13 +160,18 @@ export function DivisionSwitcher({
                       {d.playerCount} {d.playerCount === 1 ? "player" : "players"}
                     </span>
                   </div>
-                  <div className={`division-option-radio ${d.division === activeDivision ? "division-option-radio-checked" : ""}`} />
+                  <div className={`division-option-radio ${d.division === pendingDivision ? "division-option-radio-checked" : ""}`} />
                 </button>
               ))}
             </div>
-            <button className="division-cancel-btn" onClick={() => setOpen(false)}>
-              Cancel
-            </button>
+            <div className="division-sheet-actions">
+              <button className="division-ok-btn" onClick={handleConfirm}>
+                OK
+              </button>
+              <button className="division-cancel-btn" onClick={() => setOpen(false)}>
+                Cancel
+              </button>
+            </div>
           </div>
         </>
       )}

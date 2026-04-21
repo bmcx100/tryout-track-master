@@ -1094,8 +1094,25 @@
   background: oklch(1 0 0 / 8%);
 }
 
+.division-sheet-actions {
+  @apply mt-4 flex gap-3;
+}
+
+.division-ok-btn {
+  @apply flex-1 rounded-2xl py-3 text-sm font-semibold;
+  background: var(--dm-gold);
+  color: oklch(0.12 0 0);
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.division-ok-btn:hover {
+  background: var(--dm-light-gold);
+}
+
 .division-cancel-btn {
-  @apply mt-4 w-full rounded-2xl py-3 text-sm font-semibold;
+  @apply flex-1 rounded-2xl py-3 text-sm font-semibold;
   background: oklch(0.22 0 0);
   color: var(--dm-umber);
   border: none;
@@ -1105,6 +1122,10 @@
 
 .division-cancel-btn:hover {
   background: oklch(0.26 0 0);
+}
+
+.division-option-loading {
+  @apply flex items-center justify-center py-4;
 }
 
 /* -- Admin Shell -------------------------------------------- */
