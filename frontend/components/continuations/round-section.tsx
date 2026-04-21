@@ -164,44 +164,42 @@ export function RoundSection({
 
   return (
     <div>
-      {sessionInfo && (
-        <div className="continuations-summary-wrap">
-          <button
-            className="continuations-session-info continuations-session-info-tap"
-            onClick={() => setSummaryExpanded(!summaryExpanded)}
-          >
-            <ChevronDown
-              size={12}
-              className="continuations-summary-chevron"
-              style={{ transform: summaryExpanded ? "rotate(0deg)" : "rotate(-90deg)" }}
-            />
-            <span>{sessionInfo}</span>
-          </button>
-          {summaryExpanded && (
-            <ul className="continuations-round-summary">
+      <div className="continuations-summary-wrap">
+        <button
+          className="continuations-session-info continuations-session-info-tap"
+          onClick={() => setSummaryExpanded(!summaryExpanded)}
+        >
+          <ChevronDown
+            size={12}
+            className="continuations-summary-chevron"
+            style={{ transform: summaryExpanded ? "rotate(0deg)" : "rotate(-90deg)" }}
+          />
+          <span>{sessionInfo || `${totalContinuing} players`}</span>
+        </button>
+        {summaryExpanded && (
+          <ul className="continuations-round-summary">
+            <li>
+              <strong>{totalContinuing} players</strong>{" "}
+              continuing{ipCount > 0 ? ` (${nonIpCount} + ${ipPlayers.join(", ")} IP)` : ""}
+            </li>
+            <li>
+              <strong>{cuts.length} cut{cuts.length !== 1 ? "s" : ""}</strong>{" "}
+              {previousRound ? `from Round ${previousRound.round_number}` : ""}
+            </li>
+            {newPlayers.length > 0 && (
               <li>
-                <strong>{totalContinuing} players</strong>{" "}
-                continuing{ipCount > 0 ? ` (${nonIpCount} + ${ipPlayers.join(", ")} IP)` : ""}
+                {newPlayers.length} new in Round {activeRound.round_number}:{" "}
+                {newPlayers.sort((a, b) => Number(a) - Number(b)).join(", ")}
               </li>
-              <li>
-                <strong>{cuts.length} cut{cuts.length !== 1 ? "s" : ""}</strong>{" "}
-                {previousRound ? `from Round ${previousRound.round_number}` : ""}
+            )}
+            {sessions.map((s) => (
+              <li key={s.session_number}>
+                Session: {formatDate(s.date)}, {formatTime(s.start_time)}–{formatTime(s.end_time)}
               </li>
-              {newPlayers.length > 0 && (
-                <li>
-                  {newPlayers.length} new in Round {activeRound.round_number}:{" "}
-                  {newPlayers.sort((a, b) => Number(a) - Number(b)).join(", ")}
-                </li>
-              )}
-              {sessions.map((s) => (
-                <li key={s.session_number}>
-                  Session: {formatDate(s.date)}, {formatTime(s.start_time)}–{formatTime(s.end_time)}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+            ))}
+          </ul>
+        )}
+      </div>
 
       {/* Continuing section */}
       <button
