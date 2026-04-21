@@ -52,8 +52,9 @@ function extractTeamLevel(text: string): string | null {
   const tierMatch = text.match(/\b(AA|BB)\b\s*(skate|continuation|tryout|roster)/i)
   if (tierMatch) return tierMatch[1].toUpperCase()
 
-  // Single letter before a keyword (but "C" + "ontinuation" is one word, won't match \b)
-  const singleTierMatch = text.match(/\b(A|B|C)\b\s+(skate|continuation|tryout|roster)/i)
+  // Single letter before a keyword — but only if NOT preceded by "to " or "to the "
+  // which indicates "moving on to A tryouts" rather than labeling this page as A-level
+  const singleTierMatch = text.match(/(?<!\bto\s)(?<!\bto the\s)\b(A|B|C)\b\s+(skate|continuation|tryout|roster)/i)
   if (singleTierMatch) return singleTierMatch[1].toUpperCase()
 
   return null
@@ -95,6 +96,19 @@ function extractJerseyNumbers(html: string): { jerseyNumbers: string[], ipPlayer
         jerseyNumbers.push(num)
         if (isIp) ipPlayers.push(num)
       }
+    }
+
+    if (jerseyNumbers.length > 0) return { jerseyNumbers, ipPlayers }
+  }
+
+  // Method 3: P-tag separated numbers — sites like U18 use <p>168</p> per number
+  const pRegex = /<p[^>]*>\s*(\d{1,4})\s*(?:&nbsp;)?\s*(IP)?\s*<\/p>/gi
+  while ((match = pRegex.exec(html)) !== null) {
+    const num = match[1]
+    const isIp = !!match[2]
+    if (!jerseyNumbers.includes(num)) {
+      jerseyNumbers.push(num)
+      if (isIp) ipPlayers.push(num)
     }
   }
 
