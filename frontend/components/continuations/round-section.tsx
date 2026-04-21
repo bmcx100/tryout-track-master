@@ -134,7 +134,7 @@ export function RoundSection({
   const ipCount = ipPlayers.length
   const nonIpCount = totalContinuing - ipCount
 
-  const [summaryExpanded, setSummaryExpanded] = useState(false)
+  const [summaryExpanded, setSummaryExpanded] = useState(true)
 
   // Build per-session player lists (guard against malformed session data)
   const sessionLists = sessions
