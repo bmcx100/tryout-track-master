@@ -1348,45 +1348,169 @@ body:has(.admin-shell) {
   color: oklch(0.12 0 0);
 }
 
-/* -- Dashboard Link Card ------------------------------------ */
+/* -- Dashboard Redesign ------------------------------------- */
 
-.dashboard-link-card {
-  @apply flex items-center gap-4 rounded-xl px-5 py-4;
+.dashboard-section {
+  @apply mb-6;
+}
+
+.dashboard-section-header {
+  @apply flex items-center gap-2 text-sm font-semibold px-1 mb-3;
+  color: var(--dm-dust);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font-ibm-plex-mono);
+}
+
+.dashboard-section-count {
+  @apply inline-flex items-center justify-center rounded-full text-xs font-bold;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  background: var(--dm-gold);
+  color: oklch(0.12 0 0);
+}
+
+.dashboard-activity-list {
+  @apply flex flex-col gap-3;
+}
+
+.dashboard-activity-card {
+  @apply block rounded-xl px-4 py-3;
   background: var(--dm-dune);
   border: 1px solid var(--dm-border);
-  transition: all 200ms ease-out;
   text-decoration: none;
   color: inherit;
+  transition: background 200ms ease-out;
 }
 
-.dashboard-link-card:hover {
+.dashboard-activity-card:hover {
   background: oklch(0.22 0 0);
-  box-shadow: var(--dm-shadow-sm);
 }
 
-.dashboard-link-card-icon {
-  @apply flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg;
+.dashboard-activity-top {
+  @apply flex items-center gap-2 mb-1;
+}
+
+.dashboard-activity-badge {
+  @apply inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-bold;
   background: oklch(0.76 0.14 85 / 15%);
   color: var(--dm-gold);
+  font-family: var(--font-ibm-plex-mono);
 }
 
-.dashboard-link-card-icon-text {
-  @apply text-xs font-bold;
-  letter-spacing: -0.01em;
-}
-
-.dashboard-link-card-title {
-  @apply text-sm font-semibold;
+.dashboard-activity-round {
+  @apply text-sm font-medium;
   color: var(--dm-umber);
 }
 
-.dashboard-link-card-desc {
-  @apply text-xs;
+.dashboard-activity-time {
+  @apply ml-auto text-xs;
   color: var(--dm-dust);
 }
 
-.dashboard-link-card-second {
-  @apply mt-3;
+.dashboard-activity-stats {
+  @apply flex items-center gap-2 text-xs;
+  color: var(--dm-dust);
+  font-family: var(--font-ibm-plex-mono);
+}
+
+.dashboard-activity-cuts {
+  color: oklch(0.65 0.18 25);
+}
+
+.dashboard-activity-continuing {
+  color: var(--dm-official-green);
+}
+
+.dashboard-activity-final {
+  @apply font-semibold;
+  color: var(--dm-gold);
+}
+
+.dashboard-activity-empty {
+  @apply text-sm px-1 py-4;
+  color: var(--dm-dust);
+}
+
+.dashboard-fav-list {
+  @apply flex flex-col;
+}
+
+.dashboard-fav-row {
+  @apply flex items-center gap-2 px-3 py-2.5;
+  border-bottom: 1px solid var(--dm-border);
+}
+
+.dashboard-fav-row:last-child {
+  border-bottom: none;
+}
+
+.dashboard-fav-jersey {
+  @apply text-sm font-bold flex-shrink-0;
+  color: var(--dm-gold);
+  font-family: var(--font-ibm-plex-mono);
+  min-width: 2.5rem;
+}
+
+.dashboard-fav-position {
+  @apply text-xs rounded-sm px-1 py-0.5 flex-shrink-0;
+  background: oklch(1 0 0 / 6%);
+  color: var(--dm-dust);
+  font-family: var(--font-ibm-plex-mono);
+}
+
+.dashboard-fav-name {
+  @apply text-sm truncate;
+  color: var(--dm-umber);
+}
+
+.dashboard-fav-spacer {
+  @apply flex-1;
+}
+
+.dashboard-fav-status {
+  @apply text-xs flex-shrink-0 text-right flex items-center gap-1;
+  font-family: var(--font-ibm-plex-mono);
+}
+
+.dashboard-fav-status-continuing {
+  color: var(--dm-official-green);
+}
+
+.dashboard-fav-status-cut {
+  color: oklch(0.65 0.18 25);
+}
+
+.dashboard-fav-status-made_team {
+  color: var(--dm-gold);
+}
+
+.dashboard-fav-status-missing {
+  color: oklch(0.72 0.15 55);
+}
+
+.dashboard-fav-status-registered {
+  color: var(--dm-dust);
+}
+
+.dashboard-fav-alert {
+  @apply flex-shrink-0;
+}
+
+.dashboard-empty {
+  @apply flex flex-col items-center justify-center gap-3 py-16 text-center;
+  color: var(--dm-dust);
+}
+
+.dashboard-empty p {
+  @apply text-sm;
+}
+
+.dashboard-empty-link {
+  color: var(--dm-gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* -- Player List -------------------------------------------- */
