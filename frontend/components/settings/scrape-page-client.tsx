@@ -47,6 +47,7 @@ export function ScrapePageClient({
   const [confirming, setConfirming] = useState(false)
   const [drafts, setDrafts] = useState(existingDrafts)
   const [roundNumber, setRoundNumber] = useState<number | null>(null)
+  const [sessionInfo, setSessionInfo] = useState("")
 
   const handleScrape = async () => {
     setError(null)
@@ -85,7 +86,8 @@ export function ScrapePageClient({
         associationId,
         division,
         resultToSave,
-        roundNumber ?? undefined
+        roundNumber ?? undefined,
+        sessionInfo || undefined
       )
 
       if (saveErr || !newDraftId) {
@@ -116,6 +118,7 @@ export function ScrapePageClient({
     setDraftId(null)
     setTeamLevelOverride(null)
     setRoundNumber(null)
+    setSessionInfo("")
     setError(null)
   }
 
@@ -260,6 +263,18 @@ export function ScrapePageClient({
                 </span>
               </div>
             )}
+            <div className="scrape-summary-row">
+              <span className="scrape-summary-label">Session Info</span>
+              <span className="scrape-summary-value">
+                <input
+                  type="text"
+                  className="scrape-session-info-input"
+                  placeholder="e.g. Game vs Kanata"
+                  value={sessionInfo}
+                  onChange={(e) => setSessionInfo(e.target.value)}
+                />
+              </span>
+            </div>
           </div>
 
           {result.jerseyNumbers.length > 0 && (

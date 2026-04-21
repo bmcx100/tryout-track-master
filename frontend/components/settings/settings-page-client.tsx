@@ -1,7 +1,29 @@
 "use client"
 
+import { useSyncExternalStore } from "react"
 import Link from "next/link"
-import { ChevronRight, LogOut, Scan, FileCheck, UserPlus } from "lucide-react"
+import { ChevronRight, LogOut, Scan, FileCheck, UserPlus, HelpCircle } from "lucide-react"
+import { setOnboardingDisabled } from "@/components/shared/onboarding-manager"
+
+const DISABLED_KEY = "onboarding-disabled"
+const CHANGE_EVENT = "onboarding-change"
+
+function getDisabledSnapshot(): boolean {
+  try {
+    return localStorage.getItem(DISABLED_KEY) === "true"
+  } catch {
+    return false
+  }
+}
+
+function getDisabledServerSnapshot(): boolean {
+  return false
+}
+
+function subscribeDisabled(callback: () => void) {
+  window.addEventListener(CHANGE_EVENT, callback)
+  return () => window.removeEventListener(CHANGE_EVENT, callback)
+}
 
 type SettingsPageClientProps = {
   email: string
@@ -20,6 +42,7 @@ export function SettingsPageClient({
   pendingCorrectionsCount,
 }: SettingsPageClientProps) {
   const isAdmin = role === "group_admin" || role === "admin"
+  const tipsDisabled = useSyncExternalStore(subscribeDisabled, getDisabledSnapshot, getDisabledServerSnapshot)
 
   return (
     <div className="settings-page">
@@ -64,6 +87,21 @@ export function SettingsPageClient({
           </Link>
         </section>
       )}
+
+      {/* Preferences section */}
+      <section className="settings-section">
+        <h2 className="settings-section-title">Preferences</h2>
+        <button
+          className="settings-row"
+          onClick={() => setOnboardingDisabled(!tipsDisabled)}
+        >
+          <span className="settings-row-icon settings-row-icon-gold">
+            <HelpCircle size={18} />
+          </span>
+          <span className="settings-row-label">Show Onboarding Tips</span>
+          <div className={tipsDisabled ? "settings-toggle" : "settings-toggle settings-toggle-on"} />
+        </button>
+      </section>
 
       {/* Account section */}
       <section className="settings-section">

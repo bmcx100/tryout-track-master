@@ -302,6 +302,56 @@ No database mutations. All test state is in localStorage.
 6. **Modify** `frontend/components/layout/bottom-nav.tsx` — add Help tab
 7. **Modify** `frontend/app/globals.css` — add onboarding tooltip styles and help page card styles
 
+## Post-Spec Enhancements
+
+The following changes were added after the original spec was implemented:
+
+### Target element highlighting
+- The target element (division badge or Sessions tab) receives an
+  `.onboarding-highlight` class while its tooltip is active.
+- Adds a pulsing gold glow ring (`box-shadow`) and a brighter gold
+  background so the button visually "lights up" through the overlay.
+
+### Persistent tooltip 1
+- Tooltip 1 (division badge) uses `persistent` mode: no X close button.
+- Dismisses only when the user clicks "Got it" OR clicks the highlighted
+  division badge button itself. This ensures parents engage with the
+  switcher before proceeding.
+
+### Opt-out popup after tooltip sequence
+- After dismissing tooltip 2, a centered popup asks **"Hide tips in the
+  future?"** with two buttons: "Yes, hide tips" / "Keep showing".
+- "Yes, hide tips" sets `localStorage` key `"onboarding-disabled"` to
+  `"true"`, suppressing all future tooltips.
+- "Keep showing" dismisses the popup without changing any state.
+
+### Settings toggle to re-enable tips
+- **Modified:** `frontend/components/settings/settings-page-client.tsx`
+- New **Preferences** section (between Admin and Account) with a
+  "Show Onboarding Tips" toggle switch (`HelpCircle` icon).
+- Toggle OFF sets `onboarding-disabled` in localStorage.
+- Toggle ON clears both `onboarding-disabled` and `onboarding-dismissed`,
+  resetting the full two-tooltip sequence.
+- Uses `useSyncExternalStore` with a custom `"onboarding-change"` event
+  so the toggle reacts instantly without page reload.
+
+### Additional localStorage key
+```
+"onboarding-disabled": "true"   // set when user opts out of tips
+```
+
+### Additional styles added to globals.css
+- `.onboarding-highlight` — gold glow ring + bright background on target
+- `@keyframes onboarding-glow` — pulsing glow animation
+- `.onboarding-optout` / `.onboarding-optout-*` — centered opt-out popup
+- `.settings-toggle` / `.settings-toggle-on` — iOS-style toggle switch
+
+### Additional files modified
+- `frontend/components/settings/settings-page-client.tsx` — added
+  Preferences section with onboarding tips toggle
+- `frontend/components/layout/division-switcher.tsx` — added `/help`
+  to `TITLE_MAP`
+
 ## Implementation Checklist
 
 After implementing the changes above, you MUST complete these steps

@@ -22,6 +22,7 @@ type RoundSectionProps = {
   previousRound: ContinuationRound | null
   playerMap: Record<string, TryoutPlayer>
   annotations: Annotations
+  activeView: "continuing" | "cuts"
   onToggleFavorite: (playerId: string) => void
   onPlayerLongPress?: (player: TryoutPlayer) => void
   onLinkUnknown?: (jerseyNumber: string) => void
@@ -56,7 +57,7 @@ function sortByPositionThenTeam(
   return getBlendedTeamRank(a.player) - getBlendedTeamRank(b.player)
 }
 
-function formatDate(dateStr: string): string {
+export function formatDate(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00")
   return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
 }
@@ -69,7 +70,7 @@ function formatTime(time: string): string {
   return `${displayHour}:${m}${ampm}`
 }
 
-function getSessionInfo(sessions: SessionData[]): string {
+export function getSessionInfo(sessions: SessionData[]): string {
   if (!sessions || sessions.length === 0) return ""
   const sessionCount = sessions.length
   const dates = [...new Set(sessions.map((s) => s.date))]
@@ -111,30 +112,17 @@ function buildPlayerList(
 }
 
 export function RoundSection({
-  teamLevel,
-  division,
   activeRound,
   previousRound,
   playerMap,
   annotations,
+  activeView,
   onToggleFavorite,
   onPlayerLongPress,
   onLinkUnknown,
 }: RoundSectionProps) {
   const sessions = (activeRound.sessions ?? []) as SessionData[]
-  const sessionInfo = getSessionInfo(sessions)
   const ipPlayers = activeRound.ip_players ?? []
-
-  const totalContinuing = activeRound.jersey_numbers.length
-
-  // Compute round-over-round stats
-  const newPlayers = previousRound
-    ? activeRound.jersey_numbers.filter((jn) => !previousRound.jersey_numbers.includes(jn))
-    : []
-  const ipCount = ipPlayers.length
-  const nonIpCount = totalContinuing - ipCount
-
-  const [summaryExpanded, setSummaryExpanded] = useState(true)
 
   // Build per-session player lists (guard against malformed session data)
   const sessionLists = sessions
@@ -144,12 +132,10 @@ export function RoundSection({
       players: buildPlayerList(s.jersey_numbers, playerMap, annotations, ipPlayers),
     }))
 
-  // Expanded state
-  const [continuingExpanded, setContinuingExpanded] = useState(true)
+  // Session expand/collapse state
   const [sessionExpanded, setSessionExpanded] = useState<Record<number, boolean>>(
     () => Object.fromEntries(sessions.map((s) => [s.session_number, true]))
   )
-  const [cutsExpanded, setCutsExpanded] = useState(true)
 
   // Compute cuts (players in previous round of same team level not in this round)
   const cuts = previousRound
@@ -162,167 +148,107 @@ export function RoundSection({
     setSessionExpanded((prev) => ({ ...prev, [num]: !prev[num] }))
   }
 
-  return (
-    <div>
-      <div className="continuations-summary-wrap">
-        <button
-          className="continuations-session-info continuations-session-info-tap"
-          onClick={() => setSummaryExpanded(!summaryExpanded)}
-        >
-          <ChevronDown
-            size={12}
-            className="continuations-summary-chevron"
-            style={{ transform: summaryExpanded ? "rotate(0deg)" : "rotate(-90deg)" }}
-          />
-          <span>{sessionInfo || `${totalContinuing} players`}</span>
-        </button>
-        {summaryExpanded && (
-          <ul className="continuations-round-summary">
-            <li>
-              <strong>{totalContinuing} players</strong>{" "}
-              continuing{ipCount > 0 ? ` (${nonIpCount} + ${ipPlayers.join(", ")} IP)` : ""}
-            </li>
-            <li>
-              <strong>{cuts.length} cut{cuts.length !== 1 ? "s" : ""}</strong>{" "}
-              {previousRound ? `from Round ${previousRound.round_number}` : ""}
-            </li>
-            {newPlayers.length > 0 && (
-              <li>
-                {newPlayers.length} new in Round {activeRound.round_number}:{" "}
-                {newPlayers.sort((a, b) => Number(a) - Number(b)).join(", ")}
-              </li>
-            )}
-            {sessions.map((s) => (
-              <li key={s.session_number}>
-                Session: {formatDate(s.date)}, {formatTime(s.start_time)}–{formatTime(s.end_time)}
-              </li>
-            ))}
-          </ul>
+  if (activeView === "cuts") {
+    return (
+      <div className="continuations-cuts-list">
+        {cutPlayers.length === 0 ? (
+          <p className="continuations-empty-cuts">No cuts yet</p>
+        ) : (
+          cutPlayers.map((p) => (
+            <ContinuationPlayerRow
+              key={p.jerseyNumber}
+              jerseyNumber={p.jerseyNumber}
+              player={p.player}
+              isFavorite={p.isFavorite}
+              noteText={p.noteText}
+              isInjured={false}
+              isCut={true}
+              customName={p.customName}
+              onToggleFavorite={() => {
+                if (p.player) onToggleFavorite(p.player.id)
+              }}
+              onLongPress={onPlayerLongPress}
+              onLinkUnknown={!p.player && onLinkUnknown
+                ? () => onLinkUnknown(p.jerseyNumber)
+                : undefined
+              }
+            />
+          ))
         )}
       </div>
+    )
+  }
 
-      {/* Continuing section */}
-      <button
-        className="continuations-section-label"
-        onClick={() => setContinuingExpanded(!continuingExpanded)}
-      >
-        <ChevronDown
-          size={14}
-          style={{ transform: continuingExpanded ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms" }}
-        />
-        <span>Continuing ({totalContinuing})</span>
-      </button>
-      {continuingExpanded && (
-        <div>
-          {sessionLists.length > 0 ? (
-            sessionLists.map(({ session, players }) => (
-              <div key={session.session_number}>
-                <button
-                  className="continuations-session-subheader"
-                  onClick={() => toggleSession(session.session_number)}
-                >
-                  <ChevronDown
-                    size={12}
-                    style={{
-                      transform: sessionExpanded[session.session_number] ? "rotate(0deg)" : "rotate(-90deg)",
-                      transition: "transform 200ms",
-                    }}
-                  />
-                  <span>
-                    Session {session.session_number} · {formatTime(session.start_time)}–{formatTime(session.end_time)}
-                  </span>
-                  <span className="continuations-session-count">({players.length})</span>
-                </button>
-                {sessionExpanded[session.session_number] && (
-                  <div className="continuations-session-players">
-                    {players.map((p) => (
-                      <ContinuationPlayerRow
-                        key={p.jerseyNumber}
-                        jerseyNumber={p.jerseyNumber}
-                        player={p.player}
-                        isFavorite={p.isFavorite}
-                        noteText={p.noteText}
-                        isInjured={p.isInjured}
-                        isCut={false}
-                        customName={p.customName}
-                        onToggleFavorite={() => {
-                          if (p.player) onToggleFavorite(p.player.id)
-                        }}
-                        onLongPress={onPlayerLongPress}
-                        onLinkUnknown={!p.player && onLinkUnknown
-                          ? () => onLinkUnknown(p.jerseyNumber)
-                          : undefined
-                        }
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <div className="continuations-session-players">
-              {buildPlayerList(activeRound.jersey_numbers, playerMap, annotations, ipPlayers).map((p) => (
-                <ContinuationPlayerRow
-                  key={p.jerseyNumber}
-                  jerseyNumber={p.jerseyNumber}
-                  player={p.player}
-                  isFavorite={p.isFavorite}
-                  noteText={p.noteText}
-                  isInjured={p.isInjured}
-                  isCut={false}
-                  customName={p.customName}
-                  onToggleFavorite={() => {
-                    if (p.player) onToggleFavorite(p.player.id)
-                  }}
-                  onLongPress={onPlayerLongPress}
-                  onLinkUnknown={!p.player && onLinkUnknown
-                    ? () => onLinkUnknown(p.jerseyNumber)
-                    : undefined
-                  }
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Cuts section */}
-      <button
-        className="continuations-section-label"
-        onClick={() => setCutsExpanded(!cutsExpanded)}
-      >
-        <ChevronDown
-          size={14}
-          style={{ transform: cutsExpanded ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms" }}
-        />
-        <span>Cuts ({cutPlayers.length})</span>
-      </button>
-      {cutsExpanded && (
-        <div className="continuations-cuts-list">
-          {cutPlayers.length === 0 ? (
-            <p className="continuations-empty-cuts">No cuts yet</p>
-          ) : (
-            cutPlayers.map((p) => (
-              <ContinuationPlayerRow
-                key={p.jerseyNumber}
-                jerseyNumber={p.jerseyNumber}
-                player={p.player}
-                isFavorite={p.isFavorite}
-                noteText={p.noteText}
-                isInjured={false}
-                isCut={true}
-                customName={p.customName}
-                onToggleFavorite={() => {
-                  if (p.player) onToggleFavorite(p.player.id)
+  // Continuing view
+  return (
+    <div>
+      {sessionLists.length > 0 ? (
+        sessionLists.map(({ session, players }) => (
+          <div key={session.session_number}>
+            <button
+              className="continuations-session-subheader"
+              onClick={() => toggleSession(session.session_number)}
+            >
+              <ChevronDown
+                size={12}
+                style={{
+                  transform: sessionExpanded[session.session_number] ? "rotate(0deg)" : "rotate(-90deg)",
+                  transition: "transform 200ms",
                 }}
-                onLongPress={onPlayerLongPress}
-                onLinkUnknown={!p.player && onLinkUnknown
-                  ? () => onLinkUnknown(p.jerseyNumber)
-                  : undefined
-                }
               />
-            ))
-          )}
+              <span>
+                Session {session.session_number} · {formatTime(session.start_time)}–{formatTime(session.end_time)}
+              </span>
+              <span className="continuations-session-count">({players.length})</span>
+            </button>
+            {sessionExpanded[session.session_number] && (
+              <div className="continuations-session-players">
+                {players.map((p) => (
+                  <ContinuationPlayerRow
+                    key={p.jerseyNumber}
+                    jerseyNumber={p.jerseyNumber}
+                    player={p.player}
+                    isFavorite={p.isFavorite}
+                    noteText={p.noteText}
+                    isInjured={p.isInjured}
+                    isCut={false}
+                    customName={p.customName}
+                    onToggleFavorite={() => {
+                      if (p.player) onToggleFavorite(p.player.id)
+                    }}
+                    onLongPress={onPlayerLongPress}
+                    onLinkUnknown={!p.player && onLinkUnknown
+                      ? () => onLinkUnknown(p.jerseyNumber)
+                      : undefined
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ))
+      ) : (
+        <div className="continuations-session-players">
+          {buildPlayerList(activeRound.jersey_numbers, playerMap, annotations, ipPlayers).map((p) => (
+            <ContinuationPlayerRow
+              key={p.jerseyNumber}
+              jerseyNumber={p.jerseyNumber}
+              player={p.player}
+              isFavorite={p.isFavorite}
+              noteText={p.noteText}
+              isInjured={p.isInjured}
+              isCut={false}
+              customName={p.customName}
+              onToggleFavorite={() => {
+                if (p.player) onToggleFavorite(p.player.id)
+              }}
+              onLongPress={onPlayerLongPress}
+              onLinkUnknown={!p.player && onLinkUnknown
+                ? () => onLinkUnknown(p.jerseyNumber)
+                : undefined
+              }
+            />
+          ))}
         </div>
       )}
     </div>

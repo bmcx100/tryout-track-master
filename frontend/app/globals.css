@@ -1717,11 +1717,12 @@ body:has(.admin-shell) {
 }
 
 .continuations-round-select {
-  @apply cursor-pointer rounded text-sm font-bold;
+  @apply cursor-pointer text-sm font-bold;
   color: var(--dm-gold);
   background: oklch(0.28 0 0);
   border: 1px solid oklch(1 0 0 / 10%);
-  padding: 2px 6px;
+  border-radius: 12px;
+  padding: 8px 14px;
   letter-spacing: -0.01em;
   outline: none;
 }
@@ -1844,6 +1845,84 @@ body:has(.admin-shell) {
   @apply py-3 text-xs italic;
   padding-left: 43px;
   color: var(--dm-dust);
+}
+
+/* ============================================================
+   Sessions Summary Card
+   ============================================================ */
+
+.sessions-summary-card {
+  border-radius: 14px;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+  padding: 12px 14px;
+  margin: 0 16px;
+}
+
+.sessions-summary-row {
+  @apply flex items-center gap-3;
+  flex-wrap: nowrap;
+}
+
+.sessions-summary-badges {
+  @apply ml-auto flex shrink-0 items-center gap-2;
+}
+
+.sessions-badge {
+  @apply inline-flex items-center rounded-md px-2 py-0.5;
+  font-family: var(--font-ibm-plex-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.sessions-badge-new {
+  background: oklch(0.55 0.15 145 / 20%);
+  color: oklch(0.75 0.15 145);
+}
+
+.sessions-badge-ip {
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+}
+
+.sessions-summary-session-info {
+  color: var(--dm-dust);
+  font-size: 12px;
+  font-family: var(--font-ibm-plex-mono);
+  margin-top: 6px;
+  margin-left: 12px;
+}
+
+/* ============================================================
+   Sessions Toggle (smaller variant of view-toggle)
+   ============================================================ */
+
+.sessions-toggle {
+  @apply relative mx-4 my-2 flex rounded-2xl p-0.5;
+  background: oklch(0.76 0.14 85 / 15%);
+  border: 1px solid oklch(0.76 0.14 85 / 10%);
+}
+
+.sessions-toggle-pill {
+  @apply absolute top-0.5 bottom-0.5 rounded-xl;
+  background: var(--dm-cinnabar);
+  box-shadow: var(--dm-shadow-sm);
+  transition: left 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.sessions-toggle-btn {
+  @apply relative z-1 flex-1 rounded-xl py-1.5 text-center text-xs font-semibold;
+  color: var(--dm-dust);
+  background: transparent;
+  transition: color 200ms ease-out;
+}
+
+.sessions-toggle-btn.active {
+  color: oklch(0.12 0 0);
 }
 
 .continuation-player-row {
@@ -2358,6 +2437,19 @@ body:has(.admin-shell) {
   border: 1px solid oklch(0.3 0 0);
   width: 4rem;
   text-align: center;
+}
+
+.scrape-session-info-input {
+  @apply rounded-lg px-2 py-1 text-sm;
+  background: oklch(0.22 0 0);
+  color: var(--dm-umber);
+  border: 1px solid oklch(0.3 0 0);
+  width: 100%;
+}
+
+.scrape-session-info-input::placeholder {
+  color: var(--dm-dust);
+  opacity: 0.6;
 }
 
 .scrape-jersey-vertical {
@@ -3250,4 +3342,229 @@ body:has(.admin-shell) {
 
 .corrections-edit-position {
   @apply flex gap-1;
+}
+
+/* ============================================================
+   Onboarding Tooltips
+   ============================================================ */
+
+.onboarding-overlay {
+  @apply fixed inset-0;
+  z-index: 9998;
+  background: oklch(0 0 0 / 55%);
+  pointer-events: none;
+}
+
+.onboarding-tooltip {
+  @apply fixed rounded-xl px-5 py-4;
+  z-index: 9999;
+  width: 260px;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+  box-shadow: var(--dm-shadow-lg);
+  pointer-events: auto;
+}
+
+.onboarding-tooltip-close {
+  @apply absolute top-2 right-2 flex items-center justify-center rounded-full;
+  width: 24px;
+  height: 24px;
+  color: var(--dm-dust);
+  pointer-events: auto;
+}
+
+.onboarding-tooltip-message {
+  @apply text-sm leading-relaxed pr-4;
+  color: var(--dm-umber);
+}
+
+.onboarding-tooltip-dismiss {
+  @apply mt-3 rounded-full px-4 py-1.5 text-xs font-semibold;
+  color: var(--dm-gold);
+  background: oklch(0.76 0.14 85 / 15%);
+  pointer-events: auto;
+}
+
+.onboarding-tooltip-arrow-up {
+  @apply absolute;
+  top: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid var(--dm-dune);
+  transform: translateX(-8px);
+  animation: onboarding-pulse 2s ease-in-out infinite;
+}
+
+.onboarding-tooltip-arrow-down {
+  @apply absolute;
+  bottom: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid var(--dm-dune);
+  transform: translateX(-8px);
+  animation: onboarding-pulse 2s ease-in-out infinite;
+}
+
+@keyframes onboarding-pulse {
+  0%, 100% { transform: translateX(-8px) scale(1); opacity: 1; }
+  50% { transform: translateX(-8px) scale(1.3); opacity: 0.7; }
+}
+
+.onboarding-highlight {
+  position: relative;
+  z-index: 9999;
+  background: oklch(0.76 0.14 85 / 25%) !important;
+  box-shadow: 0 0 0 3px var(--dm-gold), 0 0 16px 4px oklch(0.76 0.14 85 / 40%);
+  border-radius: 9999px;
+  animation: onboarding-glow 2s ease-in-out infinite;
+}
+
+@keyframes onboarding-glow {
+  0%, 100% { background: oklch(0.76 0.14 85 / 25%); box-shadow: 0 0 0 3px var(--dm-gold), 0 0 16px 4px oklch(0.76 0.14 85 / 40%); }
+  50% { background: oklch(0.76 0.14 85 / 35%); box-shadow: 0 0 0 3px var(--dm-gold), 0 0 24px 8px oklch(0.76 0.14 85 / 60%); }
+}
+
+.division-badge.onboarding-highlight {
+  background: var(--dm-cinnabar) !important;
+  color: oklch(0.12 0 0) !important;
+  box-shadow: none;
+  animation: none;
+}
+
+.bottom-nav:has(.onboarding-highlight) .bottom-nav-item-active {
+  color: oklch(1 0 0 / 30%);
+}
+
+.bottom-nav .onboarding-highlight {
+  color: var(--dm-cinnabar) !important;
+  background: transparent !important;
+  box-shadow: none;
+  animation: none;
+}
+
+.onboarding-overlay-active {
+  pointer-events: auto;
+}
+
+.onboarding-optout {
+  @apply fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-xl px-6 py-5 text-center;
+  z-index: 9999;
+  width: 280px;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+  box-shadow: var(--dm-shadow-lg);
+}
+
+.onboarding-optout-message {
+  @apply text-sm font-semibold mb-4;
+  color: var(--dm-umber);
+}
+
+.onboarding-optout-actions {
+  @apply flex gap-3;
+}
+
+.onboarding-optout-yes {
+  @apply flex-1 rounded-full py-2 text-xs font-semibold;
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+}
+
+.onboarding-optout-no {
+  @apply flex-1 rounded-full py-2 text-xs font-semibold;
+  background: oklch(1 0 0 / 8%);
+  color: var(--dm-umber);
+}
+
+/* -- Settings Toggle ---------------------------------------- */
+
+.settings-toggle {
+  @apply relative flex-shrink-0 rounded-full;
+  width: 44px;
+  height: 24px;
+  background: oklch(0.30 0 0);
+  transition: background 200ms ease;
+}
+
+.settings-toggle::after {
+  content: "";
+  @apply absolute top-0.5 left-0.5 rounded-full;
+  width: 20px;
+  height: 20px;
+  background: oklch(0.60 0 0);
+  transition: transform 200ms ease, background 200ms ease;
+}
+
+.settings-toggle-on {
+  background: oklch(0.76 0.14 85 / 30%);
+}
+
+.settings-toggle-on::after {
+  transform: translateX(20px);
+  background: var(--dm-gold);
+}
+
+/* ============================================================
+   Help Page
+   ============================================================ */
+
+.help-page {
+  @apply px-4 pb-20;
+}
+
+.help-header {
+  @apply flex items-center gap-2 px-4 pt-3 pb-5;
+  color: var(--dm-gold);
+}
+
+.help-header h1 {
+  @apply text-lg font-semibold;
+  color: var(--dm-umber);
+}
+
+.help-header-icon {
+  color: var(--dm-gold);
+}
+
+.help-cards {
+  @apply flex flex-col gap-3;
+}
+
+.help-card {
+  @apply flex items-center gap-4 rounded-xl px-5 py-4;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+  transition: all 200ms ease-out;
+  text-decoration: none;
+  color: inherit;
+}
+
+.help-card:hover {
+  background: oklch(0.22 0 0);
+  box-shadow: var(--dm-shadow-sm);
+}
+
+.help-card-icon {
+  @apply flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg;
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+}
+
+.help-card-icon-text {
+  @apply text-xs font-bold;
+  letter-spacing: -0.01em;
+}
+
+.help-card-title {
+  @apply text-sm font-semibold;
+  color: var(--dm-umber);
+}
+
+.help-card-desc {
+  @apply text-xs;
+  color: var(--dm-dust);
 }

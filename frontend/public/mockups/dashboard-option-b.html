@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Option B: Scoreboard Energy</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .phone {
+    width: 393px;
+    min-height: 700px;
+    background: #111;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    height: 56px;
+    padding: 0 20px;
+    background: rgba(17,17,17,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .badge {
+    background: rgba(212,168,35,0.15);
+    color: #D4A823;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 99px;
+  }
+
+  .header-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 16px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .avatar {
+    margin-left: auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(212,168,35,0.15);
+    color: #D4A823;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .content {
+    padding: 0 0 80px;
+  }
+
+  /* ---- OPTION B: Scoreboard Energy ---- */
+
+  /* Live ticker bar */
+  .ticker {
+    background: rgba(212,168,35,0.08);
+    border-bottom: 1px solid rgba(212,168,35,0.15);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ticker-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4CAF50;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .ticker-text {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .ticker-text strong {
+    color: #D4A823;
+    font-weight: 600;
+  }
+
+  /* Scoreboard-style results */
+  .results-section {
+    padding: 16px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 12px;
+  }
+
+  .scoreboard {
+    background: #1C1C1E;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.06);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .score-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    gap: 12px;
+  }
+
+  .score-row:last-child {
+    border-bottom: none;
+  }
+
+  .score-level {
+    font-size: 20px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    min-width: 40px;
+  }
+
+  .score-meta {
+    flex: 1;
+  }
+
+  .score-round {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .score-time {
+    font-size: 10px;
+    color: rgba(255,255,255,0.25);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .score-numbers {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .score-num-block {
+    text-align: center;
+    min-width: 36px;
+  }
+
+  .score-num {
+    font-size: 24px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1;
+  }
+
+  .score-num.green { color: #4CAF50; }
+  .score-num.red { color: #E05555; }
+  .score-num.gold { color: #D4A823; }
+
+  .score-num-label {
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.3);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 2px;
+  }
+
+  .score-final-badge {
+    background: rgba(212,168,35,0.15);
+    color: #D4A823;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .view-all-row {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .view-all-link {
+    font-size: 12px;
+    color: #D4A823;
+    font-family: 'IBM Plex Mono', monospace;
+    text-decoration: none;
+  }
+
+  /* Favourites — condensed dashboard strip */
+  .fav-section {
+    padding: 0 16px 16px;
+  }
+
+  .fav-strip {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .fav-tile {
+    flex: 1;
+    background: #1C1C1E;
+    border-radius: 14px;
+    padding: 16px 12px;
+    text-align: center;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+
+  .fav-tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .fav-tile.green::before { background: #4CAF50; }
+  .fav-tile.red::before { background: #E05555; }
+  .fav-tile.amber::before { background: #D4A823; }
+
+  .fav-tile-num {
+    font-size: 36px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .fav-tile-num.green { color: #4CAF50; }
+  .fav-tile-num.red { color: #E05555; }
+  .fav-tile-num.amber { color: #D4A823; }
+
+  .fav-tile-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Alert banner for missing */
+  .alert-banner {
+    background: rgba(212,168,35,0.08);
+    border: 1px solid rgba(212,168,35,0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .alert-icon {
+    font-size: 20px;
+  }
+
+  .alert-text {
+    flex: 1;
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+  }
+
+  .alert-text strong {
+    color: #D4A823;
+    font-weight: 600;
+  }
+
+  .alert-arrow {
+    color: rgba(255,255,255,0.25);
+    font-size: 18px;
+  }
+
+  .see-all-btn {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    color: #D4A823;
+    font-family: 'IBM Plex Mono', monospace;
+    text-decoration: none;
+    padding: 8px 0;
+  }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="header">
+    <span class="badge">NW-U15</span>
+    <span class="header-title">Home</span>
+    <span class="avatar">TE</span>
+  </div>
+
+  <div class="content">
+    <!-- Live ticker -->
+    <div class="ticker">
+      <span class="ticker-dot"></span>
+      <span class="ticker-text"><strong>AA Round 3</strong> posted 3h ago &mdash; 8 cuts</span>
+    </div>
+
+    <!-- Scoreboard results -->
+    <div class="results-section">
+      <div class="section-label">Recent Results</div>
+
+      <div class="scoreboard">
+        <div class="score-row">
+          <div class="score-level">AA</div>
+          <div class="score-meta">
+            <div class="score-round">Round 3</div>
+            <div class="score-time">3 hours ago</div>
+          </div>
+          <div class="score-numbers">
+            <div class="score-num-block">
+              <div class="score-num red">8</div>
+              <div class="score-num-label">Cut</div>
+            </div>
+            <div class="score-num-block">
+              <div class="score-num green">24</div>
+              <div class="score-num-label">Cont</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="score-row">
+          <div class="score-level">A</div>
+          <div class="score-meta">
+            <div class="score-round">Round 2</div>
+            <div class="score-time">1 day ago</div>
+          </div>
+          <div class="score-numbers">
+            <div class="score-num-block">
+              <div class="score-num red">12</div>
+              <div class="score-num-label">Cut</div>
+            </div>
+            <div class="score-num-block">
+              <div class="score-num green">38</div>
+              <div class="score-num-label">Cont</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="score-row">
+          <div class="score-level">BB</div>
+          <div class="score-meta">
+            <div class="score-round">Final Roster</div>
+            <div class="score-time">2 days ago</div>
+          </div>
+          <div class="score-numbers">
+            <span class="score-final-badge">Final &middot; 17</span>
+          </div>
+        </div>
+
+        <div class="view-all-row">
+          <a href="#" class="view-all-link">All Results &rsaquo;</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Favourites -->
+    <div class="fav-section">
+      <div class="section-label">My Favourites &middot; 8 tracked</div>
+
+      <div class="fav-strip">
+        <div class="fav-tile green">
+          <div class="fav-tile-num green">5</div>
+          <div class="fav-tile-label">Cont.</div>
+        </div>
+        <div class="fav-tile red">
+          <div class="fav-tile-num red">2</div>
+          <div class="fav-tile-label">Cut</div>
+        </div>
+        <div class="fav-tile amber">
+          <div class="fav-tile-num amber">1</div>
+          <div class="fav-tile-label">Missing</div>
+        </div>
+      </div>
+
+      <div class="alert-banner">
+        <span class="alert-icon">&#x26A0;&#xFE0F;</span>
+        <div class="alert-text"><strong>#19 Brown</strong> cut from AA R3, not on A&nbsp;list</div>
+        <span class="alert-arrow">&rsaquo;</span>
+      </div>
+
+      <a href="#" class="see-all-btn">See All Favourites &rsaquo;</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

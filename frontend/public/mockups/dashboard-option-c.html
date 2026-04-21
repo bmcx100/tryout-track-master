@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Option C: Status-First Rings</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .phone {
+    width: 393px;
+    min-height: 700px;
+    background: #111;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    height: 56px;
+    padding: 0 20px;
+    background: rgba(17,17,17,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .badge {
+    background: rgba(212,168,35,0.15);
+    color: #D4A823;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 99px;
+  }
+
+  .header-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 16px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .avatar {
+    margin-left: auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(212,168,35,0.15);
+    color: #D4A823;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .content {
+    padding: 0 0 80px;
+  }
+
+  /* ---- OPTION C: Status-First Rings ---- */
+
+  /* Favourites hero with rings */
+  .fav-hero {
+    padding: 24px 16px 20px;
+    background: linear-gradient(180deg, rgba(212,168,35,0.06) 0%, transparent 100%);
+  }
+
+  .fav-hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .fav-hero-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .fav-hero-link {
+    font-size: 12px;
+    color: #D4A823;
+    font-family: 'IBM Plex Mono', monospace;
+    text-decoration: none;
+  }
+
+  .rings-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .ring-item {
+    text-align: center;
+  }
+
+  .ring {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  .ring::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.06);
+  }
+
+  .ring::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 3px solid transparent;
+  }
+
+  .ring.green::after {
+    border-color: #4CAF50;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .ring.red::after {
+    border-color: #E05555;
+  }
+
+  .ring.amber::after {
+    border-color: #D4A823;
+  }
+
+  .ring-num {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1;
+    position: relative;
+  }
+
+  .ring-num.green { color: #4CAF50; }
+  .ring-num.red { color: #E05555; }
+  .ring-num.amber { color: #D4A823; }
+
+  .ring-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.45);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Alert callout */
+  .callout {
+    background: rgba(212,168,35,0.06);
+    border: 1px solid rgba(212,168,35,0.15);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 16px 8px;
+  }
+
+  .callout-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .callout-text {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1.4;
+  }
+
+  .callout-text strong {
+    color: #D4A823;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 16px 16px;
+  }
+
+  /* Timeline results */
+  .timeline-section {
+    padding: 0 16px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .section-label a {
+    font-size: 12px;
+    color: #D4A823;
+    text-decoration: none;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  .timeline {
+    position: relative;
+    padding-left: 24px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 1px;
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .timeline-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .timeline-dot {
+    position: absolute;
+    left: -24px;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid;
+  }
+
+  .timeline-dot.red {
+    border-color: #E05555;
+    background: rgba(224,85,85,0.2);
+  }
+
+  .timeline-dot.gold {
+    border-color: #D4A823;
+    background: rgba(212,168,35,0.2);
+  }
+
+  .timeline-card {
+    background: #1C1C1E;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+
+  .timeline-top {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .timeline-level {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .timeline-round {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .timeline-time {
+    margin-left: auto;
+    font-size: 10px;
+    color: rgba(255,255,255,0.25);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .timeline-bottom {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .tl-stat {
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+  }
+
+  .tl-stat.red { color: #E05555; }
+  .tl-stat.green { color: #4CAF50; }
+  .tl-stat.gold { color: #D4A823; }
+
+  .tl-stat span {
+    font-weight: 400;
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    margin-left: 4px;
+  }
+
+  .tl-final {
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    color: #D4A823;
+  }
+
+  /* Your players impact line */
+  .timeline-impact {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .timeline-impact strong {
+    color: rgba(255,255,255,0.7);
+    font-weight: 600;
+  }
+
+  .impact-cut { color: #E05555; }
+  .impact-safe { color: #4CAF50; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="header">
+    <span class="badge">NW-U15</span>
+    <span class="header-title">Home</span>
+    <span class="avatar">TE</span>
+  </div>
+
+  <div class="content">
+    <!-- Favourites hero -->
+    <div class="fav-hero">
+      <div class="fav-hero-top">
+        <span class="fav-hero-label">My Favourites &middot; 8 Players</span>
+        <a href="#" class="fav-hero-link">Details &rsaquo;</a>
+      </div>
+
+      <div class="rings-row">
+        <div class="ring-item">
+          <div class="ring green">
+            <span class="ring-num green">5</span>
+          </div>
+          <span class="ring-label">Continuing</span>
+        </div>
+        <div class="ring-item">
+          <div class="ring red">
+            <span class="ring-num red">2</span>
+          </div>
+          <span class="ring-label">Cut</span>
+        </div>
+        <div class="ring-item">
+          <div class="ring amber">
+            <span class="ring-num amber">1</span>
+          </div>
+          <span class="ring-label">Missing</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="callout-icon">&#x26A0;&#xFE0F;</span>
+      <span class="callout-text"><strong>#19 Brown</strong> was cut from AA R3 but is not on the A&nbsp;list yet</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Timeline results -->
+    <div class="timeline-section">
+      <div class="section-label">
+        Recent Results
+        <a href="#">All Results &rsaquo;</a>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot red"></div>
+          <div class="timeline-card">
+            <div class="timeline-top">
+              <span class="timeline-level">AA</span>
+              <span class="timeline-round">Round 3</span>
+              <span class="timeline-time">3h ago</span>
+            </div>
+            <div class="timeline-bottom">
+              <span class="tl-stat red">8<span>cut</span></span>
+              <span class="tl-stat green">24<span>cont</span></span>
+            </div>
+            <div class="timeline-impact">
+              Your players: <strong class="impact-safe">#12 Smith safe</strong> &middot; <strong class="impact-cut">#19 Brown cut</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot red"></div>
+          <div class="timeline-card">
+            <div class="timeline-top">
+              <span class="timeline-level">A</span>
+              <span class="timeline-round">Round 2</span>
+              <span class="timeline-time">1d ago</span>
+            </div>
+            <div class="timeline-bottom">
+              <span class="tl-stat red">12<span>cut</span></span>
+              <span class="tl-stat green">38<span>cont</span></span>
+            </div>
+            <div class="timeline-impact">
+              Your players: <strong class="impact-safe">#7 Jones, #22 Lee safe</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot gold"></div>
+          <div class="timeline-card">
+            <div class="timeline-top">
+              <span class="timeline-level">BB</span>
+              <span class="timeline-round">Final Roster</span>
+              <span class="timeline-time">2d ago</span>
+            </div>
+            <div class="timeline-bottom">
+              <span class="tl-final">Final &middot; 17 players</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -236,7 +236,8 @@ export async function saveDraftRound(
   associationId: string,
   division: string,
   scrapeResult: ScrapeResult,
-  roundNumberOverride?: number
+  roundNumberOverride?: number,
+  sessionInfo?: string
 ): Promise<{ draftId: string, error?: string }> {
   const supabase = await createClient()
 
@@ -285,6 +286,7 @@ export async function saveDraftRound(
       source_url: scrapeResult.sourceUrl,
       scraped_at: new Date().toISOString(),
       is_final_team: scrapeResult.pageType === "final_team",
+      session_info: sessionInfo || null,
     })
     .select("id")
     .single()

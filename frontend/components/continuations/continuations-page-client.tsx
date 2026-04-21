@@ -3,7 +3,8 @@
 import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import type { ContinuationRound, TryoutPlayer } from "@/types"
-import { RoundSection } from "./round-section"
+import { RoundSection, getSessionInfo } from "./round-section"
+import { SessionsToggle } from "./sessions-toggle"
 import { LongPressMenu } from "@/components/teams/long-press-menu"
 import { PlayerPicker } from "./player-picker"
 import { AddPlayerSheet } from "./add-player-sheet"
@@ -40,6 +41,7 @@ export function ContinuationsPageClient({
   const [localPlayers, setLocalPlayers] = useState(players)
   const [annotations, setAnnotations] = useState(initialAnnotations)
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [activeView, setActiveView] = useState<"continuing" | "cuts">("continuing")
 
   // Sync local state when server props change (e.g. division switch)
   useEffect(() => { setLocalPlayers(players) }, [players])
@@ -54,6 +56,12 @@ export function ContinuationsPageClient({
     if (player.jersey_number) {
       playerMap[player.jersey_number] = player
     }
+  }
+
+  // Reset toggle when round changes
+  const handleRoundChange = (index: number) => {
+    setSelectedIndex(index)
+    setActiveView("continuing")
   }
 
   const handleToggleFavorite = useCallback(async (playerId: string) => {
@@ -171,21 +179,40 @@ export function ContinuationsPageClient({
     (r, idx) => idx > selectedIndex && r.team_level === activeRound.team_level
   ) ?? null
 
+  // Compute summary stats
+  const totalContinuing = activeRound.jersey_numbers.length
+  const cuts = previousRound
+    ? previousRound.jersey_numbers.filter((jn) => !activeRound.jersey_numbers.includes(jn))
+    : []
+  const cutCount = cuts.length
+  const newPlayers = previousRound
+    ? activeRound.jersey_numbers.filter((jn) => !previousRound.jersey_numbers.includes(jn))
+    : []
+  const newCount = newPlayers.length
+  const sessions = (activeRound.sessions ?? []) as { session_number: number, date: string, start_time: string, end_time: string, jersey_numbers: string[] }[]
+  const computedSessionInfo = getSessionInfo(sessions)
+  const sessionInfo = activeRound.session_info || computedSessionInfo
+
   // Build dropdown label for each round
   const getRoundLabel = (round: ContinuationRound) => {
     const label = round.is_final_team ? "Final Team" : `Round ${round.round_number}`
     return `${division} ${round.team_level} - ${label}`
   }
 
+  // Compute IP count
+  const ipPlayers = activeRound.ip_players ?? []
+  const ipCount = ipPlayers.length
+
   return (
     <div className="continuations-page">
-      <div className="continuations-header">
-        <div className="continuations-header-left">
+      {/* Summary card with dropdown + badges */}
+      <div className="sessions-summary-card">
+        <div className="sessions-summary-row">
           {rounds.length > 1 ? (
             <select
               className="continuations-round-select"
               value={selectedIndex}
-              onChange={(e) => setSelectedIndex(Number(e.target.value))}
+              onChange={(e) => handleRoundChange(Number(e.target.value))}
             >
               {rounds.map((r, idx) => (
                 <option key={r.id} value={idx}>
@@ -198,17 +225,41 @@ export function ContinuationsPageClient({
               {getRoundLabel(activeRound)}
             </span>
           )}
+          <div className="sessions-summary-badges">
+            {newCount > 0 && (
+              <span className="sessions-badge sessions-badge-new">
+                {newCount} new
+              </span>
+            )}
+            {ipCount > 0 && (
+              <span className="sessions-badge sessions-badge-ip">
+                {ipCount} IP
+              </span>
+            )}
+          </div>
         </div>
+        {sessionInfo && (
+          <div className="sessions-summary-session-info">{sessionInfo}</div>
+        )}
       </div>
 
+      {/* Continuing / Cuts toggle */}
+      <SessionsToggle
+        activeView={activeView}
+        onViewChange={setActiveView}
+        continuingCount={totalContinuing}
+        cutCount={cutCount}
+      />
+
       <RoundSection
-        key={activeRound.id}
+        key={`${activeRound.id}-${activeView}`}
         teamLevel={activeRound.team_level}
         division={division}
         activeRound={activeRound}
         previousRound={previousRound}
         playerMap={playerMap}
         annotations={annotations}
+        activeView={activeView}
         onToggleFavorite={handleToggleFavorite}
         onPlayerLongPress={setSelectedPlayer}
         onLinkUnknown={handleLinkUnknown}

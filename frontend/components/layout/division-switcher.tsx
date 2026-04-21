@@ -13,6 +13,7 @@ const TITLE_MAP: Record<string, string> = {
   "/continuations": "Sessions",
   "/my-favourites": "My Favourites",
   "/settings": "Settings",
+  "/help": "Help",
 }
 
 type Association = {

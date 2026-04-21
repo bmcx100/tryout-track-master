@@ -4,6 +4,7 @@ import { getAllAssociations } from "@/app/(app)/association/actions"
 import { getPendingCorrectionsCount } from "@/app/(app)/corrections/actions"
 import { DivisionSwitcher } from "@/components/layout/division-switcher"
 import { BottomNav } from "@/components/layout/bottom-nav"
+import { OnboardingManager } from "@/components/shared/onboarding-manager"
 
 export default async function AppLayout({
   children,
@@ -46,6 +47,7 @@ export default async function AppLayout({
         {children}
       </div>
       <BottomNav />
+      <OnboardingManager />
     </div>
   )
 }

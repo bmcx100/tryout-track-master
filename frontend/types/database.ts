@@ -133,6 +133,7 @@ export type Database = {
           jersey_numbers: string[]
           round_number: number
           scraped_at: string | null
+          session_info: string | null
           sessions: Json
           source_url: string | null
           status: string
@@ -148,6 +149,7 @@ export type Database = {
           jersey_numbers: string[]
           round_number: number
           scraped_at?: string | null
+          session_info?: string | null
           sessions?: Json
           source_url?: string | null
           status?: string
@@ -163,6 +165,7 @@ export type Database = {
           jersey_numbers?: string[]
           round_number?: number
           scraped_at?: string | null
+          session_info?: string | null
           sessions?: Json
           source_url?: string | null
           status?: string
