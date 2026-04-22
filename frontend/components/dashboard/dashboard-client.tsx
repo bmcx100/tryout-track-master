@@ -2,20 +2,11 @@
 
 import Link from "next/link"
 import { Heart } from "lucide-react"
-import type { ActivityCard, FavoriteStatus } from "@/app/(app)/dashboard/actions"
+import type { HeroCard, FavoriteStatus } from "@/app/(app)/dashboard/actions"
 
 type DashboardClientProps = {
-  activityCards: ActivityCard[]
+  heroCards: HeroCard[]
   favoriteStatuses: FavoriteStatus[]
-}
-
-function formatTimeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const hours = Math.floor(diff / (1000 * 60 * 60))
-  if (hours < 1) return "Just now"
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
 }
 
 type StatusGroup = {
@@ -55,7 +46,6 @@ function formatSampleNames(players: FavoriteStatus[]): string {
 }
 
 function getMissingLevel(players: FavoriteStatus[]): string {
-  // Extract level from statusText: "Cut R3 (AA) · Not at A" → "A"
   for (const p of players) {
     const match = p.statusText.match(/Not at (\w+)/)
     if (match) return match[1]
@@ -63,91 +53,136 @@ function getMissingLevel(players: FavoriteStatus[]): string {
   return ""
 }
 
-function renderStatusCard(group: StatusGroup) {
-  const { statusType, players } = group
-  const count = players.length
-
-  let heading = ""
-  if (statusType === "continuing") heading = `${count} continuing`
-  else if (statusType === "cut") heading = `${count} cut`
-  else if (statusType === "missing") {
+function getStatusLabel(statusType: string, players: FavoriteStatus[]): string {
+  if (statusType === "continuing") return "Continuing"
+  if (statusType === "cut") return "Cut"
+  if (statusType === "missing") {
     const level = getMissingLevel(players)
-    heading = `\u26A0 ${count} missing${level ? ` at ${level}` : ""}`
-  } else if (statusType === "made_team") heading = `${count} made team`
-  else if (statusType === "registered") heading = `${count} registered`
+    return level ? `Missing at ${level}` : "Missing"
+  }
+  if (statusType === "made_team") return "Made Team"
+  if (statusType === "registered") return "Registered"
+  return statusType
+}
 
-  return (
-    <div
-      key={statusType}
-      className={`dashboard-status-card dashboard-status-card-${statusType}`}
-    >
-      <div className={`dashboard-status-heading dashboard-status-heading-${statusType}`}>
-        {heading}
+function renderHeroCard(card: HeroCard) {
+  if (card.isFinalTeam) {
+    // Variant B: Team Finalized
+    const hasFavourites = card.favouritesOnTeam > 0 || card.favouritesCutFinal > 0
+    return (
+      <div key={card.teamLevel} className="dashboard-hero-card">
+        <div className="dashboard-hero-title">Team Finalized</div>
+        <div className="dashboard-hero-subtitle">{card.teamLevel}</div>
+        <div className="dashboard-hero-stats">
+          <div className="dashboard-hero-stat">
+            <div className="dashboard-hero-stat-value dashboard-hero-stat-value-gold">
+              {hasFavourites ? card.favouritesOnTeam : card.totalPlayers}
+            </div>
+            <div className="dashboard-hero-stat-label">
+              {hasFavourites ? "On Roster" : "Roster"}
+            </div>
+          </div>
+          <div className="dashboard-hero-stat">
+            <div className="dashboard-hero-stat-value dashboard-hero-stat-value-red">
+              {hasFavourites ? card.favouritesCutFinal : card.cutCount}
+            </div>
+            <div className="dashboard-hero-stat-label">Cut</div>
+          </div>
+        </div>
       </div>
-      <div className="dashboard-status-names">{formatSampleNames(players)}</div>
+    )
+  }
+
+  // Variant A: Tryouts in progress
+  return (
+    <div key={card.teamLevel} className="dashboard-hero-card">
+      <div className="dashboard-hero-title">{card.division} {card.teamLevel} - Round&nbsp;{card.roundNumber}</div>
+      <div className="dashboard-hero-stats">
+        {card.isRoundOne ? (
+          <>
+            <div className="dashboard-hero-stat">
+              <div className="dashboard-hero-stat-value dashboard-hero-stat-value-neutral">
+                {card.totalPlayers}
+              </div>
+              <div className="dashboard-hero-stat-label">Total Players</div>
+            </div>
+            <div className="dashboard-hero-stat">
+              <div className="dashboard-hero-stat-value dashboard-hero-stat-value-gold">
+                {card.missingCount}
+              </div>
+              <div className="dashboard-hero-stat-label">Missing</div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="dashboard-hero-stat">
+              <div className="dashboard-hero-stat-value dashboard-hero-stat-value-green">
+                {card.continuingCount}
+              </div>
+              <div className="dashboard-hero-stat-label">Continuing</div>
+            </div>
+            <div className="dashboard-hero-stat">
+              <div className="dashboard-hero-stat-value dashboard-hero-stat-value-red">
+                {card.cutCount}
+              </div>
+              <div className="dashboard-hero-stat-label">Cuts</div>
+            </div>
+            <div className="dashboard-hero-stat">
+              <div className="dashboard-hero-stat-value dashboard-hero-stat-value-gold">
+                {card.missingCount}
+              </div>
+              <div className="dashboard-hero-stat-label">Missing</div>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }
 
-export function DashboardClient({ activityCards, favoriteStatuses }: DashboardClientProps) {
+function renderFavCard(group: StatusGroup) {
+  const { statusType, players } = group
+  const count = players.length
+  const label = getStatusLabel(statusType, players)
+
+  return (
+    <Link
+      key={statusType}
+      href="/my-favourites"
+      className={`dashboard-fav-card dashboard-fav-card-${statusType}`}
+    >
+      <div className={`dashboard-fav-count dashboard-fav-count-${statusType}`}>
+        {count}
+      </div>
+      <div className="dashboard-fav-info">
+        <div className="dashboard-fav-label">{label}</div>
+        <div className="dashboard-fav-names">{formatSampleNames(players)}</div>
+      </div>
+    </Link>
+  )
+}
+
+export function DashboardClient({ heroCards, favoriteStatuses }: DashboardClientProps) {
   const statusGroups = buildStatusGroups(favoriteStatuses)
 
   return (
     <div className="dashboard-page">
-      {/* Activity Section */}
-      <div className="dashboard-section">
-        <Link href="/continuations" className="dashboard-section-header">Recent Results</Link>
-        {activityCards.length > 0 ? (
-          <>
-            <div className="dashboard-activity-list">
-              {activityCards.map((card) => (
-                <Link
-                  key={card.teamLevel}
-                  href="/continuations"
-                  className="dashboard-activity-card"
-                >
-                  <div className="dashboard-activity-top">
-                    <span className="dashboard-activity-badge">{card.teamLevel}</span>
-                    <span className="dashboard-activity-round">Round {card.roundNumber}</span>
-                    <span className="dashboard-activity-time">{formatTimeAgo(card.publishedAt)}</span>
-                  </div>
-                  <div className="dashboard-activity-stats">
-                    {card.isFinalTeam ? (
-                      <span className="dashboard-activity-final">Final Roster</span>
-                    ) : (
-                      <>
-                        {card.cutCount > 0 && (
-                          <span className="dashboard-activity-cuts">{card.cutCount} cut{card.cutCount !== 1 ? "s" : ""}</span>
-                        )}
-                        <span className="dashboard-activity-continuing">{card.continuingCount} continuing</span>
-                      </>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
-            <Link href="/continuations" className="dashboard-results-link">
-              Results Details ›
-            </Link>
-          </>
-        ) : (
-          <p className="dashboard-activity-empty">No results in the last 5&nbsp;days</p>
-        )}
-      </div>
+      {/* Hero Cards */}
+      {heroCards.length > 0 && (
+        <div className="dashboard-hero-section">
+          {heroCards.map((card) => renderHeroCard(card))}
+        </div>
+      )}
 
-      <div className="dashboard-divider" />
-
-      {/* Favorites Section */}
+      {/* My Favourites */}
       {favoriteStatuses.length > 0 ? (
-        <div className="dashboard-section">
-          <Link href="/my-favourites" className="dashboard-section-header">
-            My Favourites{" "}
-            <span className="dashboard-section-count">({favoriteStatuses.length})</span>
+        <div className="dashboard-fav-section">
+          <Link href="/my-favourites" className="dashboard-fav-header">
+            My Favourites ({favoriteStatuses.length}<Heart size={12} fill="currentColor" className="dashboard-fav-heart" />)
           </Link>
-          {statusGroups.map((group) => renderStatusCard(group))}
-          <Link href="/my-favourites" className="dashboard-see-all-link">
-            See All My Favourites ›
-          </Link>
+          <div className="dashboard-fav-list">
+            {statusGroups.map((group) => renderFavCard(group))}
+          </div>
         </div>
       ) : (
         <div className="dashboard-empty">

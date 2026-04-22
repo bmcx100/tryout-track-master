@@ -16,12 +16,12 @@ export default async function DashboardPage() {
     : ""
   const activeDivision = savedDivision ?? defaultDivision
 
-  const { activityCards, favoriteStatuses } = await getDashboardData(associationId, activeDivision)
+  const { heroCards, favoriteStatuses } = await getDashboardData(associationId, activeDivision)
 
   return (
     <DashboardClient
       key={`${associationId}-${activeDivision}`}
-      activityCards={activityCards}
+      heroCards={heroCards}
       favoriteStatuses={favoriteStatuses}
     />
   )

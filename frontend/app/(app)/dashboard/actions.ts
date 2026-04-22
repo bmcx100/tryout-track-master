@@ -4,13 +4,19 @@ import { createClient } from "@/lib/supabase/server"
 
 const LEVEL_ORDER = ["AA", "A", "BB", "B", "C"]
 
-export type ActivityCard = {
+export type HeroCard = {
+  division: string
   teamLevel: string
   roundNumber: number
+  isFinalTeam: boolean
+  publishedAt: string
   continuingCount: number
   cutCount: number
-  publishedAt: string
-  isFinalTeam: boolean
+  missingCount: number
+  totalPlayers: number
+  isRoundOne: boolean
+  favouritesOnTeam: number
+  favouritesCutFinal: number
 }
 
 export type FavoriteStatus = {
@@ -29,12 +35,12 @@ export async function getDashboardData(
   associationId: string,
   division: string
 ): Promise<{
-  activityCards: ActivityCard[]
+  heroCards: HeroCard[]
   favoriteStatuses: FavoriteStatus[]
 }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { activityCards: [], favoriteStatuses: [] }
+  if (!user) return { heroCards: [], favoriteStatuses: [] }
 
   // 1. All published rounds for this division
   const { data: rounds } = await supabase
@@ -66,10 +72,7 @@ export async function getDashboardData(
 
   const teamsMap = new Map((teamsData ?? []).map((t) => [t.id, t]))
 
-  // --- Build activity cards ---
-  const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-
-  // Group rounds by team level
+  // --- Group rounds by team level ---
   const roundsByLevel = new Map<string, typeof allRounds>()
   for (const r of allRounds) {
     const existing = roundsByLevel.get(r.team_level) ?? []
@@ -77,29 +80,102 @@ export async function getDashboardData(
     roundsByLevel.set(r.team_level, existing)
   }
 
-  const activityCards: ActivityCard[] = []
+  // --- Build hero cards ---
+  // Collect favourite jersey numbers for finalized team counts
+  const favJerseyNumbers = new Set(
+    (favData ?? []).map((fav) => {
+      const player = fav.tryout_players as unknown as { jersey_number: string }
+      return player.jersey_number
+    })
+  )
+
+  const heroCards: HeroCard[] = []
   for (const level of LEVEL_ORDER) {
     const levelRounds = roundsByLevel.get(level)
     if (!levelRounds || levelRounds.length === 0) continue
 
     // Rounds are already sorted desc by round_number
     const latest = levelRounds[0]
-    if (latest.created_at < fiveDaysAgo) continue
-
     const previous = levelRounds.length > 1 ? levelRounds[1] : null
+    const isRoundOne = !previous
+
+    const totalPlayers = latest.jersey_numbers.length
+    const continuingCount = totalPlayers
     const cutCount = previous
       ? previous.jersey_numbers.filter((jn: string) => !latest.jersey_numbers.includes(jn)).length
       : 0
 
-    activityCards.push({
+    // Missing count: players cut from the level above who don't appear at ANY round at this level
+    let missingCount = 0
+    const levelIdx = LEVEL_ORDER.indexOf(level)
+    if (levelIdx > 0) {
+      const levelAbove = LEVEL_ORDER[levelIdx - 1]
+      const aboveRounds = roundsByLevel.get(levelAbove)
+      if (aboveRounds && aboveRounds.length > 0) {
+        const latestAbove = aboveRounds[0]
+        // Players who were on a previous above-round but NOT on the latest above-round = cut from above
+        const allAboveJerseys = new Set<string>()
+        for (const r of aboveRounds) {
+          for (const jn of r.jersey_numbers) {
+            allAboveJerseys.add(jn)
+          }
+        }
+        const stillAtAbove = new Set<string>(latestAbove.jersey_numbers)
+        const cutFromAbove = [...allAboveJerseys].filter((jn) => !stillAtAbove.has(jn))
+
+        // Check which of those cut players appear at ANY round at this level
+        const allThisLevelJerseys = new Set<string>()
+        for (const r of levelRounds) {
+          for (const jn of r.jersey_numbers) {
+            allThisLevelJerseys.add(jn)
+          }
+        }
+
+        missingCount = cutFromAbove.filter((jn) => !allThisLevelJerseys.has(jn)).length
+      }
+    }
+
+    // Finalized team: count favourites on roster vs cut
+    let favouritesOnTeam = 0
+    let favouritesCutFinal = 0
+    if (latest.is_final_team) {
+      const finalJerseys = new Set<string>(latest.jersey_numbers)
+      for (const jn of favJerseyNumbers) {
+        if (finalJerseys.has(jn)) {
+          favouritesOnTeam++
+        }
+      }
+      if (previous) {
+        const prevJerseys = new Set<string>(previous.jersey_numbers)
+        for (const jn of favJerseyNumbers) {
+          if (prevJerseys.has(jn) && !finalJerseys.has(jn)) {
+            favouritesCutFinal++
+          }
+        }
+      }
+    }
+
+    heroCards.push({
+      division,
       teamLevel: level,
       roundNumber: latest.round_number,
-      continuingCount: latest.jersey_numbers.length,
-      cutCount,
-      publishedAt: latest.created_at,
       isFinalTeam: latest.is_final_team,
+      publishedAt: latest.created_at,
+      continuingCount,
+      cutCount,
+      missingCount,
+      totalPlayers,
+      isRoundOne,
+      favouritesOnTeam,
+      favouritesCutFinal,
     })
   }
+
+  // Sort: finalized first, then by LEVEL_ORDER
+  heroCards.sort((a, b) => {
+    if (a.isFinalTeam !== b.isFinalTeam) return a.isFinalTeam ? -1 : 1
+    return LEVEL_ORDER.indexOf(a.teamLevel) - LEVEL_ORDER.indexOf(b.teamLevel)
+  })
 
   // --- Build favorite statuses ---
   const favoriteStatuses: FavoriteStatus[] = []
@@ -171,7 +247,7 @@ export async function getDashboardData(
     return jA - jB
   })
 
-  return { activityCards, favoriteStatuses }
+  return { heroCards, favoriteStatuses }
 }
 
 function derivePlayerStatus(
@@ -187,7 +263,7 @@ function derivePlayerStatus(
     roundsByLevel.set(r.team_level, existing)
   }
 
-  // For each level (AA → C), find where the player appears
+  // For each level (AA -> C), find where the player appears
   let latestAppearance: { level: string, roundNumber: number, createdAt: string } | null = null
   let wasCut = false
   let cutLevel: string | null = null

@@ -1372,190 +1372,187 @@ body:has(.admin-shell) {
   color: oklch(0.12 0 0);
 }
 
-/* -- Dashboard Redesign ------------------------------------- */
+/* -- Dashboard Hero Cards ----------------------------------- */
 
-.dashboard-section {
-  @apply mb-6;
-}
-
-.dashboard-section:first-child {
+.dashboard-hero-section {
+  @apply flex flex-col gap-3;
   margin-top: 12px;
 }
 
-.dashboard-section-header {
-  @apply flex items-center gap-2 font-semibold px-1 mb-3;
-  font-size: 13px;
-  color: var(--dm-umber);
-  font-family: var(--font-body);
-  text-decoration: none;
+.dashboard-hero-card {
+  @apply relative overflow-hidden;
+  background: linear-gradient(135deg, oklch(0.65 0.12 85 / 12%) 0%, oklch(0.65 0.12 85 / 3%) 100%);
+  border: 1px solid oklch(0.65 0.12 85 / 20%);
+  border-radius: 16px;
+  padding: 20px;
 }
 
-.dashboard-section-count {
-  color: var(--dm-umber);
+.dashboard-hero-title {
+  font-size: 18px;
   font-weight: 600;
+  color: var(--dm-umber);
 }
 
-.dashboard-section-arrow {
-  @apply ml-auto;
-  color: var(--dm-dust);
+.dashboard-hero-subtitle {
   font-size: 16px;
-}
-
-.dashboard-activity-list {
-  @apply flex flex-col gap-3;
-}
-
-.dashboard-activity-card {
-  @apply block rounded-xl px-4 py-3;
-  background: var(--dm-dune);
-  border: 1px solid var(--dm-border);
-  text-decoration: none;
-  color: inherit;
-  transition: background 200ms ease-out;
-  margin-left: 10px;
-}
-
-.dashboard-activity-card:hover {
-  background: oklch(0.22 0 0);
-}
-
-.dashboard-activity-top {
-  @apply flex items-center gap-2 mb-1;
-}
-
-.dashboard-activity-badge {
-  @apply inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-bold;
-  background: oklch(1 0 0 / 8%);
-  color: var(--dm-umber);
+  font-weight: 700;
+  color: oklch(0.75 0 0);
+  margin-top: 2px;
   font-family: var(--font-ibm-plex-mono);
 }
 
-.dashboard-activity-round {
-  @apply text-sm font-medium;
-  color: var(--dm-umber);
+.dashboard-hero-stats {
+  @apply flex gap-3;
+  margin-top: 16px;
 }
 
-.dashboard-activity-time {
-  @apply ml-auto text-xs;
-  color: var(--dm-dust);
+.dashboard-hero-stat {
+  @apply flex-1 text-center;
+  background: oklch(0.15 0 0 / 50%);
+  border-radius: 12px;
+  padding: 12px;
 }
 
-.dashboard-activity-stats {
-  @apply flex items-center gap-2 text-xs;
-  color: var(--dm-dust);
+.dashboard-hero-stat-value {
+  font-size: 28px;
+  font-weight: 700;
   font-family: var(--font-ibm-plex-mono);
+  line-height: 1;
 }
 
-.dashboard-activity-cuts {
-  color: oklch(0.65 0.18 25);
-}
-
-.dashboard-activity-continuing {
+.dashboard-hero-stat-value-green {
   color: var(--dm-official-green);
 }
 
-.dashboard-activity-final {
-  @apply font-semibold;
-  color: var(--dm-gold);
-}
-
-.dashboard-activity-empty {
-  @apply text-sm px-1 py-4;
-  color: var(--dm-dust);
-}
-
-/* Status cards */
-.dashboard-status-card {
-  @apply rounded-lg px-3.5 py-2.5;
-  background: var(--dm-dune);
-  border: 1px solid var(--dm-border);
-  border-radius: 10px;
-  padding: 10px 14px;
-  margin-bottom: 8px;
-  margin-left: 10px;
-  border-left: 3px solid transparent;
-}
-
-.dashboard-status-card-continuing {
-  border-left-color: var(--dm-official-green);
-}
-
-.dashboard-status-card-cut {
-  border-left-color: var(--dm-red);
-}
-
-.dashboard-status-card-missing {
-  border-left-color: var(--dm-orange);
-  background: oklch(0.72 0.15 55 / 6%);
-  border-color: oklch(0.72 0.15 55 / 15%);
-  border-left-color: var(--dm-orange);
-}
-
-.dashboard-status-card-made_team {
-  border-left-color: var(--dm-gold);
-}
-
-.dashboard-status-card-registered {
-  border-left-color: var(--dm-dust);
-}
-
-.dashboard-status-heading {
-  @apply font-semibold;
-  font-size: 13px;
-  font-family: var(--font-ibm-plex-mono);
-  margin-bottom: 4px;
-}
-
-.dashboard-status-heading-continuing {
-  color: var(--dm-official-green);
-}
-
-.dashboard-status-heading-cut {
+.dashboard-hero-stat-value-red {
   color: var(--dm-red);
 }
 
-.dashboard-status-heading-missing {
+.dashboard-hero-stat-value-gold {
+  color: var(--dm-gold);
+}
+
+.dashboard-hero-stat-value-neutral {
+  color: var(--dm-umber);
+}
+
+.dashboard-hero-stat-label {
+  font-size: 10px;
+  color: var(--dm-dust);
+  font-family: var(--font-ibm-plex-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+/* -- Dashboard Favourites Section --------------------------- */
+
+.dashboard-fav-section {
+  margin-top: 20px;
+}
+
+.dashboard-fav-header {
+  @apply inline-flex items-center gap-0.5 px-1 mb-3;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-ibm-plex-mono);
+  color: var(--dm-umber);
+  text-decoration: none;
+}
+
+.dashboard-fav-heart {
+  @apply inline-block;
+  margin-right: 1px;
+}
+
+.dashboard-fav-list {
+  @apply flex flex-col gap-2;
+}
+
+.dashboard-fav-card {
+  @apply flex items-center gap-3.5;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  border-left: 4px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: background 200ms ease-out;
+}
+
+.dashboard-fav-card:hover {
+  background: oklch(0.22 0 0);
+}
+
+.dashboard-fav-card-continuing {
+  border-left-color: var(--dm-official-green);
+}
+
+.dashboard-fav-card-cut {
+  border-left-color: var(--dm-red);
+}
+
+.dashboard-fav-card-missing {
+  border-left-color: var(--dm-orange);
+  background: oklch(0.72 0.15 55 / 6%);
+}
+
+.dashboard-fav-card-made_team {
+  border-left-color: var(--dm-gold);
+}
+
+.dashboard-fav-card-registered {
+  border-left-color: var(--dm-dust);
+}
+
+.dashboard-fav-count {
+  font-size: 32px;
+  font-weight: 700;
+  font-family: var(--font-ibm-plex-mono);
+  line-height: 1;
+  min-width: 44px;
+  text-align: center;
+}
+
+.dashboard-fav-count-continuing {
+  color: var(--dm-official-green);
+}
+
+.dashboard-fav-count-cut {
+  color: var(--dm-red);
+}
+
+.dashboard-fav-count-missing {
   color: var(--dm-orange);
 }
 
-.dashboard-status-heading-made_team {
+.dashboard-fav-count-made_team {
   color: var(--dm-gold);
 }
 
-.dashboard-status-heading-registered {
+.dashboard-fav-count-registered {
   color: var(--dm-dust);
 }
 
-.dashboard-status-names {
-  font-size: 12px;
+.dashboard-fav-info {
+  @apply flex-1;
+}
+
+.dashboard-fav-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: oklch(0.85 0 0);
+}
+
+.dashboard-fav-names {
+  font-size: 11px;
   color: var(--dm-dust);
   font-family: var(--font-ibm-plex-mono);
-  user-select: text;
 }
 
-.dashboard-results-link {
-  @apply block text-center;
-  font-size: 12px;
-  font-family: var(--font-ibm-plex-mono);
-  color: var(--dm-gold);
-  padding: 8px 0 0;
-  text-decoration: none;
-}
-
-.dashboard-see-all-link {
-  @apply block text-center;
-  font-size: 12px;
-  font-family: var(--font-ibm-plex-mono);
-  color: var(--dm-gold);
-  padding: 12px 0;
-  text-decoration: none;
-}
-
-.dashboard-divider {
-  height: 1px;
-  background: var(--dm-border);
-  margin: 16px 0;
-}
+/* -- Dashboard Empty State ---------------------------------- */
 
 .dashboard-empty {
   @apply flex flex-col items-center justify-center gap-3 py-16 text-center;
@@ -1883,14 +1880,15 @@ body:has(.admin-shell) {
 }
 
 .sessions-badge-ip {
-  background: oklch(0.76 0.14 85 / 15%);
-  color: var(--dm-gold);
+  background: none;
+  color: oklch(0.85 0 0);
+  font-family: inherit;
+  padding: 0;
 }
 
 .sessions-summary-session-info {
-  color: var(--dm-dust);
-  font-size: 12px;
-  font-family: var(--font-ibm-plex-mono);
+  color: oklch(0.85 0 0);
+  font-size: 13px;
   margin-top: 6px;
   margin-left: 12px;
 }
@@ -3430,8 +3428,8 @@ body:has(.admin-shell) {
 
 .division-badge.onboarding-highlight {
   background: var(--dm-cinnabar) !important;
-  color: oklch(0.12 0 0) !important;
-  box-shadow: none;
+  color: oklch(0.98 0 0) !important;
+  box-shadow: 0 0 12px 4px oklch(0.55 0.2 25 / 50%);
   animation: none;
 }
 
@@ -3440,7 +3438,7 @@ body:has(.admin-shell) {
 }
 
 .bottom-nav .onboarding-highlight {
-  color: var(--dm-cinnabar) !important;
+  color: oklch(0.98 0 0) !important;
   background: transparent !important;
   box-shadow: none;
   animation: none;
