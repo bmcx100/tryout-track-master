@@ -1102,6 +1102,65 @@
   background: oklch(1 0 0 / 8%);
 }
 
+.division-sheet-top {
+  @apply relative flex items-center justify-center;
+  padding-top: 4px;
+}
+
+.division-sheet-links-btn {
+  @apply absolute right-0 text-xs font-medium;
+  color: var(--dm-gold);
+  opacity: 0.6;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.division-links-modal {
+  @apply fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-xl px-6 py-5;
+  z-index: 10002;
+  background: oklch(0.16 0 0);
+  border: 1px solid oklch(1 0 0 / 10%);
+  width: min(340px, 90vw);
+}
+
+.division-links-title {
+  @apply text-base font-semibold mb-4;
+  color: var(--dm-umber);
+}
+
+.division-sheet-links {
+  @apply flex flex-col gap-4 mb-5;
+}
+
+.division-sheet-link {
+  @apply flex flex-col gap-0.5;
+  text-decoration: none;
+}
+
+.division-link-row {
+  @apply flex items-center gap-1 text-sm font-semibold;
+  color: var(--dm-gold);
+}
+
+.division-link-row svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.division-link-domain {
+  @apply text-xs;
+  color: var(--dm-dust);
+}
+
+.division-links-close {
+  @apply w-full rounded-xl py-2.5 text-sm font-semibold;
+  background: oklch(1 0 0 / 8%);
+  color: var(--dm-umber);
+  border: none;
+  cursor: pointer;
+}
+
 .division-sheet-actions {
   @apply mt-4 flex gap-3;
 }
