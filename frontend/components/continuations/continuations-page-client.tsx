@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import type { ContinuationRound, TryoutPlayer } from "@/types"
 import { RoundSection, getSessionInfo } from "./round-section"
 import { SessionsToggle } from "./sessions-toggle"
+import { PositionFilter } from "@/components/teams/position-filter"
 import { LongPressMenu } from "@/components/teams/long-press-menu"
 import { PlayerPicker } from "./player-picker"
 import { AddPlayerSheet } from "./add-player-sheet"
@@ -13,6 +14,8 @@ import {
   savePlayerNote,
   linkUnknownPlayer,
   suggestPlayerLink,
+  saveContinuationOrder,
+  resetContinuationOrder,
 } from "@/app/(app)/continuations/actions"
 import { saveCustomName } from "@/app/(app)/annotations/actions"
 import { submitCorrection } from "@/app/(app)/corrections/actions"
@@ -27,6 +30,7 @@ type ContinuationsPageClientProps = {
   associationId: string
   division: string
   isAdmin: boolean
+  savedOrders?: Record<string, string[]>
 }
 
 export function ContinuationsPageClient({
@@ -36,16 +40,22 @@ export function ContinuationsPageClient({
   associationId,
   division,
   isAdmin,
+  savedOrders: initialSavedOrders,
 }: ContinuationsPageClientProps) {
   const router = useRouter()
   const [localPlayers, setLocalPlayers] = useState(players)
   const [annotations, setAnnotations] = useState(initialAnnotations)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [activeView, setActiveView] = useState<"continuing" | "cuts">("continuing")
+  const [activePosition, setActivePosition] = useState<string | null>(null)
+  const [isResetting, setIsResetting] = useState(false)
+  const [currentOrders, setCurrentOrders] = useState<Record<string, string[]>>(initialSavedOrders ?? {})
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Sync local state when server props change (e.g. division switch)
   useEffect(() => { setLocalPlayers(players) }, [players])
   useEffect(() => { setAnnotations(initialAnnotations) }, [initialAnnotations])
+  useEffect(() => { setCurrentOrders(initialSavedOrders ?? {}) }, [initialSavedOrders])
   const [selectedPlayer, setSelectedPlayer] = useState<TryoutPlayer | null>(null)
   const [linkingJerseyNumber, setLinkingJerseyNumber] = useState<string | null>(null)
   const [addingPlayer, setAddingPlayer] = useState<{ jerseyNumber: string } | null>(null)
@@ -58,10 +68,11 @@ export function ContinuationsPageClient({
     }
   }
 
-  // Reset toggle when round changes
+  // Reset toggle and position filter when round changes
   const handleRoundChange = (index: number) => {
     setSelectedIndex(index)
     setActiveView("continuing")
+    setActivePosition(null)
   }
 
   const handleToggleFavorite = useCallback(async (playerId: string) => {
@@ -162,6 +173,35 @@ export function ContinuationsPageClient({
     router.refresh()
   }, [router])
 
+  // Drag order handling with debounced save
+  const handleOrderChange = useCallback((jerseyNumbers: string[]) => {
+    const roundId = rounds[selectedIndex]?.id
+    if (!roundId) return
+
+    setCurrentOrders((prev) => ({ ...prev, [roundId]: jerseyNumbers }))
+
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      saveContinuationOrder(roundId, jerseyNumbers)
+    }, 1000)
+  }, [rounds, selectedIndex])
+
+  // Reset handler
+  const handleReset = useCallback(async () => {
+    const roundId = rounds[selectedIndex]?.id
+    if (!roundId) return
+
+    setIsResetting(true)
+    setCurrentOrders((prev) => {
+      const next = { ...prev }
+      delete next[roundId]
+      return next
+    })
+
+    await resetContinuationOrder(roundId)
+    setTimeout(() => setIsResetting(false), 500)
+  }, [rounds, selectedIndex])
+
   const selectedAnn = selectedPlayer ? annotations[selectedPlayer.id] : null
 
   if (rounds.length === 0) {
@@ -173,6 +213,7 @@ export function ContinuationsPageClient({
   }
 
   const activeRound = rounds[selectedIndex]
+  const hasCustomOrder = !!(currentOrders[activeRound.id] && currentOrders[activeRound.id].length > 0)
 
   // Find the previous round for the SAME team level (for computing cuts)
   const previousRound = rounds.find(
@@ -197,6 +238,14 @@ export function ContinuationsPageClient({
   const getRoundLabel = (round: ContinuationRound) => {
     const label = round.is_final_team ? "Final Team" : `Round ${round.round_number}`
     return `${division} ${round.team_level} - ${label}`
+  }
+
+  // Compute position counts for the active round
+  const positionCounts: Record<string, number> = { F: 0, D: 0, G: 0, "?": 0 }
+  for (const jn of activeRound.jersey_numbers) {
+    const p = playerMap[jn]
+    const pos = p?.position && p.position !== "?" ? p.position : "?"
+    positionCounts[pos] = (positionCounts[pos] ?? 0) + 1
   }
 
   // Compute IP count
@@ -251,8 +300,19 @@ export function ContinuationsPageClient({
         cutCount={cutCount}
       />
 
+      {/* Position filter */}
+      <PositionFilter
+        activePosition={activePosition}
+        onPositionChange={setActivePosition}
+        onReset={handleReset}
+        isResetting={isResetting}
+        hasCustomOrder={hasCustomOrder}
+        showUnknown={true}
+        positionCounts={positionCounts}
+      />
+
       <RoundSection
-        key={`${activeRound.id}-${activeView}`}
+        key={`${activeRound.id}-${activeView}-${hasCustomOrder}`}
         teamLevel={activeRound.team_level}
         division={division}
         activeRound={activeRound}
@@ -260,9 +320,12 @@ export function ContinuationsPageClient({
         playerMap={playerMap}
         annotations={annotations}
         activeView={activeView}
+        positionFilter={activePosition}
+        savedOrder={currentOrders[activeRound.id]}
         onToggleFavorite={handleToggleFavorite}
         onPlayerLongPress={setSelectedPlayer}
         onLinkUnknown={handleLinkUnknown}
+        onOrderChange={handleOrderChange}
       />
 
       {selectedPlayer && (

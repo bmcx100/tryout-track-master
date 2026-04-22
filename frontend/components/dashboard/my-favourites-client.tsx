@@ -17,11 +17,11 @@ type MyFavouritesClientProps = {
 const STATUS_ORDER = ["continuing", "cut", "missing", "made_team", "registered"]
 
 const STATUS_LABELS: Record<string, string> = {
-  continuing: "continuing",
-  cut: "cut",
-  missing: "missing",
-  made_team: "made team",
-  registered: "registered",
+  continuing: "Continuing",
+  cut: "Cut",
+  missing: "Missing",
+  made_team: "Made Team",
+  registered: "Registered",
 }
 
 type StatusGroup = {
@@ -123,14 +123,10 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
   if (totalCount === 0) {
     return (
       <div className="my-favourites-page">
-        <div className="my-favourites-header">
-          <Link href="/dashboard" className="my-favourites-back">
-            <ChevronLeft size={20} />
-          </Link>
-          <span className="my-favourites-title">
-            My Favourites <span className="my-favourites-count">(0)</span>
-          </span>
-        </div>
+        <Link href="/dashboard" className="my-favourites-back-line">
+          <ChevronLeft size={12} />
+          Back
+        </Link>
         <div className="dashboard-empty">
           <Heart size={32} />
           <p>
@@ -145,23 +141,18 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
 
   return (
     <div className="my-favourites-page">
-      <div className="my-favourites-header">
-        <Link href="/dashboard" className="my-favourites-back">
-          <ChevronLeft size={20} />
-        </Link>
-        <span className="my-favourites-title">
-          My Favourites <span className="my-favourites-count">({totalCount})</span>
-        </span>
-      </div>
+      <Link href="/dashboard" className="my-favourites-back-line">
+        <ChevronLeft size={12} />
+        Back
+      </Link>
 
       {statusGroups.map((group, groupIdx) => (
         <div key={group.statusType}>
           {groupIdx > 0 && <div className="my-favourites-group-divider" />}
           <div className="my-favourites-group">
             <div className={`my-favourites-group-header my-favourites-group-header-${group.statusType}`}>
-              <span className={`my-favourites-group-dot my-favourites-group-dot-${group.statusType}`} />
               {group.statusType === "missing" && "\u26A0 "}
-              {group.players.length} {STATUS_LABELS[group.statusType]}
+              {STATUS_LABELS[group.statusType]} {group.players.length}
             </div>
             {group.players.map((fav, rowIdx) => {
               const isUnhearted = unhearted.has(fav.playerId)

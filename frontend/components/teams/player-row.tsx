@@ -49,7 +49,7 @@ export function PlayerRow({
     startPos.current = { x: e.clientX, y: e.clientY }
     timerRef.current = setTimeout(() => {
       firedRef.current = true
-      onLongPress?.(player)
+      // onLongPress?.(player) // TEMPORARILY DISABLED
     }, LONG_PRESS_MS)
   }, [onLongPress, player])
 
@@ -101,7 +101,7 @@ export function PlayerRow({
         e.preventDefault()
         if (!firedRef.current) {
           clearTimer()
-          onLongPress?.(player)
+          // onLongPress?.(player) // TEMPORARILY DISABLED
         }
       }}
     >
@@ -137,7 +137,7 @@ export function PlayerRow({
             title={noteText}
             onClick={(e) => {
               e.stopPropagation()
-              onLongPress?.(player)
+              // onLongPress?.(player) // TEMPORARILY DISABLED
             }}
           >
             <FileText size={10} />

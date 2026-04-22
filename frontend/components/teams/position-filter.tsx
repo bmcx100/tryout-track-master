@@ -9,14 +9,16 @@ type PositionFilterProps = {
   onReset: () => void
   isResetting?: boolean
   hasCustomOrder?: boolean
+  showUnknown?: boolean
+  positionCounts?: Record<string, number>
 }
 
-const POSITIONS = [
+const BASE_POSITIONS: { label: string, value: string | null }[] = [
   { label: "All", value: null },
   { label: "F", value: "F" },
   { label: "D", value: "D" },
   { label: "G", value: "G" },
-] as const
+]
 
 export function PositionFilter({
   activePosition,
@@ -24,12 +26,23 @@ export function PositionFilter({
   onReset,
   isResetting,
   hasCustomOrder,
+  showUnknown,
+  positionCounts,
 }: PositionFilterProps) {
+  const allPositions = showUnknown
+    ? [...BASE_POSITIONS, { label: "?", value: "?" }]
+    : BASE_POSITIONS
+
+  // Hide ? chip when its count is 0
+  const positions = positionCounts
+    ? allPositions.filter((p) => p.value !== "?" || (positionCounts["?"] ?? 0) > 0)
+    : allPositions
+
   const containerRef = useRef<HTMLDivElement>(null)
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [pill, setPill] = useState({ left: 0, width: 0 })
 
-  const activeIndex = POSITIONS.findIndex((p) => p.value === activePosition)
+  const activeIndex = positions.findIndex((p) => p.value === activePosition)
 
   useEffect(() => {
     const btn = btnRefs.current[activeIndex]
@@ -53,7 +66,7 @@ export function PositionFilter({
           className="position-filter-pill"
           style={{ left: pill.left, width: pill.width }}
         />
-        {POSITIONS.map((pos, i) => {
+        {positions.map((pos, i) => {
           const isActive = activePosition === pos.value
           return (
             <button
@@ -64,7 +77,7 @@ export function PositionFilter({
                 if (!isActive) onPositionChange(pos.value)
               }}
             >
-              {pos.label}
+              {pos.value && positionCounts ? `${pos.label} (${positionCounts[pos.value] ?? 0})` : pos.label}
             </button>
           )
         })}

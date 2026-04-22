@@ -95,7 +95,7 @@ function renderHeroCard(card: HeroCard) {
 
   // Variant A: Tryouts in progress
   return (
-    <div key={card.teamLevel} className="dashboard-hero-card">
+    <Link key={card.teamLevel} href="/continuations" className="dashboard-hero-card dashboard-hero-card-link">
       <div className="dashboard-hero-title">{card.division} {card.teamLevel} - Round&nbsp;{card.roundNumber}</div>
       <div className="dashboard-hero-stats">
         {card.isRoundOne ? (
@@ -136,7 +136,7 @@ function renderHeroCard(card: HeroCard) {
           </>
         )}
       </div>
-    </div>
+    </Link>
   )
 }
 

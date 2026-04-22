@@ -204,6 +204,70 @@ export async function submitSuggestedPlayer(
   return {}
 }
 
+export async function saveContinuationOrder(
+  roundId: string,
+  playerOrder: string[]
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { error } = await supabase
+    .from("continuation_orders")
+    .upsert(
+      {
+        user_id: user.id,
+        round_id: roundId,
+        player_order: playerOrder,
+      },
+      { onConflict: "user_id,round_id" }
+    )
+
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function resetContinuationOrder(
+  roundId: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { error } = await supabase
+    .from("continuation_orders")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("round_id", roundId)
+
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function getContinuationOrders(
+  roundIds: string[]
+): Promise<Record<string, string[]>> {
+  if (roundIds.length === 0) return {}
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return {}
+
+  const { data } = await supabase
+    .from("continuation_orders")
+    .select("round_id, player_order")
+    .eq("user_id", user.id)
+    .in("round_id", roundIds)
+
+  const result: Record<string, string[]> = {}
+  if (data) {
+    for (const row of data) {
+      result[row.round_id] = row.player_order
+    }
+  }
+  return result
+}
+
 export async function lockFinalTeam(roundId: string): Promise<{ error?: string, count?: number }> {
   const supabase = await createClient()
 

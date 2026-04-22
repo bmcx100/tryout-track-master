@@ -2,6 +2,8 @@
 
 import { useRef, useCallback } from "react"
 import { Heart, FileText, Link2 } from "lucide-react"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import type { TryoutPlayer } from "@/types"
 
 type ContinuationPlayerRowProps = {
@@ -12,6 +14,7 @@ type ContinuationPlayerRowProps = {
   isInjured: boolean
   isCut: boolean
   customName?: string | null
+  sortableId?: string
   onToggleFavorite: () => void
   onLongPress?: (player: TryoutPlayer) => void
   onLinkUnknown?: () => void
@@ -28,6 +31,7 @@ export function ContinuationPlayerRow({
   isInjured,
   isCut,
   customName,
+  sortableId,
   onToggleFavorite,
   onLongPress,
   onLinkUnknown,
@@ -35,6 +39,18 @@ export function ContinuationPlayerRow({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const startPos = useRef<{ x: number; y: number } | null>(null)
   const firedRef = useRef(false)
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: sortableId ?? jerseyNumber,
+    disabled: !sortableId,
+  })
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -53,7 +69,7 @@ export function ContinuationPlayerRow({
     timerRef.current = setTimeout(() => {
       firedRef.current = true
       if (player && onLongPress) {
-        onLongPress(player)
+        // onLongPress(player) // TEMPORARILY DISABLED
       } else if (!player && onLinkUnknown) {
         onLinkUnknown()
       }
@@ -85,10 +101,25 @@ export function ContinuationPlayerRow({
     ? (customName || player.name)
     : "Unknown"
 
+  const sortableStyle = sortableId
+    ? {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }
+    : undefined
+
   return (
     <div
+      ref={sortableId ? setNodeRef : undefined}
+      style={sortableStyle}
       className={rowClass}
-      onPointerDown={handlePointerDown}
+      onPointerDown={(e) => {
+        if (sortableId && listeners?.onPointerDown) {
+          (listeners.onPointerDown as React.PointerEventHandler)(e)
+        }
+        handlePointerDown(e)
+      }}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
@@ -100,12 +131,18 @@ export function ContinuationPlayerRow({
         if (!firedRef.current) {
           clearTimer()
           if (player && onLongPress) {
-            onLongPress(player)
+            // onLongPress(player) // TEMPORARILY DISABLED
           } else if (!player && onLinkUnknown) {
             onLinkUnknown()
           }
         }
       }}
+      {...(sortableId ? {
+        ...attributes,
+        ...Object.fromEntries(
+          Object.entries(listeners ?? {}).filter(([k]) => k !== "onPointerDown")
+        ),
+      } : {})}
     >
       <span className={isCut ? "player-jersey continuation-jersey-cut" : "player-jersey"}>
         #{jerseyNumber}
@@ -136,7 +173,7 @@ export function ContinuationPlayerRow({
             title={noteText}
             onClick={(e) => {
               e.stopPropagation()
-              if (player && onLongPress) onLongPress(player)
+              // if (player && onLongPress) onLongPress(player) // TEMPORARILY DISABLED
             }}
           >
             <FileText size={10} />

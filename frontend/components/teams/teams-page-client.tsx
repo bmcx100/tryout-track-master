@@ -182,9 +182,12 @@ export function TeamsPageClient({
 
   const selectedAnn = selectedPlayer ? annotations[selectedPlayer.id] : null
 
+  const dragHint = activeView === "previous"
+    ? "Drag players to reorder in their\u00a0team"
+    : "Drag players up and down between\u00a0teams"
   const instructionText = activePosition
     ? `Showing ${activePosition === "F" ? "forwards" : activePosition === "D" ? "defensemen" : "goalies"} only \u2014 drag to\u00a0reorder`
-    : "Drag players up and down between\u00a0teams"
+    : dragHint
 
   return (
     <>

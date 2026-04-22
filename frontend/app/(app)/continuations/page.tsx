@@ -1,7 +1,7 @@
 import { requireAssociation } from "@/lib/auth"
 import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
 import { ContinuationsPageClient } from "@/components/continuations/continuations-page-client"
-import { getAllPublishedRounds, getPlayerAnnotations } from "./actions"
+import { getAllPublishedRounds, getPlayerAnnotations, getContinuationOrders } from "./actions"
 import type { TryoutPlayer } from "@/types"
 
 export default async function ContinuationsPage() {
@@ -33,6 +33,10 @@ export default async function ContinuationsPage() {
   // Fetch user's annotations
   const annotations = await getPlayerAnnotations(associationId)
 
+  // Fetch user's saved continuation orders
+  const roundIds = rounds.map((r) => r.id)
+  const savedOrders = await getContinuationOrders(roundIds)
+
   return (
     <ContinuationsPageClient
       key={`${associationId}-${activeDivision}`}
@@ -42,6 +46,7 @@ export default async function ContinuationsPage() {
       associationId={associationId}
       division={activeDivision}
       isAdmin={role === "group_admin" || role === "admin"}
+      savedOrders={savedOrders}
     />
   )
 }

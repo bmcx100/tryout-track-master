@@ -106,9 +106,11 @@ export async function getDashboardData(
       : 0
 
     // Missing count: players cut from the level above who don't appear at ANY round at this level
+    // Only compute if this level has rounds WITH posted jersey numbers
     let missingCount = 0
     const levelIdx = LEVEL_ORDER.indexOf(level)
-    if (levelIdx > 0) {
+    const thisLevelHasNumbers = levelRounds.some((r) => r.jersey_numbers.length > 0)
+    if (levelIdx > 0 && thisLevelHasNumbers) {
       const levelAbove = LEVEL_ORDER[levelIdx - 1]
       const aboveRounds = roundsByLevel.get(levelAbove)
       if (aboveRounds && aboveRounds.length > 0) {
@@ -263,7 +265,8 @@ function derivePlayerStatus(
     roundsByLevel.set(r.team_level, existing)
   }
 
-  // For each level (AA -> C), find where the player appears
+  // For each level (AA -> C), compare latest round to the immediately previous round
+  // (same logic as the Sessions page: cuts = in previous round but not in latest)
   let latestAppearance: { level: string, roundNumber: number, createdAt: string } | null = null
   let wasCut = false
   let cutLevel: string | null = null
@@ -274,50 +277,46 @@ function derivePlayerStatus(
     if (!levelRounds || levelRounds.length === 0) continue
 
     // Rounds are sorted desc by round_number already
-    // Find last round where player appears
-    const appearsIn = levelRounds.filter((r) =>
-      r.jersey_numbers.includes(jerseyNumber)
-    )
+    const latest = levelRounds[0]
+    const previous = levelRounds.length > 1 ? levelRounds[1] : null
 
-    if (appearsIn.length === 0) continue
-
-    // Latest round where player appears at this level
-    const latestInLevel = appearsIn[0] // highest round_number (desc sorted)
-    const latestRoundAtLevel = levelRounds[0] // overall latest round at this level
-
-    // Check if cut: appears in an earlier round but not in the latest round at this level
-    if (latestRoundAtLevel.round_number > latestInLevel.round_number) {
-      // Player was cut from this level
-      if (!latestAppearance || latestInLevel.created_at > latestAppearance.createdAt) {
-        wasCut = true
-        cutLevel = level
-        cutRoundNumber = latestRoundAtLevel.round_number
-        latestAppearance = {
-          level,
-          roundNumber: latestInLevel.round_number,
-          createdAt: latestInLevel.created_at,
-        }
-      }
-    } else {
-      // Player is continuing at this level
-      if (!latestAppearance || latestInLevel.created_at > latestAppearance.createdAt) {
+    // Player is in the latest round at this level → continuing
+    if (latest.jersey_numbers.includes(jerseyNumber)) {
+      if (!latestAppearance || latest.created_at > latestAppearance.createdAt) {
         wasCut = false
         cutLevel = null
         latestAppearance = {
           level,
-          roundNumber: latestInLevel.round_number,
-          createdAt: latestInLevel.created_at,
+          roundNumber: latest.round_number,
+          createdAt: latest.created_at,
         }
       }
     }
+    // Player was in the previous round but not the latest → just cut
+    else if (previous && previous.jersey_numbers.includes(jerseyNumber)) {
+      if (!latestAppearance || previous.created_at > latestAppearance.createdAt) {
+        wasCut = true
+        cutLevel = level
+        cutRoundNumber = latest.round_number
+        latestAppearance = {
+          level,
+          roundNumber: previous.round_number,
+          createdAt: previous.created_at,
+        }
+      }
+    }
+    // Player not in the latest two rounds → was cut earlier, not a current cut at this level
   }
 
   if (!latestAppearance) {
-    // No rounds data — use DB status
+    // No rounds data for this player
     const label = playerDbStatus === "trying_out" ? "Trying Out"
       : playerDbStatus === "registered" ? "Registered"
       : playerDbStatus.charAt(0).toUpperCase() + playerDbStatus.slice(1).replace(/_/g, " ")
-    return { statusText: label, statusType: "registered" }
+    // Only show "registered" if no rounds exist at all (tryouts haven't started).
+    // If rounds exist but player isn't in any, their level likely hasn't started yet — show as continuing.
+    const anyRoundsExist = allRounds.length > 0
+    return { statusText: label, statusType: anyRoundsExist ? "continuing" : "registered" }
   }
 
   if (wasCut && cutLevel) {
@@ -330,12 +329,16 @@ function derivePlayerStatus(
 
     if (nextLevel) {
       const nextLevelRounds = roundsByLevel.get(nextLevel)
-      const seenAtNextLevel = nextLevelRounds?.some((r) =>
-        r.jersey_numbers.includes(jerseyNumber)
-      )
-      if (!seenAtNextLevel) {
-        statusText += ` \u00b7 Not at ${nextLevel}`
-        statusType = "missing"
+      // Only check for missing if next level has rounds WITH posted jersey numbers
+      const nextLevelHasNumbers = nextLevelRounds?.some((r) => r.jersey_numbers.length > 0)
+      if (nextLevelHasNumbers) {
+        const seenAtNextLevel = nextLevelRounds?.some((r) =>
+          r.jersey_numbers.includes(jerseyNumber)
+        )
+        if (!seenAtNextLevel) {
+          statusText += ` \u00b7 Not at ${nextLevel}`
+          statusType = "missing"
+        }
       }
     }
 
