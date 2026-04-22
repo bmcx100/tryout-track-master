@@ -51,3 +51,6 @@ next-env.d.ts
 
 # screenshots (debug/temp)
 *.png
+
+# backup files
+*.bak

@@ -152,7 +152,7 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
           <div className="my-favourites-group">
             <div className={`my-favourites-group-header my-favourites-group-header-${group.statusType}`}>
               {group.statusType === "missing" && "\u26A0 "}
-              {STATUS_LABELS[group.statusType]} {group.players.length}
+              {STATUS_LABELS[group.statusType]} ({group.players.length})
             </div>
             {group.players.map((fav, rowIdx) => {
               const isUnhearted = unhearted.has(fav.playerId)

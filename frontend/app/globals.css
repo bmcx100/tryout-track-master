@@ -3415,7 +3415,7 @@ body:has(.admin-shell) {
 .onboarding-highlight {
   position: relative;
   z-index: 9999;
-  background: oklch(0.76 0.14 85 / 25%) !important;
+  background: oklch(0.76 0.14 85 / 25%);
   box-shadow: 0 0 0 3px var(--dm-gold), 0 0 16px 4px oklch(0.76 0.14 85 / 40%);
   border-radius: 9999px;
   animation: onboarding-glow 2s ease-in-out infinite;
@@ -3426,22 +3426,35 @@ body:has(.admin-shell) {
   50% { background: oklch(0.76 0.14 85 / 35%); box-shadow: 0 0 0 3px var(--dm-gold), 0 0 24px 8px oklch(0.76 0.14 85 / 60%); }
 }
 
-.division-badge.onboarding-highlight {
-  background: var(--dm-cinnabar) !important;
-  color: oklch(0.98 0 0) !important;
-  box-shadow: 0 0 12px 4px oklch(0.55 0.2 25 / 50%);
-  animation: none;
+button.division-badge.onboarding-highlight {
+  background: var(--dm-gold) !important;
+  color: oklch(0.15 0 0) !important;
+  box-shadow: 0 0 16px 6px oklch(0.76 0.14 85 / 60%) !important;
+  animation: none !important;
+  border-radius: 9999px !important;
+}
+
+.app-header:has(.onboarding-highlight),
+.bottom-nav:has(.onboarding-highlight) {
+  z-index: 9999;
 }
 
 .bottom-nav:has(.onboarding-highlight) .bottom-nav-item-active {
   color: oklch(1 0 0 / 30%);
 }
 
-.bottom-nav .onboarding-highlight {
-  color: oklch(0.98 0 0) !important;
-  background: transparent !important;
-  box-shadow: none;
+.bottom-nav a.onboarding-highlight {
+  color: oklch(0.15 0 0) !important;
+  background-color: var(--dm-gold) !important;
+  box-shadow: 0 0 16px 6px oklch(0.76 0.14 85 / 60%);
   animation: none;
+  border-radius: 12px;
+  padding: 6px 12px;
+}
+
+.bottom-nav a.onboarding-highlight svg,
+.bottom-nav a.onboarding-highlight span {
+  color: oklch(0.15 0 0) !important;
 }
 
 .onboarding-overlay-active {
@@ -3526,6 +3539,15 @@ body:has(.admin-shell) {
 
 .help-header-icon {
   color: var(--dm-gold);
+}
+
+.help-header-secondary {
+  padding-top: 24px;
+}
+
+.help-header-secondary h2 {
+  @apply text-lg font-semibold;
+  color: var(--dm-umber);
 }
 
 .help-cards {
