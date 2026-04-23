@@ -167,7 +167,7 @@ function FinalTeamHeroCard({
           <DashboardPlayerRow
             key={p.jerseyNumber}
             player={p}
-            isCut={activeView === "cuts"}
+            isCut={false}
             onToggleFavorite={onToggleFavorite}
           />
         ))}
