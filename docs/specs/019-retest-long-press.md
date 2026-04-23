@@ -1,4 +1,4 @@
-# Spec 017: Retest Long-Press on Feature Branch
+# Spec 019: Retest Long-Press on Feature Branch
 
 **PRD Reference:** FR-039
 **Priority:** Must Have

@@ -1,8 +1,9 @@
-# Spec 018: Scraper Robustness & Final Team in Continuations
+# Spec 017: Scraper Robustness & Final Team in Continuations
 
 **PRD Reference:** FR-039
 **Priority:** Must Have
 **Depends on:** None
+**Extended by:** [Spec 018](018-scraper-fallback-team-validation.md) (priority #18) — adds manual jersey entry fallback and final team size validation
 
 ## What This Feature Does
 
