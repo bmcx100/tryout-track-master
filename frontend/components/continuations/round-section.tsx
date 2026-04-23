@@ -320,7 +320,7 @@ export function RoundSection({
               isFavorite={p.isFavorite}
               noteText={p.noteText}
               isInjured={false}
-              isCut={true}
+              isCut={false}
               customName={p.customName}
               onToggleFavorite={() => {
                 if (p.player) onToggleFavorite(p.player.id)
