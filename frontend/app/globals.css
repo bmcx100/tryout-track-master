@@ -2415,8 +2415,12 @@ body:has(.admin-shell) {
   @apply px-5 py-6;
 }
 
+.scrape-top-row {
+  @apply flex items-center justify-between mb-4;
+}
+
 .scrape-back-link {
-  @apply mb-4 flex items-center gap-1 text-sm font-medium;
+  @apply flex items-center gap-1 text-sm font-medium;
   color: var(--dm-gold);
   text-decoration: none;
 }
@@ -2426,17 +2430,10 @@ body:has(.admin-shell) {
   color: var(--dm-umber);
 }
 
-.scrape-division-badge {
-  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold mb-4;
-  background: oklch(0.76 0.14 85 / 15%);
-  color: var(--dm-gold);
-}
-
 .scrape-source-link {
-  @apply flex items-center gap-1.5 text-xs font-medium mb-4;
+  @apply flex items-center gap-1.5 text-xs font-medium;
   color: var(--dm-gold);
   text-decoration: none;
-  word-break: break-all;
 }
 
 .scrape-source-link:hover {
@@ -2581,7 +2578,7 @@ body:has(.admin-shell) {
 }
 
 .scrape-confirm-btn {
-  @apply flex flex-1 items-center justify-center gap-2 rounded-2xl px-10 py-3 text-sm font-semibold;
+  @apply flex flex-1 items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold;
   background: var(--dm-cinnabar);
   color: oklch(0.12 0 0);
   border: none;
@@ -2647,6 +2644,104 @@ body:has(.admin-shell) {
 
 .scrape-draft-btn {
   @apply py-2 text-xs;
+}
+
+.scrape-no-players-warning {
+  @apply flex items-start gap-3 rounded-xl px-4 py-3 mb-4;
+  background: oklch(0.25 0.06 85 / 30%);
+  color: oklch(0.80 0.12 85);
+}
+
+.scrape-no-players-warning p {
+  @apply text-sm font-medium mb-1;
+}
+
+.scrape-manual-entry-link {
+  @apply text-xs font-medium;
+  color: var(--dm-gold);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.scrape-manual-entry-link:hover {
+  filter: brightness(1.2);
+}
+
+.scrape-value-light {
+  color: var(--dm-umber);
+}
+
+.scrape-edit-manually {
+  @apply mb-2 w-full text-center;
+  display: block;
+}
+
+.scrape-modal-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center;
+  background: oklch(0 0 0 / 60%);
+}
+
+.scrape-modal-card {
+  @apply rounded-2xl p-5 w-full mx-4;
+  max-width: 360px;
+  background: oklch(0.18 0 0);
+  border: 1px solid var(--dm-border);
+  box-shadow: var(--dm-shadow-lg);
+}
+
+.scrape-modal-title {
+  @apply text-base font-semibold mb-2;
+  color: var(--dm-umber);
+}
+
+.scrape-modal-text {
+  @apply text-xs mb-3;
+  color: var(--dm-dust);
+}
+
+.scrape-manual-textarea {
+  @apply w-full rounded-lg px-3 py-2 text-sm mb-3;
+  background: oklch(0.14 0 0);
+  color: var(--dm-umber);
+  border: 1px solid oklch(0.3 0 0);
+  font-family: var(--font-mono);
+  resize: vertical;
+}
+
+.scrape-manual-textarea::placeholder {
+  color: var(--dm-dust);
+  opacity: 0.5;
+}
+
+.scrape-modal-actions {
+  @apply flex gap-3;
+}
+
+.scrape-team-size-note {
+  @apply text-xs py-1.5 pl-1;
+  color: var(--dm-dust);
+}
+
+.scrape-team-size-warning {
+  color: oklch(0.80 0.12 85);
+}
+
+.scrape-team-size-error {
+  color: oklch(0.70 0.15 25);
+}
+
+.scrape-team-size-unusual {
+  font-weight: 600;
+}
+
+.scrape-size-confirm-text {
+  @apply text-sm mb-4;
+  color: var(--dm-umber);
+  line-height: 1.5;
 }
 
 /* ============================================================

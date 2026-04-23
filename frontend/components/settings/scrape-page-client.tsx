@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react"
+import { ArrowLeft, ExternalLink, Loader2, TriangleAlert } from "lucide-react"
 import Link from "next/link"
 import {
   scrapeContinuationsPage,
@@ -30,6 +30,22 @@ const PAGE_TYPE_LABELS: Record<string, string> = {
 }
 
 const TEAM_LEVELS = ["AA", "A", "BB", "B", "C"]
+const TEAM_SIZE_MIN = 14
+const TEAM_SIZE_MAX = 19
+
+function parseJerseyNumbers(text: string): string[] {
+  const tokens = text.split(/[\n,]/)
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const token of tokens) {
+    const trimmed = token.trim()
+    if (/^\d{1,4}$/.test(trimmed) && !seen.has(trimmed)) {
+      seen.add(trimmed)
+      result.push(trimmed)
+    }
+  }
+  return result
+}
 
 export function ScrapePageClient({
   associationId,
@@ -49,6 +65,13 @@ export function ScrapePageClient({
   const [roundNumber, setRoundNumber] = useState<number | null>(null)
   const [sessionInfo, setSessionInfo] = useState("")
   const [isFinalTeam, setIsFinalTeam] = useState(false)
+  const [showManualEntry, setShowManualEntry] = useState(false)
+  const [manualText, setManualText] = useState("")
+  const [showSizeWarning, setShowSizeWarning] = useState(false)
+  const hasScrapeStarted = useRef(false)
+
+  const playerCount = result?.jerseyNumbers.length ?? 0
+  const isUnusualSize = playerCount < TEAM_SIZE_MIN || playerCount > TEAM_SIZE_MAX
 
   const handleScrape = async () => {
     setError(null)
@@ -61,13 +84,11 @@ export function ScrapePageClient({
 
       if (scrapeResult.error) {
         setError(scrapeResult.error)
-        setScraping(false)
-        return
       }
 
       setResult(scrapeResult)
       setTeamLevelOverride(scrapeResult.teamLevel)
-      setIsFinalTeam(scrapeResult.pageType === "final_team")
+      setIsFinalTeam(false)
       const nextRound = await getNextRoundNumber(associationId, division, scrapeResult.teamLevel ?? "AA")
       setRoundNumber(nextRound)
       setScraping(false)
@@ -77,12 +98,29 @@ export function ScrapePageClient({
     }
   }
 
-  const handleConfirm = async () => {
+  useEffect(() => {
+    if (sourceUrl && !hasScrapeStarted.current && existingDrafts.length === 0) {
+      hasScrapeStarted.current = true
+      handleScrape()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleConfirmClick = () => {
     if (!result) return
+    if (isFinalTeam && isUnusualSize) {
+      setShowSizeWarning(true)
+      return
+    }
+    doConfirm()
+  }
+
+  const doConfirm = async () => {
+    if (!result) return
+    setShowSizeWarning(false)
     setConfirming(true)
 
     try {
-      // Apply team level override before saving
       const resultToSave = { ...result, teamLevel: teamLevelOverride ?? result.teamLevel }
       const { draftId: newDraftId, error: saveErr } = await saveDraftRound(
         associationId,
@@ -99,7 +137,6 @@ export function ScrapePageClient({
         return
       }
 
-      // Then confirm (publish)
       const { error: confirmErr } = await confirmDraft(newDraftId)
       if (confirmErr) {
         setError(confirmErr)
@@ -116,6 +153,28 @@ export function ScrapePageClient({
     }
   }
 
+  const handleApplyManual = () => {
+    if (!result) return
+    const parsed = parseJerseyNumbers(manualText)
+    setResult({
+      ...result,
+      jerseyNumbers: parsed,
+      ipPlayers: [],
+      pageType: result.pageType === "no_data" ? "continuation" : result.pageType,
+    })
+    setShowManualEntry(false)
+    setManualText("")
+  }
+
+  const openManualEntry = () => {
+    if (result && result.jerseyNumbers.length > 0) {
+      setManualText(result.jerseyNumbers.join("\n"))
+    } else {
+      setManualText("")
+    }
+    setShowManualEntry(true)
+  }
+
   const handleDiscard = () => {
     setResult(null)
     setDraftId(null)
@@ -124,6 +183,9 @@ export function ScrapePageClient({
     setSessionInfo("")
     setIsFinalTeam(false)
     setError(null)
+    setShowManualEntry(false)
+    setShowSizeWarning(false)
+    setManualText("")
   }
 
   const handleDiscardExisting = async (id: string) => {
@@ -146,41 +208,31 @@ export function ScrapePageClient({
 
   return (
     <div className="scrape-page">
-      <Link href="/settings" className="scrape-back-link">
-        <ArrowLeft size={16} />
-        Settings
-      </Link>
+      <div className="scrape-top-row">
+        <Link href="/settings" className="scrape-back-link">
+          <ArrowLeft size={16} />
+          Settings
+        </Link>
+        {sourceUrl && (
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="scrape-source-link"
+          >
+            Verify source page
+            <ExternalLink size={12} />
+          </a>
+        )}
+      </div>
 
       <h1 className="scrape-page-title">Scrape Continuations</h1>
 
-      <div className="scrape-division-badge">{abbreviation}-{division}</div>
-
-      {sourceUrl ? (
-        <a
-          href={sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="scrape-source-link"
-        >
-          {sourceUrl}
-          <ExternalLink size={12} />
-        </a>
-      ) : (
+      {!sourceUrl && (
         <p className="scrape-no-url">No continuations URL configured for&nbsp;this&nbsp;division</p>
       )}
 
       {error && <p className="scrape-error">{error}</p>}
-
-      {/* Ready state */}
-      {!result && !scraping && (
-        <button
-          className="scrape-confirm-btn"
-          onClick={handleScrape}
-          disabled={!sourceUrl}
-        >
-          Scrape Now
-        </button>
-      )}
 
       {/* Loading state */}
       {scraping && (
@@ -193,22 +245,10 @@ export function ScrapePageClient({
       {/* Preview state */}
       {result && !draftId && (
         <div className="scrape-preview">
-          {sourceUrl && (
-            <a
-              href={sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="scrape-source-link"
-            >
-              Verify source page
-              <ExternalLink size={12} />
-            </a>
-          )}
-
           <div className="scrape-summary-card">
             <div className="scrape-summary-row">
               <span className="scrape-summary-label">Type</span>
-              <span className="scrape-summary-value">
+              <span className="scrape-summary-value scrape-value-light">
                 {PAGE_TYPE_LABELS[result.pageType]}
               </span>
             </div>
@@ -247,7 +287,7 @@ export function ScrapePageClient({
             </div>
             <div className="scrape-summary-row">
               <span className="scrape-summary-label">Players</span>
-              <span className="scrape-summary-value">
+              <span className="scrape-summary-value scrape-value-light">
                 {result.jerseyNumbers.length} players
               </span>
             </div>
@@ -282,7 +322,7 @@ export function ScrapePageClient({
             <div className="scrape-summary-row scrape-final-team-row">
               <span className="scrape-summary-label">Final Team</span>
               <span className="scrape-summary-value">
-                <label className="scrape-final-team-label">
+                <label className="scrape-final-team-label scrape-value-light">
                   <input
                     type="checkbox"
                     checked={isFinalTeam}
@@ -294,7 +334,12 @@ export function ScrapePageClient({
             </div>
           </div>
 
-          {result.jerseyNumbers.length > 0 && (
+          {result.jerseyNumbers.length === 0 ? (
+            <div className="scrape-no-players-warning">
+              <TriangleAlert size={16} />
+              <p>No players found on this&nbsp;page</p>
+            </div>
+          ) : (
             <div className="scrape-jersey-vertical">
               {result.jerseyNumbers.map((num) => (
                 <div
@@ -316,10 +361,14 @@ export function ScrapePageClient({
             </p>
           )}
 
+          <button className="scrape-manual-entry-link scrape-edit-manually" onClick={openManualEntry}>
+            Edit manually
+          </button>
+
           <div className="scrape-actions">
             <button
               className="scrape-confirm-btn"
-              onClick={handleConfirm}
+              onClick={handleConfirmClick}
               disabled={confirming}
             >
               {confirming ? <Loader2 size={14} className="scrape-spinner" /> : null}
@@ -332,6 +381,50 @@ export function ScrapePageClient({
             >
               Discard
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Manual entry modal */}
+      {showManualEntry && (
+        <div className="scrape-modal-overlay" onClick={() => setShowManualEntry(false)}>
+          <div className="scrape-modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2 className="scrape-modal-title">Enter Jersey Numbers</h2>
+            <p className="scrape-modal-text">Paste jersey numbers, one per line or&nbsp;comma-separated</p>
+            <textarea
+              className="scrape-manual-textarea"
+              rows={8}
+              placeholder={"e.g.\n12\n34\n56"}
+              value={manualText}
+              onChange={(e) => setManualText(e.target.value)}
+            />
+            <div className="scrape-modal-actions">
+              <button className="scrape-confirm-btn" onClick={handleApplyManual}>
+                Apply
+              </button>
+              <button className="scrape-discard-btn" onClick={() => setShowManualEntry(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Size warning confirmation dialog */}
+      {showSizeWarning && (
+        <div className="scrape-modal-overlay" onClick={() => setShowSizeWarning(false)}>
+          <div className="scrape-modal-card" onClick={(e) => e.stopPropagation()}>
+            <p className="scrape-size-confirm-text">
+              This final team has {playerCount} players. Typical team size is&nbsp;16-17. Are you&nbsp;sure?
+            </p>
+            <div className="scrape-modal-actions">
+              <button className="scrape-confirm-btn" onClick={doConfirm}>
+                Yes, confirm
+              </button>
+              <button className="scrape-discard-btn" onClick={() => setShowSizeWarning(false)}>
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
