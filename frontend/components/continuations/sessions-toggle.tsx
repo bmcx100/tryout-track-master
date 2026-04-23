@@ -7,6 +7,7 @@ type SessionsToggleProps = {
   onViewChange: (view: "continuing" | "cuts") => void
   continuingCount: number
   cutCount: number
+  isFinalTeam?: boolean
 }
 
 const VIEWS = [
@@ -14,12 +15,18 @@ const VIEWS = [
   { label: "Cuts", value: "cuts" as const },
 ]
 
-export function SessionsToggle({ activeView, onViewChange, continuingCount, cutCount }: SessionsToggleProps) {
+const FINAL_VIEWS = [
+  { label: "Final Roster", value: "continuing" as const },
+  { label: "Final Cuts", value: "cuts" as const },
+]
+
+export function SessionsToggle({ activeView, onViewChange, continuingCount, cutCount, isFinalTeam }: SessionsToggleProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [pill, setPill] = useState({ left: 0, width: 0 })
 
-  const activeIndex = VIEWS.findIndex((v) => v.value === activeView)
+  const views = isFinalTeam ? FINAL_VIEWS : VIEWS
+  const activeIndex = views.findIndex((v) => v.value === activeView)
 
   const counts = [continuingCount, cutCount]
 
@@ -38,7 +45,7 @@ export function SessionsToggle({ activeView, onViewChange, continuingCount, cutC
         className="sessions-toggle-pill"
         style={{ left: pill.left, width: pill.width }}
       />
-      {VIEWS.map((view, i) => (
+      {views.map((view, i) => (
         <button
           key={view.value}
           ref={(el) => { btnRefs.current[i] = el }}

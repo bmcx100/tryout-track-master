@@ -1519,6 +1519,21 @@ body:has(.admin-shell) {
   margin-top: 4px;
 }
 
+/* -- Dashboard Final Team Hero Card ------------------------- */
+
+.dashboard-hero-card-final {
+  padding-bottom: 12px;
+}
+
+.dashboard-hero-final-toggle {
+  margin-top: 12px;
+}
+
+.dashboard-hero-final-players {
+  @apply flex flex-col;
+  margin-top: 8px;
+}
+
 /* -- Dashboard Favourites Section --------------------------- */
 
 .dashboard-fav-section {
@@ -2507,6 +2522,17 @@ body:has(.admin-shell) {
 .scrape-session-info-input::placeholder {
   color: var(--dm-dust);
   opacity: 0.6;
+}
+
+.scrape-final-team-row {
+  /* Inherits scrape-summary-row styles */
+}
+
+.scrape-final-team-label {
+  @apply flex items-center gap-2;
+  font-size: 13px;
+  color: var(--dm-umber);
+  cursor: pointer;
 }
 
 .scrape-jersey-vertical {

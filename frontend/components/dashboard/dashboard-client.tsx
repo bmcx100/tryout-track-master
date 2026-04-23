@@ -1,8 +1,11 @@
 "use client"
 
+import { useState, useCallback } from "react"
 import Link from "next/link"
 import { Heart } from "lucide-react"
-import type { HeroCard, FavoriteStatus } from "@/app/(app)/dashboard/actions"
+import type { HeroCard, HeroPlayerRow, FavoriteStatus } from "@/app/(app)/dashboard/actions"
+import { SessionsToggle } from "@/components/continuations/sessions-toggle"
+import { toggleFavorite } from "@/app/(app)/continuations/actions"
 
 type DashboardClientProps = {
   heroCards: HeroCard[]
@@ -65,30 +68,83 @@ function getStatusLabel(statusType: string, players: FavoriteStatus[]): string {
   return statusType
 }
 
-function renderHeroCard(card: HeroCard) {
-  if (card.isFinalTeam) {
-    // Variant B: Team Finalized — always show totals
-    return (
-      <div key={card.teamLevel} className="dashboard-hero-card">
-        <div className="dashboard-hero-title">Final Team - {card.division}{card.teamLevel}</div>
-        <div className="dashboard-hero-stats">
-          <div className="dashboard-hero-stat">
-            <div className="dashboard-hero-stat-value dashboard-hero-stat-value-gold">
-              {card.totalPlayers}
-            </div>
-            <div className="dashboard-hero-stat-label">Roster</div>
-          </div>
-          <div className="dashboard-hero-stat">
-            <div className="dashboard-hero-stat-value dashboard-hero-stat-value-red">
-              {card.cutCount}
-            </div>
-            <div className="dashboard-hero-stat-label">Cut</div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+function FinalTeamHeroCard({
+  card,
+  onToggleFavorite,
+}: {
+  card: HeroCard
+  onToggleFavorite: (playerId: string) => void
+}) {
+  const [activeView, setActiveView] = useState<"continuing" | "cuts">("continuing")
+  const roster = card.rosterPlayers ?? []
+  const cuts = card.cutPlayers ?? []
+  const activePlayers = activeView === "continuing" ? roster : cuts
 
+  return (
+    <div className="dashboard-hero-card dashboard-hero-card-final">
+      <div className="dashboard-hero-title">Final Team - {card.division}{card.teamLevel}</div>
+      <div className="dashboard-hero-final-toggle">
+        <SessionsToggle
+          activeView={activeView}
+          onViewChange={setActiveView}
+          continuingCount={roster.length}
+          cutCount={cuts.length}
+          isFinalTeam
+        />
+      </div>
+      <div className="dashboard-hero-final-players">
+        {activePlayers.map((p) => (
+          <DashboardPlayerRow
+            key={p.jerseyNumber}
+            player={p}
+            isCut={activeView === "cuts"}
+            onToggleFavorite={onToggleFavorite}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DashboardPlayerRow({
+  player,
+  isCut,
+  onToggleFavorite,
+}: {
+  player: HeroPlayerRow
+  isCut: boolean
+  onToggleFavorite: (playerId: string) => void
+}) {
+  const rowClass = isCut
+    ? "continuation-player-row continuation-player-row-cut"
+    : "continuation-player-row"
+
+  return (
+    <div className={rowClass}>
+      <span className={isCut ? "player-jersey continuation-jersey-cut" : "player-jersey"}>
+        #{player.jerseyNumber}
+      </span>
+      {player.position && player.position !== "?" && (
+        <span className="player-position">{player.position}</span>
+      )}
+      <button
+        className={player.isFavorite ? "favorite-btn favorite-btn-active" : "favorite-btn"}
+        onClick={(e) => {
+          e.stopPropagation()
+          onToggleFavorite(player.playerId ?? "")
+        }}
+      >
+        <Heart size={14} fill={player.isFavorite ? "currentColor" : "none"} />
+      </button>
+      <span className="player-name">{player.name}</span>
+      {player.previousTeam && (
+        <span className="player-prev-team">{player.previousTeam}</span>
+      )}
+    </div>
+  )
+}
+
+function renderHeroCard(card: HeroCard) {
   // Variant A: Tryouts in progress
   return (
     <Link key={card.teamLevel} href="/continuations" className="dashboard-hero-card dashboard-hero-card-link">
@@ -123,12 +179,6 @@ function renderHeroCard(card: HeroCard) {
               </div>
               <div className="dashboard-hero-stat-label">Cuts</div>
             </div>
-            <div className="dashboard-hero-stat">
-              <div className="dashboard-hero-stat-value dashboard-hero-stat-value-gold">
-                {card.missingCount}
-              </div>
-              <div className="dashboard-hero-stat-label">Missing</div>
-            </div>
           </>
         )}
       </div>
@@ -160,13 +210,63 @@ function renderFavCard(group: StatusGroup) {
 
 export function DashboardClient({ heroCards, favoriteStatuses }: DashboardClientProps) {
   const statusGroups = buildStatusGroups(favoriteStatuses)
+  const [localCards, setLocalCards] = useState(heroCards)
+
+  const handleToggleFavorite = useCallback(async (playerId: string) => {
+    if (!playerId) return
+
+    // Optimistic update
+    setLocalCards((prev) =>
+      prev.map((card) => {
+        if (!card.isFinalTeam) return card
+        const updateRows = (rows?: HeroPlayerRow[]) =>
+          rows?.map((p) =>
+            p.playerId === playerId ? { ...p, isFavorite: !p.isFavorite } : p
+          )
+        return {
+          ...card,
+          rosterPlayers: updateRows(card.rosterPlayers),
+          cutPlayers: updateRows(card.cutPlayers),
+        }
+      })
+    )
+
+    const result = await toggleFavorite(playerId)
+    if (result.error) {
+      // Revert on error
+      setLocalCards((prev) =>
+        prev.map((card) => {
+          if (!card.isFinalTeam) return card
+          const revertRows = (rows?: HeroPlayerRow[]) =>
+            rows?.map((p) =>
+              p.playerId === playerId ? { ...p, isFavorite: !p.isFavorite } : p
+            )
+          return {
+            ...card,
+            rosterPlayers: revertRows(card.rosterPlayers),
+            cutPlayers: revertRows(card.cutPlayers),
+          }
+        })
+      )
+    }
+  }, [])
 
   return (
     <div className="dashboard-page">
       {/* Hero Cards */}
-      {heroCards.length > 0 && (
+      {localCards.length > 0 && (
         <div className="dashboard-hero-section">
-          {heroCards.map((card) => renderHeroCard(card))}
+          {localCards.map((card) =>
+            card.isFinalTeam ? (
+              <FinalTeamHeroCard
+                key={card.teamLevel}
+                card={card}
+                onToggleFavorite={handleToggleFavorite}
+              />
+            ) : (
+              renderHeroCard(card)
+            )
+          )}
         </div>
       )}
 

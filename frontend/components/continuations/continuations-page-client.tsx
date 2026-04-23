@@ -298,6 +298,7 @@ export function ContinuationsPageClient({
         onViewChange={setActiveView}
         continuingCount={totalContinuing}
         cutCount={cutCount}
+        isFinalTeam={activeRound.is_final_team}
       />
 
       {/* Position filter */}

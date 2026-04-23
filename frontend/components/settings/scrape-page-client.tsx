@@ -48,6 +48,7 @@ export function ScrapePageClient({
   const [drafts, setDrafts] = useState(existingDrafts)
   const [roundNumber, setRoundNumber] = useState<number | null>(null)
   const [sessionInfo, setSessionInfo] = useState("")
+  const [isFinalTeam, setIsFinalTeam] = useState(false)
 
   const handleScrape = async () => {
     setError(null)
@@ -66,6 +67,7 @@ export function ScrapePageClient({
 
       setResult(scrapeResult)
       setTeamLevelOverride(scrapeResult.teamLevel)
+      setIsFinalTeam(scrapeResult.pageType === "final_team")
       const nextRound = await getNextRoundNumber(associationId, division, scrapeResult.teamLevel ?? "AA")
       setRoundNumber(nextRound)
       setScraping(false)
@@ -87,7 +89,8 @@ export function ScrapePageClient({
         division,
         resultToSave,
         roundNumber ?? undefined,
-        sessionInfo || undefined
+        sessionInfo || undefined,
+        isFinalTeam
       )
 
       if (saveErr || !newDraftId) {
@@ -119,6 +122,7 @@ export function ScrapePageClient({
     setTeamLevelOverride(null)
     setRoundNumber(null)
     setSessionInfo("")
+    setIsFinalTeam(false)
     setError(null)
   }
 
@@ -273,6 +277,19 @@ export function ScrapePageClient({
                   value={sessionInfo}
                   onChange={(e) => setSessionInfo(e.target.value)}
                 />
+              </span>
+            </div>
+            <div className="scrape-summary-row scrape-final-team-row">
+              <span className="scrape-summary-label">Final Team</span>
+              <span className="scrape-summary-value">
+                <label className="scrape-final-team-label">
+                  <input
+                    type="checkbox"
+                    checked={isFinalTeam}
+                    onChange={(e) => setIsFinalTeam(e.target.checked)}
+                  />
+                  Final Team
+                </label>
               </span>
             </div>
           </div>

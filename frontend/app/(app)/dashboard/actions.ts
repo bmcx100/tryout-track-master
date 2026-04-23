@@ -4,6 +4,15 @@ import { createClient } from "@/lib/supabase/server"
 
 const LEVEL_ORDER = ["AA", "A", "BB", "B", "C"]
 
+export type HeroPlayerRow = {
+  jerseyNumber: string
+  name: string
+  position: string
+  isFavorite: boolean
+  previousTeam: string | null
+  playerId: string | null
+}
+
 export type HeroCard = {
   division: string
   teamLevel: string
@@ -17,6 +26,8 @@ export type HeroCard = {
   isRoundOne: boolean
   favouritesOnTeam: number
   favouritesCutFinal: number
+  rosterPlayers?: HeroPlayerRow[]
+  cutPlayers?: HeroPlayerRow[]
 }
 
 export type FavoriteStatus = {
@@ -171,6 +182,85 @@ export async function getDashboardData(
       favouritesOnTeam,
       favouritesCutFinal,
     })
+
+    // Populate player rows for final team cards
+    if (latest.is_final_team) {
+      const card = heroCards[heroCards.length - 1]
+      // Fetch all players for this division
+      const { data: divPlayers } = await supabase
+        .from("tryout_players")
+        .select("id, jersey_number, name, position, previous_team")
+        .eq("association_id", associationId)
+        .eq("division", division)
+        .is("deleted_at", null)
+
+      // Fetch user's annotations for favorites
+      const { data: userAnnotations } = await supabase
+        .from("player_annotations")
+        .select("player_id, is_favorite, custom_name")
+        .eq("user_id", user.id)
+
+      const annMap = new Map(
+        (userAnnotations ?? []).map((a) => [a.player_id, a])
+      )
+
+      const POSITION_ORDER: Record<string, number> = { F: 0, D: 1, G: 2, "?": 3 }
+      const sortPlayers = (rows: HeroPlayerRow[]) =>
+        rows.sort((a, b) => {
+          const posA = POSITION_ORDER[a.position] ?? 3
+          const posB = POSITION_ORDER[b.position] ?? 3
+          if (posA !== posB) return posA - posB
+          return parseInt(a.jerseyNumber, 10) - parseInt(b.jerseyNumber, 10)
+        })
+
+      const finalJerseys = new Set(latest.jersey_numbers)
+      const playersByJersey = new Map(
+        (divPlayers ?? []).map((p) => [p.jersey_number, p])
+      )
+
+      // Roster: players on the final round
+      const rosterPlayers: HeroPlayerRow[] = []
+      for (const jn of latest.jersey_numbers) {
+        const p = playersByJersey.get(jn)
+        const ann = p ? annMap.get(p.id) : null
+        rosterPlayers.push({
+          jerseyNumber: jn,
+          name: ann?.custom_name || p?.name || "Unknown",
+          position: p?.position || "?",
+          isFavorite: ann?.is_favorite ?? false,
+          previousTeam: p?.previous_team ?? null,
+          playerId: p?.id ?? null,
+        })
+      }
+
+      // Cuts: players on earlier rounds but NOT on the final round
+      const cutPlayers: HeroPlayerRow[] = []
+      if (previous) {
+        const allEarlierJerseys = new Set<string>()
+        for (const r of levelRounds) {
+          if (r.id === latest.id) continue
+          for (const jn of r.jersey_numbers) {
+            allEarlierJerseys.add(jn)
+          }
+        }
+        for (const jn of allEarlierJerseys) {
+          if (finalJerseys.has(jn)) continue
+          const p = playersByJersey.get(jn)
+          const ann = p ? annMap.get(p.id) : null
+          cutPlayers.push({
+            jerseyNumber: jn,
+            name: ann?.custom_name || p?.name || "Unknown",
+            position: p?.position || "?",
+            isFavorite: ann?.is_favorite ?? false,
+            previousTeam: p?.previous_team ?? null,
+            playerId: p?.id ?? null,
+          })
+        }
+      }
+
+      card.rosterPlayers = sortPlayers(rosterPlayers)
+      card.cutPlayers = sortPlayers(cutPlayers)
+    }
   }
 
   // Sort: finalized first, then by LEVEL_ORDER

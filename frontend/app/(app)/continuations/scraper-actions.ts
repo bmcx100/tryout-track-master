@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { lockFinalTeam } from "@/app/(app)/continuations/actions"
 
 export type ScrapeResult = {
   pageType: "continuation" | "final_team" | "everyone_continues" | "no_data"
@@ -32,6 +33,17 @@ function classifyPage(text: string): ScrapeResult["pageType"] {
   }
 
   if (lower.includes("final team") || lower.includes("final roster")) {
+    return "final_team"
+  }
+
+  // NGHA-style final team phrasings
+  if (/making the\b.*\bteam\b/i.test(lower)) {
+    return "final_team"
+  }
+  if (/selected for\b.*\b(?:u\d{2}|wildcats|team)/i.test(lower)) {
+    return "final_team"
+  }
+  if (/\b(?:congratulations|congratulate)\b.*\bu\d{2}\s*(?:aa|a|bb|b|c)\b/i.test(lower)) {
     return "final_team"
   }
 
@@ -83,8 +95,8 @@ function extractJerseyNumbers(html: string): { jerseyNumbers: string[], ipPlayer
   if (foundInTable) return { jerseyNumbers, ipPlayers }
 
   // Method 2: BR-separated numbers — sites like U15 use <br> between numbers
-  // Find a block that has many number<br> sequences
-  const brBlockMatch = html.match(/<div[^>]*>((?:\s*\d{1,4}\s*(?:IP)?\s*<br\s*\/?>?\s*)+\d{1,4}\s*(?:IP)?)\s*<\/div>/i)
+  // Find a block (<div> or <p>) that has many number<br> sequences
+  const brBlockMatch = html.match(/<(?:div|p)[^>]*>((?:\s*\d{1,4}\s*(?:IP)?\s*(?:&nbsp;)?\s*<br\s*\/?>?\s*)+\d{1,4}\s*(?:IP)?(?:\s*(?:&nbsp;)?)*)\s*<\/(?:div|p)>/i)
   if (brBlockMatch) {
     const block = brBlockMatch[1]
     const numRegex = /(\d{1,4})\s*(IP)?/g
@@ -237,7 +249,8 @@ export async function saveDraftRound(
   division: string,
   scrapeResult: ScrapeResult,
   roundNumberOverride?: number,
-  sessionInfo?: string
+  sessionInfo?: string,
+  isFinalTeamOverride?: boolean
 ): Promise<{ draftId: string, error?: string }> {
   const supabase = await createClient()
 
@@ -285,7 +298,7 @@ export async function saveDraftRound(
       status: "draft",
       source_url: scrapeResult.sourceUrl,
       scraped_at: new Date().toISOString(),
-      is_final_team: scrapeResult.pageType === "final_team",
+      is_final_team: isFinalTeamOverride ?? (scrapeResult.pageType === "final_team"),
       session_info: sessionInfo || null,
     })
     .select("id")
@@ -305,6 +318,19 @@ export async function confirmDraft(roundId: string): Promise<{ error?: string }>
     .eq("status", "draft")
 
   if (error) return { error: error.message }
+
+  // After successful publish, check if this is a final team round
+  const { data: round } = await supabase
+    .from("continuation_rounds")
+    .select("is_final_team")
+    .eq("id", roundId)
+    .single()
+
+  if (round?.is_final_team) {
+    const lockResult = await lockFinalTeam(roundId)
+    if (lockResult.error) return { error: lockResult.error }
+  }
+
   return {}
 }
 
