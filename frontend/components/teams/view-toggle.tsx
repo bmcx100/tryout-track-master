@@ -8,8 +8,8 @@ type ViewToggleProps = {
 }
 
 const VIEWS = [
-  { label: "Previous Teams", value: "previous" as const },
-  { label: "Predictions", value: "predictions" as const },
+  { label: "Previous Year", value: "previous" as const },
+  { label: "Next Year", value: "predictions" as const },
 ]
 
 export function ViewToggle({ activeView, onViewChange }: ViewToggleProps) {
