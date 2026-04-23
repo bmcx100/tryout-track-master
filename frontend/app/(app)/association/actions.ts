@@ -6,14 +6,35 @@ export async function getAllAssociations(): Promise<
   { id: string, name: string, abbreviation: string }[]
 > {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  const { data } = await supabase
+  // Get all public associations
+  const { data: publicAssocs } = await supabase
     .from("associations")
     .select("id, name, abbreviation")
     .eq("join_enabled", true)
     .order("name")
 
-  return data ?? []
+  // Get associations the user belongs to (includes hidden ones like sandbox)
+  let memberAssocs: { id: string, name: string, abbreviation: string }[] = []
+  if (user) {
+    const { data: memberships } = await supabase
+      .from("user_associations")
+      .select("associations(id, name, abbreviation)")
+      .eq("user_id", user.id)
+
+    memberAssocs = (memberships ?? [])
+      .map((m) => m.associations as unknown as { id: string, name: string, abbreviation: string })
+      .filter(Boolean)
+  }
+
+  // Merge and deduplicate by id
+  const merged = new Map<string, { id: string, name: string, abbreviation: string }>()
+  for (const a of [...(publicAssocs ?? []), ...memberAssocs]) {
+    merged.set(a.id, a)
+  }
+
+  return [...merged.values()].sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function setActiveAssociation(
