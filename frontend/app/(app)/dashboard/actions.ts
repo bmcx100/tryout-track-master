@@ -233,17 +233,10 @@ export async function getDashboardData(
         })
       }
 
-      // Cuts: players on earlier rounds but NOT on the final round
+      // Cuts: players on the previous round but NOT on the final round
       const cutPlayers: HeroPlayerRow[] = []
       if (previous) {
-        const allEarlierJerseys = new Set<string>()
-        for (const r of levelRounds) {
-          if (r.id === latest.id) continue
-          for (const jn of r.jersey_numbers) {
-            allEarlierJerseys.add(jn)
-          }
-        }
-        for (const jn of allEarlierJerseys) {
+        for (const jn of previous.jersey_numbers) {
           if (finalJerseys.has(jn)) continue
           const p = playersByJersey.get(jn)
           const ann = p ? annMap.get(p.id) : null

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import Link from "next/link"
 import { Heart } from "lucide-react"
 import type { HeroCard, HeroPlayerRow, FavoriteStatus } from "@/app/(app)/dashboard/actions"
@@ -68,6 +68,61 @@ function getStatusLabel(statusType: string, players: FavoriteStatus[]): string {
   return statusType
 }
 
+const POSITIONS: { label: string, value: string | null }[] = [
+  { label: "All", value: null },
+  { label: "F", value: "F" },
+  { label: "D", value: "D" },
+  { label: "G", value: "G" },
+]
+
+function HeroPositionFilter({
+  active,
+  onChange,
+  counts,
+}: {
+  active: string | null
+  onChange: (v: string | null) => void
+  counts: Record<string, number>
+}) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const [pill, setPill] = useState({ left: 0, width: 0 })
+  const activeIdx = POSITIONS.findIndex((p) => p.value === active)
+
+  useEffect(() => {
+    const btn = btnRefs.current[activeIdx]
+    const container = trackRef.current
+    if (!btn || !container) return
+    const cRect = container.getBoundingClientRect()
+    const bRect = btn.getBoundingClientRect()
+    setPill({ left: bRect.left - cRect.left, width: bRect.width })
+  }, [activeIdx])
+
+  return (
+    <div className="hero-position-filter">
+      <div className="position-filter-track" ref={trackRef}>
+        <div
+          className="position-filter-pill"
+          style={{ left: pill.left, width: pill.width }}
+        />
+        {POSITIONS.map((pos, i) => {
+          const isActive = active === pos.value
+          return (
+            <button
+              key={pos.label}
+              ref={(el) => { btnRefs.current[i] = el }}
+              className={isActive ? "position-chip active" : "position-chip"}
+              onClick={() => { if (!isActive) onChange(pos.value) }}
+            >
+              {pos.value ? `${pos.label} (${counts[pos.value] ?? 0})` : pos.label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function FinalTeamHeroCard({
   card,
   onToggleFavorite,
@@ -76,9 +131,19 @@ function FinalTeamHeroCard({
   onToggleFavorite: (playerId: string) => void
 }) {
   const [activeView, setActiveView] = useState<"continuing" | "cuts">("continuing")
+  const [posFilter, setPosFilter] = useState<string | null>(null)
   const roster = card.rosterPlayers ?? []
   const cuts = card.cutPlayers ?? []
-  const activePlayers = activeView === "continuing" ? roster : cuts
+  const allPlayers = activeView === "continuing" ? roster : cuts
+  const activePlayers = posFilter
+    ? allPlayers.filter((p) => p.position === posFilter)
+    : allPlayers
+
+  // Counts based on the current view (roster or cuts)
+  const posCounts: Record<string, number> = {}
+  for (const p of allPlayers) {
+    posCounts[p.position] = (posCounts[p.position] ?? 0) + 1
+  }
 
   return (
     <div className="dashboard-hero-card dashboard-hero-card-final">
@@ -86,12 +151,17 @@ function FinalTeamHeroCard({
       <div className="dashboard-hero-final-toggle">
         <SessionsToggle
           activeView={activeView}
-          onViewChange={setActiveView}
+          onViewChange={(v) => { setActiveView(v); setPosFilter(null) }}
           continuingCount={roster.length}
           cutCount={cuts.length}
           isFinalTeam
         />
       </div>
+      <HeroPositionFilter
+        active={posFilter}
+        onChange={setPosFilter}
+        counts={posCounts}
+      />
       <div className="dashboard-hero-final-players">
         {activePlayers.map((p) => (
           <DashboardPlayerRow

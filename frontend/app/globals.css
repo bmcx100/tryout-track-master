@@ -1529,6 +1529,11 @@ body:has(.admin-shell) {
   margin-top: 12px;
 }
 
+.hero-position-filter {
+  @apply flex items-center justify-center;
+  margin-top: 8px;
+}
+
 .dashboard-hero-final-players {
   @apply flex flex-col;
   margin-top: 8px;
