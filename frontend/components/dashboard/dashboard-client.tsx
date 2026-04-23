@@ -70,8 +70,7 @@ function renderHeroCard(card: HeroCard) {
     // Variant B: Team Finalized — always show totals
     return (
       <div key={card.teamLevel} className="dashboard-hero-card">
-        <div className="dashboard-hero-title">Team Finalized</div>
-        <div className="dashboard-hero-subtitle">{card.teamLevel}</div>
+        <div className="dashboard-hero-title">Final Team - {card.division}{card.teamLevel}</div>
         <div className="dashboard-hero-stats">
           <div className="dashboard-hero-stat">
             <div className="dashboard-hero-stat-value dashboard-hero-stat-value-gold">
@@ -171,26 +170,7 @@ export function DashboardClient({ heroCards, favoriteStatuses }: DashboardClient
         </div>
       )}
 
-      {/* My Favourites */}
-      {favoriteStatuses.length > 0 ? (
-        <div className="dashboard-fav-section">
-          <Link href="/my-favourites" className="dashboard-fav-header">
-            My Favourites ({favoriteStatuses.length}<Heart size={12} fill="currentColor" className="dashboard-fav-heart" />)
-          </Link>
-          <div className="dashboard-fav-list">
-            {statusGroups.map((group) => renderFavCard(group))}
-          </div>
-        </div>
-      ) : (
-        <div className="dashboard-empty">
-          <Heart size={32} />
-          <p>
-            Heart players on the{" "}
-            <Link href="/teams" className="dashboard-empty-link">Teams</Link>
-            {" "}page to track them&nbsp;here.
-          </p>
-        </div>
-      )}
+      {/* My Favourites — hidden for now */}
     </div>
   )
 }
