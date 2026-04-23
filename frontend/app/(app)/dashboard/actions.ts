@@ -202,14 +202,14 @@ export async function getDashboardData(
       : null
 
     // Check made_team first
-    if (player.status === "made_team" && player.team_id) {
-      const team = teamsMap.get(player.team_id)
+    if (player.status === "made_team") {
+      const team = player.team_id ? teamsMap.get(player.team_id) : null
       favoriteStatuses.push({
         playerId: player.id,
         playerName: displayName,
         jerseyNumber: player.jersey_number,
         position: player.position ?? "?",
-        statusText: `Made ${team?.name ?? "Team"}`,
+        statusText: team ? `Made ${team.name}` : "Made Team",
         statusType: "made_team",
         division: player.division,
         originalName,
@@ -265,8 +265,8 @@ function derivePlayerStatus(
     roundsByLevel.set(r.team_level, existing)
   }
 
-  // For each level (AA -> C), compare latest round to the immediately previous round
-  // (same logic as the Sessions page: cuts = in previous round but not in latest)
+  // For each level (AA -> C), check if the player is in the latest round (continuing)
+  // or was in ANY earlier round but not the latest (cut)
   let latestAppearance: { level: string, roundNumber: number, createdAt: string } | null = null
   let wasCut = false
   let cutLevel: string | null = null
@@ -278,7 +278,6 @@ function derivePlayerStatus(
 
     // Rounds are sorted desc by round_number already
     const latest = levelRounds[0]
-    const previous = levelRounds.length > 1 ? levelRounds[1] : null
 
     // Player is in the latest round at this level → continuing
     if (latest.jersey_numbers.includes(jerseyNumber)) {
@@ -291,21 +290,25 @@ function derivePlayerStatus(
           createdAt: latest.created_at,
         }
       }
-    }
-    // Player was in the previous round but not the latest → just cut
-    else if (previous && previous.jersey_numbers.includes(jerseyNumber)) {
-      if (!latestAppearance || previous.created_at > latestAppearance.createdAt) {
-        wasCut = true
-        cutLevel = level
-        cutRoundNumber = latest.round_number
-        latestAppearance = {
-          level,
-          roundNumber: previous.round_number,
-          createdAt: previous.created_at,
+    } else {
+      // Check if player was in ANY earlier round at this level → cut
+      for (let i = 1; i < levelRounds.length; i++) {
+        if (levelRounds[i].jersey_numbers.includes(jerseyNumber)) {
+          if (!latestAppearance || levelRounds[i].created_at > latestAppearance.createdAt) {
+            wasCut = true
+            cutLevel = level
+            // The round that cut them is the one after their last appearance
+            cutRoundNumber = levelRounds[i - 1].round_number
+            latestAppearance = {
+              level,
+              roundNumber: levelRounds[i].round_number,
+              createdAt: levelRounds[i].created_at,
+            }
+          }
+          break
         }
       }
     }
-    // Player not in the latest two rounds → was cut earlier, not a current cut at this level
   }
 
   if (!latestAppearance) {
@@ -420,9 +423,9 @@ export async function getMyFavouritesPageData(
     let statusText: string
     let statusType: FavoriteStatus["statusType"]
 
-    if (player.status === "made_team" && player.team_id) {
-      const team = teamsMap.get(player.team_id)
-      statusText = `Made ${team?.name ?? "Team"}`
+    if (player.status === "made_team") {
+      const team = player.team_id ? teamsMap.get(player.team_id) : null
+      statusText = team ? `Made ${team.name}` : "Made Team"
       statusType = "made_team"
     } else {
       const derived = derivePlayerStatus(player.jersey_number, allRounds, player.status)

@@ -67,8 +67,7 @@ function getStatusLabel(statusType: string, players: FavoriteStatus[]): string {
 
 function renderHeroCard(card: HeroCard) {
   if (card.isFinalTeam) {
-    // Variant B: Team Finalized
-    const hasFavourites = card.favouritesOnTeam > 0 || card.favouritesCutFinal > 0
+    // Variant B: Team Finalized — always show totals
     return (
       <div key={card.teamLevel} className="dashboard-hero-card">
         <div className="dashboard-hero-title">Team Finalized</div>
@@ -76,15 +75,13 @@ function renderHeroCard(card: HeroCard) {
         <div className="dashboard-hero-stats">
           <div className="dashboard-hero-stat">
             <div className="dashboard-hero-stat-value dashboard-hero-stat-value-gold">
-              {hasFavourites ? card.favouritesOnTeam : card.totalPlayers}
+              {card.totalPlayers}
             </div>
-            <div className="dashboard-hero-stat-label">
-              {hasFavourites ? "On Roster" : "Roster"}
-            </div>
+            <div className="dashboard-hero-stat-label">Roster</div>
           </div>
           <div className="dashboard-hero-stat">
             <div className="dashboard-hero-stat-value dashboard-hero-stat-value-red">
-              {hasFavourites ? card.favouritesCutFinal : card.cutCount}
+              {card.cutCount}
             </div>
             <div className="dashboard-hero-stat-label">Cut</div>
           </div>
