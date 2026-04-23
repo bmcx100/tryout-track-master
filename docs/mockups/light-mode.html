@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track Master — Light Mode Mockups</title>
+<style>
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #1a1a1a;
+    color: #333;
+    padding: 40px 20px;
+  }
+
+  /* ── Layout ── */
+  .mockup-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    justify-content: center;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .phone-frame {
+    width: 393px;
+    height: 852px;
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+    flex-shrink: 0;
+  }
+
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .phone-screen::-webkit-scrollbar { width: 0; }
+
+  .phone-label {
+    color: #999;
+    text-align: center;
+    margin-top: 12px;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    width: 393px;
+  }
+
+  .phone-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Theme switcher header ── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 48px;
+    color: #e0e0e0;
+  }
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #D4A823;
+  }
+  .page-header p {
+    font-size: 15px;
+    color: #888;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  .theme-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 48px;
+  }
+  .theme-tab {
+    padding: 10px 24px;
+    border-radius: 999px;
+    border: 1px solid #444;
+    background: transparent;
+    color: #aaa;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 200ms;
+  }
+  .theme-tab:hover { border-color: #D4A823; color: #D4A823; }
+  .theme-tab.active {
+    background: #D4A823;
+    color: #111;
+    border-color: #D4A823;
+  }
+
+  /* ── Section headers ── */
+  .section-title {
+    color: #D4A823;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    margin: 48px 0 24px;
+    width: 100%;
+  }
+  .section-title:first-of-type { margin-top: 0; }
+
+  /* ════════════════════════════════════════════════════════
+     THEME A — Warm Cream
+     ════════════════════════════════════════════════════════ */
+  .theme-a {
+    --bg: #FAF6EF;
+    --surface: #FFFFFF;
+    --surface-alt: #F5F0E8;
+    --text: #2C2418;
+    --text-muted: #8C7E6A;
+    --gold: #B8941E;
+    --gold-light: #D4A823;
+    --cta: #D4A823;
+    --cta-text: #2C2418;
+    --border: rgba(0,0,0,0.08);
+    --border-subtle: rgba(0,0,0,0.05);
+    --green: #2E8B57;
+    --red: #C0392B;
+    --orange: #D4771E;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+    --nav-bg: #FFFFFF;
+    --header-bg: rgba(250,246,239,0.92);
+    --badge-bg: rgba(184,148,30,0.12);
+  }
+
+  /* ════════════════════════════════════════════════════════
+     THEME B — Cool White
+     ════════════════════════════════════════════════════════ */
+  .theme-b {
+    --bg: #F4F5F7;
+    --surface: #FFFFFF;
+    --surface-alt: #ECEEF2;
+    --text: #1A1D26;
+    --text-muted: #6B7280;
+    --gold: #B8941E;
+    --gold-light: #D4A823;
+    --cta: #D4A823;
+    --cta-text: #1A1D26;
+    --border: rgba(0,0,0,0.07);
+    --border-subtle: rgba(0,0,0,0.04);
+    --green: #059669;
+    --red: #DC2626;
+    --orange: #D97706;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.07);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.09);
+    --nav-bg: #FFFFFF;
+    --header-bg: rgba(244,245,247,0.92);
+    --badge-bg: rgba(184,148,30,0.10);
+  }
+
+  /* ════════════════════════════════════════════════════════
+     THEME C — Soft Sand (warm mid-tone)
+     ════════════════════════════════════════════════════════ */
+  .theme-c {
+    --bg: #F0EBE1;
+    --surface: #F9F6F0;
+    --surface-alt: #E8E2D6;
+    --text: #33291C;
+    --text-muted: #8A7D6B;
+    --gold: #A6850F;
+    --gold-light: #C4A01A;
+    --cta: #C4A01A;
+    --cta-text: #33291C;
+    --border: rgba(0,0,0,0.09);
+    --border-subtle: rgba(0,0,0,0.05);
+    --green: #2D7A4F;
+    --red: #B33A2A;
+    --orange: #C06B15;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.09);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    --nav-bg: #F9F6F0;
+    --header-bg: rgba(240,235,225,0.92);
+    --badge-bg: rgba(166,133,15,0.12);
+  }
+
+  /* ════════════════════════════════════════════════════════
+     THEME N — New (Gold Scale)
+     bg=50, cards=100, card-border=900 tint, text=950, cta=500
+     ════════════════════════════════════════════════════════ */
+  .theme-n {
+    --bg: oklch(0.98 0.02 85);              /* gold-50 */
+    --surface: oklch(0.94 0.04 85);         /* gold-100 */
+    --surface-alt: oklch(0.89 0.07 85);     /* gold-200 */
+    --text: oklch(0.25 0.05 85);            /* gold-950 */
+    --text-muted: oklch(0.45 0.09 85);      /* gold-800 */
+    --gold: oklch(0.76 0.14 85);            /* gold-500 */
+    --gold-light: oklch(0.80 0.13 85);      /* gold-400 */
+    --cta: oklch(0.76 0.14 85);             /* gold-500 */
+    --cta-text: oklch(0.25 0.05 85);        /* gold-950 */
+    --border: oklch(0.35 0.07 85 / 20%);    /* gold-900 @ 20% */
+    --border-subtle: oklch(0.35 0.07 85 / 10%); /* gold-900 @ 10% */
+    --green: #2E8B57;
+    --red: #C0392B;
+    --orange: #D4771E;
+    --shadow-sm: 0 1px 3px oklch(0.35 0.07 85 / 8%);
+    --shadow-md: 0 4px 12px oklch(0.35 0.07 85 / 12%);
+    --shadow-lg: 0 8px 32px oklch(0.35 0.07 85 / 16%);
+    --nav-bg: oklch(0.94 0.04 85);          /* gold-100 */
+    --header-bg: oklch(0.94 0.04 85 / 95%); /* gold-100 @ 95% */
+    --badge-bg: oklch(0.76 0.14 85 / 15%);  /* gold-500 @ 15% */
+    --toggle-active-bg: oklch(0.76 0.14 85);  /* gold-500 */
+    --toggle-active-text: oklch(0.98 0.02 85); /* gold-50 */
+    --chip-active-bg: oklch(0.76 0.14 85);    /* gold-500 */
+    --chip-active-text: oklch(0.98 0.02 85);  /* gold-50 */
+  }
+
+  /* ── Theme N overrides for toggle + chips ── */
+  .theme-n .toggle-btn.active {
+    background: oklch(0.76 0.14 85);    /* gold-500 */
+    color: oklch(0.94 0.04 85);         /* gold-100 */
+  }
+  .theme-n .filter-chip.active {
+    background: oklch(0.76 0.14 85);    /* gold-500 */
+    color: oklch(0.98 0.02 85);         /* gold-50 */
+    border-color: oklch(0.76 0.14 85);  /* gold-500 */
+  }
+  .theme-n .filter-chip.active-dark {
+    background: oklch(0.76 0.14 85);    /* gold-500 */
+    color: oklch(0.25 0.05 85);         /* gold-950 */
+    border-color: oklch(0.76 0.14 85);  /* gold-500 */
+  }
+  .theme-n .jersey {
+    color: oklch(0.25 0.05 85);         /* gold-950 */
+  }
+  .theme-n .bottom-nav {
+    background: oklch(0.25 0.05 85);    /* gold-950 */
+    border-top: 1px solid oklch(1 0 0 / 6%);
+  }
+  .theme-n .nav-item {
+    color: oklch(1 0 0 / 30%);          /* matches live inactive */
+  }
+  .theme-n .nav-item.active {
+    color: oklch(0.84 0.16 88);         /* --dm-cinnabar */
+  }
+  .theme-n .nav-item.active .nav-icon {
+    background: transparent;
+  }
+
+  /* ── Shared component styles ── */
+  .screen-bg { background: var(--bg); }
+
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--header-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-division {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .header-division span {
+    color: var(--gold);
+    font-weight: 400;
+    font-size: 13px;
+    margin-left: 6px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--badge-bg);
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .header-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--text-muted);
+  }
+
+  .content-area {
+    flex: 1;
+    padding: 16px 16px 90px;
+  }
+
+  /* ── Bottom Nav ── */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0 28px;
+    background: var(--nav-bg);
+    border-top: 1px solid var(--border);
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .nav-item.active { color: var(--gold); }
+  .nav-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .nav-item.active .nav-icon {
+    background: var(--badge-bg);
+  }
+
+  /* ── Hero Card ── */
+  .hero-card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-subtle);
+  }
+  .hero-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .hero-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--surface-alt);
+    color: var(--text);
+  }
+  .stat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .stat-dot.green { background: var(--green); }
+  .stat-dot.red { background: var(--red); }
+  .stat-dot.orange { background: var(--orange); }
+  .stat-dot.gold { background: var(--gold); }
+
+  /* ── Player rows ── */
+  .player-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    gap: 10px;
+  }
+  .player-row:last-child { border-bottom: none; }
+  .jersey {
+    width: 28px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gold);
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .pos-badge {
+    width: 24px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 4px;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    background: var(--surface-alt);
+  }
+  .heart {
+    width: 20px;
+    text-align: center;
+    color: var(--red);
+    font-size: 14px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .heart.empty { color: var(--border); font-size: 13px; }
+  .player-name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .prev-team {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── Position filter chips ── */
+  .filter-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .filter-chip {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .filter-chip.active {
+    background: var(--badge-bg);
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+
+  /* ── View toggle ── */
+  .view-toggle {
+    display: flex;
+    background: var(--surface-alt);
+    border-radius: 10px;
+    padding: 3px;
+    margin-bottom: 16px;
+  }
+  .toggle-btn {
+    flex: 1;
+    padding: 8px 0;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 200ms;
+  }
+  .toggle-btn.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ── Team card (predictions) ── */
+  .team-card {
+    background: var(--surface);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-subtle);
+  }
+  .team-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .team-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .team-count {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .team-players {
+    padding: 4px 16px;
+  }
+
+  /* ── Settings ── */
+  .settings-card {
+    background: var(--surface);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-subtle);
+  }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: background 150ms;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row:hover { background: var(--surface-alt); }
+  .settings-row-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .settings-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .settings-icon.gold { background: var(--badge-bg); }
+  .settings-icon.red { background: rgba(192,57,43,0.1); }
+  .settings-icon.green { background: rgba(46,139,87,0.1); }
+  .settings-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .settings-chevron {
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .settings-badge {
+    background: var(--red);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    margin-left: 8px;
+  }
+  .settings-section-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 16px 16px 8px;
+  }
+
+  /* ── User card ── */
+  .user-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 16px;
+    background: var(--surface);
+    border-radius: 14px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-subtle);
+  }
+  .user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--badge-bg);
+    color: var(--gold);
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .user-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .user-email {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* ── Status badges ── */
+  .status-text {
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .status-text.green { color: var(--green); }
+  .status-text.red { color: var(--red); }
+  .status-text.orange { color: var(--orange); }
+  .status-text.gold { color: var(--gold); }
+
+  /* ── Section within page ── */
+  .page-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 20px 0 10px;
+  }
+
+  /* ── CTA Button ── */
+  .cta-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    background: var(--cta);
+    color: var(--cta-text);
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    margin-top: 16px;
+  }
+
+  /* ── Corrections list ── */
+  .correction-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    gap: 12px;
+  }
+  .correction-row:last-child { border-bottom: none; }
+  .correction-type {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gold);
+    background: var(--badge-bg);
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .correction-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .correction-player {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .correction-detail {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .correction-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+  }
+  .action-btn.approve { background: rgba(46,139,87,0.12); color: var(--green); }
+  .action-btn.reject { background: rgba(192,57,43,0.12); color: var(--red); }
+
+  /* ── Session / Continuations ── */
+  .session-card {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-subtle);
+    border-left: 4px solid;
+  }
+  .session-card.active { border-left-color: var(--green); }
+  .session-card.upcoming { border-left-color: var(--gold); }
+  .session-card.past { border-left-color: var(--border); }
+  .session-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .session-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .session-stats {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+  }
+  .session-stat {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .session-stat strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ── Hidden sections for tab switching ── */
+  .theme-section { display: none; }
+  .theme-section.visible { display: flex; flex-wrap: wrap; gap: 40px; justify-content: center; }
+
+  /* ── Color swatch panel ── */
+  .swatch-panel {
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 200px;
+    background: #222;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    z-index: 100;
+    border: 1px solid #333;
+  }
+  .swatch-title {
+    padding: 14px 16px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #D4A823;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+  }
+  .swatch-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    height: 44px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 150ms;
+  }
+  .swatch-bar:hover {
+    transform: scaleX(1.04);
+    z-index: 1;
+    position: relative;
+  }
+  .swatch-label {
+    opacity: 0.9;
+  }
+  .swatch-hex {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    opacity: 0.7;
+  }
+  .swatch-bar.light-text { color: #fff; }
+  .swatch-bar.dark-text { color: #2C1A00; }
+
+  .swatch-footer {
+    padding: 10px 14px;
+    font-size: 10px;
+    color: #666;
+    text-align: center;
+    border-top: 1px solid #333;
+    line-height: 1.4;
+  }
+
+  /* Hide swatch on narrow screens */
+  @media (max-width: 1200px) {
+    .swatch-panel { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Gold Shade Swatch ── -->
+<div class="swatch-panel">
+  <div class="swatch-title">Gold Scale</div>
+  <div class="swatch-bar dark-text" style="background: oklch(0.98 0.02 85);">
+    <span class="swatch-label">50</span>
+    <span class="swatch-hex">#FEFBF0</span>
+  </div>
+  <div class="swatch-bar dark-text" style="background: oklch(0.94 0.04 85);">
+    <span class="swatch-label">100</span>
+    <span class="swatch-hex">#FBF2D4</span>
+  </div>
+  <div class="swatch-bar dark-text" style="background: oklch(0.89 0.07 85);">
+    <span class="swatch-label">200</span>
+    <span class="swatch-hex">#F2E0A3</span>
+  </div>
+  <div class="swatch-bar dark-text" style="background: oklch(0.84 0.11 85);">
+    <span class="swatch-label">300</span>
+    <span class="swatch-hex">#E6CA6E</span>
+  </div>
+  <div class="swatch-bar dark-text" style="background: oklch(0.80 0.13 85);">
+    <span class="swatch-label">400</span>
+    <span class="swatch-hex">#DDB842</span>
+  </div>
+  <div class="swatch-bar dark-text" style="background: oklch(0.76 0.14 85);">
+    <span class="swatch-label">500 ★</span>
+    <span class="swatch-hex">#D4A823</span>
+  </div>
+  <div class="swatch-bar dark-text" style="background: oklch(0.68 0.13 85);">
+    <span class="swatch-label">600</span>
+    <span class="swatch-hex">#B48C1A</span>
+  </div>
+  <div class="swatch-bar light-text" style="background: oklch(0.56 0.11 85);">
+    <span class="swatch-label">700</span>
+    <span class="swatch-hex">#8C6C12</span>
+  </div>
+  <div class="swatch-bar light-text" style="background: oklch(0.45 0.09 85);">
+    <span class="swatch-label">800</span>
+    <span class="swatch-hex">#6A510E</span>
+  </div>
+  <div class="swatch-bar light-text" style="background: oklch(0.35 0.07 85);">
+    <span class="swatch-label">900</span>
+    <span class="swatch-hex">#4D3A0A</span>
+  </div>
+  <div class="swatch-bar light-text" style="background: oklch(0.25 0.05 85);">
+    <span class="swatch-label">950</span>
+    <span class="swatch-hex">#302406</span>
+  </div>
+  <div class="swatch-footer">
+    Anchor: 500 = --dm-gold<br>
+    oklch(L 0.14 85) &middot; hue 85
+  </div>
+</div>
+
+<div class="page-header">
+  <h1>Track Master — Light Mode</h1>
+  <p>Three light theme options to compare. Each shows Dashboard, Teams,
+     Sessions, and Settings screens.</p>
+</div>
+
+<div class="theme-tabs">
+  <button class="theme-tab" onclick="showTheme('n')">New (Gold Scale)</button>
+  <button class="theme-tab active" onclick="showTheme('a')">Warm Cream</button>
+  <button class="theme-tab" onclick="showTheme('b')">Cool White</button>
+  <button class="theme-tab" onclick="showTheme('c')">Soft Sand</button>
+  <button class="theme-tab" onclick="showTheme('all')">All</button>
+</div>
+
+<!-- ════════ THEME A — Warm Cream ════════ -->
+<div id="section-a" class="theme-section visible mockup-grid">
+  <div class="section-title" style="width:100%">Warm Cream</div>
+
+  <!-- Dashboard -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-a">
+        <div class="app-header">
+          <div class="header-division">U15 <span>NW</span></div>
+          <div class="header-right">
+            <svg class="header-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2H10c0 1.1.9 2 2 2zm6-6V11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+            <div class="header-avatar">JD</div>
+          </div>
+        </div>
+        <div class="content-area">
+          <div class="hero-card">
+            <div class="hero-title">U15 AA Tryout</div>
+            <div class="hero-subtitle">Round 3 of 4 &middot; Updated 2h ago</div>
+            <div class="hero-stats">
+              <div class="stat-pill"><div class="stat-dot green"></div> 42</div>
+              <div class="stat-pill"><div class="stat-dot red"></div> 8</div>
+              <div class="stat-pill"><div class="stat-dot orange"></div> 3</div>
+            </div>
+            <div class="filter-bar">
+              <div class="filter-chip active">All</div>
+              <div class="filter-chip">F</div>
+              <div class="filter-chip">D</div>
+              <div class="filter-chip">G</div>
+            </div>
+            <div class="player-row"><div class="jersey">17</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Carter Williams</div><div class="prev-team">U13 AA</div></div>
+            <div class="player-row"><div class="jersey">44</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Logan Bennett</div><div class="prev-team">U13 A</div></div>
+            <div class="player-row"><div class="jersey">91</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Hudson McAllister</div><div class="prev-team">U13 AA</div></div>
+            <div class="player-row"><div class="jersey">8</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Nolan Thibodeau</div><div class="prev-team">U13 BB</div></div>
+            <div class="player-row"><div class="jersey">33</div><div class="pos-badge">G</div><div class="heart empty">&#9825;</div><div class="player-name">Gavin Laroche</div><div class="prev-team">U13 A</div></div>
+          </div>
+
+          <div class="hero-card">
+            <div class="hero-title">U15 A Tryout</div>
+            <div class="hero-subtitle">Round 2 of 4 &middot; Updated 5h ago</div>
+            <div class="hero-stats">
+              <div class="stat-pill"><div class="stat-dot green"></div> 38</div>
+              <div class="stat-pill"><div class="stat-dot red"></div> 5</div>
+              <div class="stat-pill"><div class="stat-dot orange"></div> 1</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Dashboard</div>
+  </div>
+
+  <!-- Teams -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-a">
+        <div class="app-header">
+          <div class="header-division">U15 <span>NW</span></div>
+          <div class="header-right">
+            <div class="header-avatar">JD</div>
+          </div>
+        </div>
+        <div class="content-area">
+          <div class="view-toggle">
+            <div class="toggle-btn">Previous Teams</div>
+            <div class="toggle-btn active">Predictions</div>
+          </div>
+          <div class="filter-bar">
+            <div class="filter-chip active">All</div>
+            <div class="filter-chip">F</div>
+            <div class="filter-chip">D</div>
+            <div class="filter-chip">G</div>
+          </div>
+
+          <div class="team-card">
+            <div class="team-header"><div class="team-name">U15 AA</div><div class="team-count">17 players</div></div>
+            <div class="team-players">
+              <div class="player-row"><div class="jersey">17</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Carter Williams</div></div>
+              <div class="player-row"><div class="jersey">91</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Hudson McAllister</div></div>
+              <div class="player-row"><div class="jersey">22</div><div class="pos-badge">F</div><div class="heart empty">&#9825;</div><div class="player-name">Mason Tremblay</div></div>
+              <div class="player-row"><div class="jersey">44</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Logan Bennett</div></div>
+              <div class="player-row"><div class="jersey">5</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Wyatt Belanger</div></div>
+              <div class="player-row"><div class="jersey">33</div><div class="pos-badge">G</div><div class="heart empty">&#9825;</div><div class="player-name">Gavin Laroche</div></div>
+            </div>
+          </div>
+
+          <div class="team-card">
+            <div class="team-header"><div class="team-name">U15 A</div><div class="team-count">17 players</div></div>
+            <div class="team-players">
+              <div class="player-row"><div class="jersey">14</div><div class="pos-badge">F</div><div class="heart empty">&#9825;</div><div class="player-name">Ethan Fournier</div></div>
+              <div class="player-row"><div class="jersey">77</div><div class="pos-badge">F</div><div class="heart empty">&#9825;</div><div class="player-name">Owen Pelletier</div></div>
+              <div class="player-row"><div class="jersey">8</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Nolan Thibodeau</div></div>
+              <div class="player-row"><div class="jersey">3</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Jack Morissette</div></div>
+              <div class="player-row"><div class="jersey">30</div><div class="pos-badge">G</div><div class="heart empty">&#9825;</div><div class="player-name">Felix Dupuis</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item active"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Teams &mdash; Predictions</div>
+  </div>
+
+  <!-- Sessions -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-a">
+        <div class="app-header">
+          <div class="header-division">U15 <span>NW</span></div>
+          <div class="header-right">
+            <div class="header-avatar">JD</div>
+          </div>
+        </div>
+        <div class="content-area">
+          <div class="page-section-title">Active</div>
+          <div class="session-card active">
+            <div class="session-title">U15 AA — Round 3</div>
+            <div class="session-meta">Apr 22, 2026 &middot; 6:00 PM &middot; Minto Arena</div>
+            <div class="session-stats">
+              <div class="session-stat"><strong>42</strong> continuing</div>
+              <div class="session-stat"><strong>8</strong> cut</div>
+              <div class="session-stat"><strong>3</strong> missing</div>
+            </div>
+          </div>
+
+          <div class="page-section-title">Upcoming</div>
+          <div class="session-card upcoming">
+            <div class="session-title">U15 AA — Round 4</div>
+            <div class="session-meta">Apr 25, 2026 &middot; 7:00 PM &middot; Bell Sensplex</div>
+          </div>
+          <div class="session-card upcoming">
+            <div class="session-title">U15 A — Round 3</div>
+            <div class="session-meta">Apr 26, 2026 &middot; 5:30 PM &middot; Minto Arena</div>
+          </div>
+
+          <div class="page-section-title">Completed</div>
+          <div class="session-card past">
+            <div class="session-title">U15 AA — Round 2</div>
+            <div class="session-meta">Apr 19, 2026 &middot; 6:00 PM</div>
+            <div class="session-stats">
+              <div class="session-stat"><strong>50</strong> continued</div>
+              <div class="session-stat"><strong>12</strong> cut</div>
+            </div>
+          </div>
+          <div class="session-card past">
+            <div class="session-title">U15 AA — Round 1</div>
+            <div class="session-meta">Apr 15, 2026 &middot; 6:00 PM</div>
+            <div class="session-stats">
+              <div class="session-stat"><strong>62</strong> continued</div>
+              <div class="session-stat"><strong>0</strong> cut</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item active"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Sessions</div>
+  </div>
+
+  <!-- Settings -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-a">
+        <div class="app-header">
+          <div class="header-division">Settings</div>
+          <div class="header-right">
+            <div class="header-avatar">JD</div>
+          </div>
+        </div>
+        <div class="content-area">
+          <div class="user-card">
+            <div class="user-avatar">JD</div>
+            <div>
+              <div class="user-name">Jane Donovan</div>
+              <div class="user-email">jane.donovan@gmail.com</div>
+              <div class="user-email" style="margin-top:2px; color:var(--gold); font-weight:600;">Nepean Wildcats</div>
+            </div>
+          </div>
+
+          <div class="settings-section-label">Admin</div>
+          <div class="settings-card">
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="settings-icon gold">&#9998;</div>
+                <div class="settings-label">Corrections <span class="settings-badge">3</span></div>
+              </div>
+              <div class="settings-chevron">&#8250;</div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="settings-icon gold">+</div>
+                <div class="settings-label">Add Player</div>
+              </div>
+              <div class="settings-chevron">&#8250;</div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="settings-icon gold">&#8645;</div>
+                <div class="settings-label">Scraper Config</div>
+              </div>
+              <div class="settings-chevron">&#8250;</div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="settings-icon gold">&#8593;</div>
+                <div class="settings-label">CSV Import</div>
+              </div>
+              <div class="settings-chevron">&#8250;</div>
+            </div>
+          </div>
+
+          <div class="settings-section-label">General</div>
+          <div class="settings-card">
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="settings-icon green">?</div>
+                <div class="settings-label">Help</div>
+              </div>
+              <div class="settings-chevron">&#8250;</div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-left">
+                <div class="settings-icon red">&#10140;</div>
+                <div class="settings-label">Log Out</div>
+              </div>
+              <div class="settings-chevron">&#8250;</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Settings</div>
+  </div>
+</div>
+
+<!-- ════════ THEME B — Cool White ════════ -->
+<div id="section-b" class="theme-section mockup-grid">
+  <div class="section-title" style="width:100%">Cool White</div>
+
+  <!-- Dashboard -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-b">
+        <div class="app-header">
+          <div class="header-division">U15 <span>NW</span></div>
+          <div class="header-right">
+            <svg class="header-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2H10c0 1.1.9 2 2 2zm6-6V11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+            <div class="header-avatar">JD</div>
+          </div>
+        </div>
+        <div class="content-area">
+          <div class="hero-card">
+            <div class="hero-title">U15 AA Tryout</div>
+            <div class="hero-subtitle">Round 3 of 4 &middot; Updated 2h ago</div>
+            <div class="hero-stats">
+              <div class="stat-pill"><div class="stat-dot green"></div> 42</div>
+              <div class="stat-pill"><div class="stat-dot red"></div> 8</div>
+              <div class="stat-pill"><div class="stat-dot orange"></div> 3</div>
+            </div>
+            <div class="filter-bar">
+              <div class="filter-chip active">All</div>
+              <div class="filter-chip">F</div>
+              <div class="filter-chip">D</div>
+              <div class="filter-chip">G</div>
+            </div>
+            <div class="player-row"><div class="jersey">17</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Carter Williams</div><div class="prev-team">U13 AA</div></div>
+            <div class="player-row"><div class="jersey">44</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Logan Bennett</div><div class="prev-team">U13 A</div></div>
+            <div class="player-row"><div class="jersey">91</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Hudson McAllister</div><div class="prev-team">U13 AA</div></div>
+            <div class="player-row"><div class="jersey">8</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Nolan Thibodeau</div><div class="prev-team">U13 BB</div></div>
+            <div class="player-row"><div class="jersey">33</div><div class="pos-badge">G</div><div class="heart empty">&#9825;</div><div class="player-name">Gavin Laroche</div><div class="prev-team">U13 A</div></div>
+          </div>
+          <div class="hero-card">
+            <div class="hero-title">U15 A Tryout</div>
+            <div class="hero-subtitle">Round 2 of 4 &middot; Updated 5h ago</div>
+            <div class="hero-stats">
+              <div class="stat-pill"><div class="stat-dot green"></div> 38</div>
+              <div class="stat-pill"><div class="stat-dot red"></div> 5</div>
+              <div class="stat-pill"><div class="stat-dot orange"></div> 1</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Dashboard</div>
+  </div>
+
+  <!-- Teams -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-b">
+        <div class="app-header">
+          <div class="header-division">U15 <span>NW</span></div>
+          <div class="header-right"><div class="header-avatar">JD</div></div>
+        </div>
+        <div class="content-area">
+          <div class="view-toggle">
+            <div class="toggle-btn">Previous Teams</div>
+            <div class="toggle-btn active">Predictions</div>
+          </div>
+          <div class="filter-bar">
+            <div class="filter-chip active">All</div>
+            <div class="filter-chip">F</div>
+            <div class="filter-chip">D</div>
+            <div class="filter-chip">G</div>
+          </div>
+          <div class="team-card">
+            <div class="team-header"><div class="team-name">U15 AA</div><div class="team-count">17 players</div></div>
+            <div class="team-players">
+              <div class="player-row"><div class="jersey">17</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Carter Williams</div></div>
+              <div class="player-row"><div class="jersey">91</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Hudson McAllister</div></div>
+              <div class="player-row"><div class="jersey">22</div><div class="pos-badge">F</div><div class="heart empty">&#9825;</div><div class="player-name">Mason Tremblay</div></div>
+              <div class="player-row"><div class="jersey">44</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Logan Bennett</div></div>
+              <div class="player-row"><div class="jersey">5</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Wyatt Belanger</div></div>
+              <div class="player-row"><div class="jersey">33</div><div class="pos-badge">G</div><div class="heart empty">&#9825;</div><div class="player-name">Gavin Laroche</div></div>
+            </div>
+          </div>
+          <div class="team-card">
+            <div class="team-header"><div class="team-name">U15 A</div><div class="team-count">17 players</div></div>
+            <div class="team-players">
+              <div class="player-row"><div class="jersey">14</div><div class="pos-badge">F</div><div class="heart empty">&#9825;</div><div class="player-name">Ethan Fournier</div></div>
+              <div class="player-row"><div class="jersey">77</div><div class="pos-badge">F</div><div class="heart empty">&#9825;</div><div class="player-name">Owen Pelletier</div></div>
+              <div class="player-row"><div class="jersey">8</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Nolan Thibodeau</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item active"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Teams &mdash; Predictions</div>
+  </div>
+
+  <!-- Sessions -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-b">
+        <div class="app-header">
+          <div class="header-division">U15 <span>NW</span></div>
+          <div class="header-right"><div class="header-avatar">JD</div></div>
+        </div>
+        <div class="content-area">
+          <div class="page-section-title">Active</div>
+          <div class="session-card active">
+            <div class="session-title">U15 AA — Round 3</div>
+            <div class="session-meta">Apr 22, 2026 &middot; 6:00 PM &middot; Minto Arena</div>
+            <div class="session-stats">
+              <div class="session-stat"><strong>42</strong> continuing</div>
+              <div class="session-stat"><strong>8</strong> cut</div>
+              <div class="session-stat"><strong>3</strong> missing</div>
+            </div>
+          </div>
+          <div class="page-section-title">Upcoming</div>
+          <div class="session-card upcoming">
+            <div class="session-title">U15 AA — Round 4</div>
+            <div class="session-meta">Apr 25, 2026 &middot; 7:00 PM &middot; Bell Sensplex</div>
+          </div>
+          <div class="session-card upcoming">
+            <div class="session-title">U15 A — Round 3</div>
+            <div class="session-meta">Apr 26, 2026 &middot; 5:30 PM &middot; Minto Arena</div>
+          </div>
+          <div class="page-section-title">Completed</div>
+          <div class="session-card past">
+            <div class="session-title">U15 AA — Round 2</div>
+            <div class="session-meta">Apr 19, 2026 &middot; 6:00 PM</div>
+            <div class="session-stats">
+              <div class="session-stat"><strong>50</strong> continued</div>
+              <div class="session-stat"><strong>12</strong> cut</div>
+            </div>
+          </div>
+          <div class="session-card past">
+            <div class="session-title">U15 AA — Round 1</div>
+            <div class="session-meta">Apr 15, 2026 &middot; 6:00 PM</div>
+            <div class="session-stats">
+              <div class="session-stat"><strong>62</strong> continued</div>
+              <div class="session-stat"><strong>0</strong> cut</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item active"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Sessions</div>
+  </div>
+
+  <!-- Settings -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-b">
+        <div class="app-header">
+          <div class="header-division">Settings</div>
+          <div class="header-right"><div class="header-avatar">JD</div></div>
+        </div>
+        <div class="content-area">
+          <div class="user-card">
+            <div class="user-avatar">JD</div>
+            <div>
+              <div class="user-name">Jane Donovan</div>
+              <div class="user-email">jane.donovan@gmail.com</div>
+              <div class="user-email" style="margin-top:2px; color:var(--gold); font-weight:600;">Nepean Wildcats</div>
+            </div>
+          </div>
+          <div class="settings-section-label">Admin</div>
+          <div class="settings-card">
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon gold">&#9998;</div><div class="settings-label">Corrections <span class="settings-badge">3</span></div></div><div class="settings-chevron">&#8250;</div></div>
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon gold">+</div><div class="settings-label">Add Player</div></div><div class="settings-chevron">&#8250;</div></div>
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon gold">&#8645;</div><div class="settings-label">Scraper Config</div></div><div class="settings-chevron">&#8250;</div></div>
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon gold">&#8593;</div><div class="settings-label">CSV Import</div></div><div class="settings-chevron">&#8250;</div></div>
+          </div>
+          <div class="settings-section-label">General</div>
+          <div class="settings-card">
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon green">?</div><div class="settings-label">Help</div></div><div class="settings-chevron">&#8250;</div></div>
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon red">&#10140;</div><div class="settings-label">Log Out</div></div><div class="settings-chevron">&#8250;</div></div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Settings</div>
+  </div>
+</div>
+
+<!-- ════════ THEME C — Soft Sand ════════ -->
+<div id="section-c" class="theme-section mockup-grid">
+  <div class="section-title" style="width:100%">Soft Sand</div>
+
+  <!-- Dashboard -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-c">
+        <div class="app-header">
+          <div class="header-division">U15 <span>NW</span></div>
+          <div class="header-right">
+            <svg class="header-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2H10c0 1.1.9 2 2 2zm6-6V11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+            <div class="header-avatar">JD</div>
+          </div>
+        </div>
+        <div class="content-area">
+          <div class="hero-card">
+            <div class="hero-title">U15 AA Tryout</div>
+            <div class="hero-subtitle">Round 3 of 4 &middot; Updated 2h ago</div>
+            <div class="hero-stats">
+              <div class="stat-pill"><div class="stat-dot green"></div> 42</div>
+              <div class="stat-pill"><div class="stat-dot red"></div> 8</div>
+              <div class="stat-pill"><div class="stat-dot orange"></div> 3</div>
+            </div>
+            <div class="filter-bar">
+              <div class="filter-chip active">All</div>
+              <div class="filter-chip">F</div>
+              <div class="filter-chip">D</div>
+              <div class="filter-chip">G</div>
+            </div>
+            <div class="player-row"><div class="jersey">17</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Carter Williams</div><div class="prev-team">U13 AA</div></div>
+            <div class="player-row"><div class="jersey">44</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Logan Bennett</div><div class="prev-team">U13 A</div></div>
+            <div class="player-row"><div class="jersey">91</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Hudson McAllister</div><div class="prev-team">U13 AA</div></div>
+            <div class="player-row"><div class="jersey">8</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Nolan Thibodeau</div><div class="prev-team">U13 BB</div></div>
+            <div class="player-row"><div class="jersey">33</div><div class="pos-badge">G</div><div class="heart empty">&#9825;</div><div class="player-name">Gavin Laroche</div><div class="prev-team">U13 A</div></div>
+          </div>
+          <div class="hero-card">
+            <div class="hero-title">U15 A Tryout</div>
+            <div class="hero-subtitle">Round 2 of 4 &middot; Updated 5h ago</div>
+            <div class="hero-stats">
+              <div class="stat-pill"><div class="stat-dot green"></div> 38</div>
+              <div class="stat-pill"><div class="stat-dot red"></div> 5</div>
+              <div class="stat-pill"><div class="stat-dot orange"></div> 1</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Dashboard</div>
+  </div>
+
+  <!-- Teams -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-c">
+        <div class="app-header">
+          <div class="header-division">U15 <span>NW</span></div>
+          <div class="header-right"><div class="header-avatar">JD</div></div>
+        </div>
+        <div class="content-area">
+          <div class="view-toggle">
+            <div class="toggle-btn">Previous Teams</div>
+            <div class="toggle-btn active">Predictions</div>
+          </div>
+          <div class="filter-bar">
+            <div class="filter-chip active">All</div>
+            <div class="filter-chip">F</div>
+            <div class="filter-chip">D</div>
+            <div class="filter-chip">G</div>
+          </div>
+          <div class="team-card">
+            <div class="team-header"><div class="team-name">U15 AA</div><div class="team-count">17 players</div></div>
+            <div class="team-players">
+              <div class="player-row"><div class="jersey">17</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Carter Williams</div></div>
+              <div class="player-row"><div class="jersey">91</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Hudson McAllister</div></div>
+              <div class="player-row"><div class="jersey">22</div><div class="pos-badge">F</div><div class="heart empty">&#9825;</div><div class="player-name">Mason Tremblay</div></div>
+              <div class="player-row"><div class="jersey">44</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Logan Bennett</div></div>
+              <div class="player-row"><div class="jersey">5</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Wyatt Belanger</div></div>
+              <div class="player-row"><div class="jersey">33</div><div class="pos-badge">G</div><div class="heart empty">&#9825;</div><div class="player-name">Gavin Laroche</div></div>
+            </div>
+          </div>
+          <div class="team-card">
+            <div class="team-header"><div class="team-name">U15 A</div><div class="team-count">17 players</div></div>
+            <div class="team-players">
+              <div class="player-row"><div class="jersey">14</div><div class="pos-badge">F</div><div class="heart empty">&#9825;</div><div class="player-name">Ethan Fournier</div></div>
+              <div class="player-row"><div class="jersey">77</div><div class="pos-badge">F</div><div class="heart empty">&#9825;</div><div class="player-name">Owen Pelletier</div></div>
+              <div class="player-row"><div class="jersey">8</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Nolan Thibodeau</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item active"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Teams &mdash; Predictions</div>
+  </div>
+
+  <!-- Sessions -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-c">
+        <div class="app-header">
+          <div class="header-division">U15 <span>NW</span></div>
+          <div class="header-right"><div class="header-avatar">JD</div></div>
+        </div>
+        <div class="content-area">
+          <div class="page-section-title">Active</div>
+          <div class="session-card active">
+            <div class="session-title">U15 AA — Round 3</div>
+            <div class="session-meta">Apr 22, 2026 &middot; 6:00 PM &middot; Minto Arena</div>
+            <div class="session-stats">
+              <div class="session-stat"><strong>42</strong> continuing</div>
+              <div class="session-stat"><strong>8</strong> cut</div>
+              <div class="session-stat"><strong>3</strong> missing</div>
+            </div>
+          </div>
+          <div class="page-section-title">Upcoming</div>
+          <div class="session-card upcoming">
+            <div class="session-title">U15 AA — Round 4</div>
+            <div class="session-meta">Apr 25, 2026 &middot; 7:00 PM &middot; Bell Sensplex</div>
+          </div>
+          <div class="session-card upcoming">
+            <div class="session-title">U15 A — Round 3</div>
+            <div class="session-meta">Apr 26, 2026 &middot; 5:30 PM &middot; Minto Arena</div>
+          </div>
+          <div class="page-section-title">Completed</div>
+          <div class="session-card past">
+            <div class="session-title">U15 AA — Round 2</div>
+            <div class="session-meta">Apr 19, 2026 &middot; 6:00 PM</div>
+            <div class="session-stats">
+              <div class="session-stat"><strong>50</strong> continued</div>
+              <div class="session-stat"><strong>12</strong> cut</div>
+            </div>
+          </div>
+          <div class="session-card past">
+            <div class="session-title">U15 AA — Round 1</div>
+            <div class="session-meta">Apr 15, 2026 &middot; 6:00 PM</div>
+            <div class="session-stats">
+              <div class="session-stat"><strong>62</strong> continued</div>
+              <div class="session-stat"><strong>0</strong> cut</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item active"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Sessions</div>
+  </div>
+
+  <!-- Settings -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-c">
+        <div class="app-header">
+          <div class="header-division">Settings</div>
+          <div class="header-right"><div class="header-avatar">JD</div></div>
+        </div>
+        <div class="content-area">
+          <div class="user-card">
+            <div class="user-avatar">JD</div>
+            <div>
+              <div class="user-name">Jane Donovan</div>
+              <div class="user-email">jane.donovan@gmail.com</div>
+              <div class="user-email" style="margin-top:2px; color:var(--gold); font-weight:600;">Nepean Wildcats</div>
+            </div>
+          </div>
+          <div class="settings-section-label">Admin</div>
+          <div class="settings-card">
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon gold">&#9998;</div><div class="settings-label">Corrections <span class="settings-badge">3</span></div></div><div class="settings-chevron">&#8250;</div></div>
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon gold">+</div><div class="settings-label">Add Player</div></div><div class="settings-chevron">&#8250;</div></div>
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon gold">&#8645;</div><div class="settings-label">Scraper Config</div></div><div class="settings-chevron">&#8250;</div></div>
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon gold">&#8593;</div><div class="settings-label">CSV Import</div></div><div class="settings-chevron">&#8250;</div></div>
+          </div>
+          <div class="settings-section-label">General</div>
+          <div class="settings-card">
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon green">?</div><div class="settings-label">Help</div></div><div class="settings-chevron">&#8250;</div></div>
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon red">&#10140;</div><div class="settings-label">Log Out</div></div><div class="settings-chevron">&#8250;</div></div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Settings</div>
+  </div>
+</div>
+
+<!-- ════════ THEME N — New (Gold Scale) ════════ -->
+<div id="section-n" class="theme-section mockup-grid">
+  <div class="section-title" style="width:100%">New — Full Gold Scale</div>
+
+  <!-- Dashboard -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-n">
+        <div class="app-header">
+          <div class="header-division">U15 <span>NW</span></div>
+          <div class="header-right">
+            <svg class="header-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2H10c0 1.1.9 2 2 2zm6-6V11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+            <div class="header-avatar">JD</div>
+          </div>
+        </div>
+        <div class="content-area">
+          <div class="hero-card">
+            <div class="hero-title">U15 AA Tryout</div>
+            <div class="hero-subtitle">Round 3 of 4 &middot; Updated 2h ago</div>
+            <div class="hero-stats">
+              <div class="stat-pill"><div class="stat-dot green"></div> 42</div>
+              <div class="stat-pill"><div class="stat-dot red"></div> 8</div>
+              <div class="stat-pill"><div class="stat-dot orange"></div> 3</div>
+            </div>
+            <div class="filter-bar">
+              <div class="filter-chip active">All <small style="opacity:.5;font-size:9px">50</small></div>
+              <div class="filter-chip active-dark">F <small style="opacity:.5;font-size:9px">950</small></div>
+              <div class="filter-chip">D</div>
+              <div class="filter-chip">G</div>
+            </div>
+            <div class="player-row"><div class="jersey">17</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Carter Williams</div><div class="prev-team">U13 AA</div></div>
+            <div class="player-row"><div class="jersey">44</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Logan Bennett</div><div class="prev-team">U13 A</div></div>
+            <div class="player-row"><div class="jersey">91</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Hudson McAllister</div><div class="prev-team">U13 AA</div></div>
+            <div class="player-row"><div class="jersey">8</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Nolan Thibodeau</div><div class="prev-team">U13 BB</div></div>
+            <div class="player-row"><div class="jersey">33</div><div class="pos-badge">G</div><div class="heart empty">&#9825;</div><div class="player-name">Gavin Laroche</div><div class="prev-team">U13 A</div></div>
+          </div>
+          <div class="hero-card">
+            <div class="hero-title">U15 A Tryout</div>
+            <div class="hero-subtitle">Round 2 of 4 &middot; Updated 5h ago</div>
+            <div class="hero-stats">
+              <div class="stat-pill"><div class="stat-dot green"></div> 38</div>
+              <div class="stat-pill"><div class="stat-dot red"></div> 5</div>
+              <div class="stat-pill"><div class="stat-dot orange"></div> 1</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Dashboard</div>
+  </div>
+
+  <!-- Teams -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-n">
+        <div class="app-header">
+          <div class="header-division">U15 <span>NW</span></div>
+          <div class="header-right"><div class="header-avatar">JD</div></div>
+        </div>
+        <div class="content-area">
+          <div class="view-toggle">
+            <div class="toggle-btn">Previous Teams</div>
+            <div class="toggle-btn active">Predictions</div>
+          </div>
+          <div class="filter-bar">
+            <div class="filter-chip active">All</div>
+            <div class="filter-chip">F</div>
+            <div class="filter-chip">D</div>
+            <div class="filter-chip">G</div>
+          </div>
+          <div class="team-card">
+            <div class="team-header"><div class="team-name">U15 AA</div><div class="team-count">17 players</div></div>
+            <div class="team-players">
+              <div class="player-row"><div class="jersey">17</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Carter Williams</div></div>
+              <div class="player-row"><div class="jersey">91</div><div class="pos-badge">F</div><div class="heart">&#9829;</div><div class="player-name">Hudson McAllister</div></div>
+              <div class="player-row"><div class="jersey">22</div><div class="pos-badge">F</div><div class="heart empty">&#9825;</div><div class="player-name">Mason Tremblay</div></div>
+              <div class="player-row"><div class="jersey">44</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Logan Bennett</div></div>
+              <div class="player-row"><div class="jersey">5</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Wyatt Belanger</div></div>
+              <div class="player-row"><div class="jersey">33</div><div class="pos-badge">G</div><div class="heart empty">&#9825;</div><div class="player-name">Gavin Laroche</div></div>
+            </div>
+          </div>
+          <div class="team-card">
+            <div class="team-header"><div class="team-name">U15 A</div><div class="team-count">17 players</div></div>
+            <div class="team-players">
+              <div class="player-row"><div class="jersey">14</div><div class="pos-badge">F</div><div class="heart empty">&#9825;</div><div class="player-name">Ethan Fournier</div></div>
+              <div class="player-row"><div class="jersey">77</div><div class="pos-badge">F</div><div class="heart empty">&#9825;</div><div class="player-name">Owen Pelletier</div></div>
+              <div class="player-row"><div class="jersey">8</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Nolan Thibodeau</div></div>
+              <div class="player-row"><div class="jersey">3</div><div class="pos-badge">D</div><div class="heart empty">&#9825;</div><div class="player-name">Jack Morissette</div></div>
+              <div class="player-row"><div class="jersey">30</div><div class="pos-badge">G</div><div class="heart empty">&#9825;</div><div class="player-name">Felix Dupuis</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item active"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Teams &mdash; Predictions</div>
+  </div>
+
+  <!-- Sessions -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-n">
+        <div class="app-header">
+          <div class="header-division">U15 <span>NW</span></div>
+          <div class="header-right"><div class="header-avatar">JD</div></div>
+        </div>
+        <div class="content-area">
+          <div class="page-section-title">Active</div>
+          <div class="session-card active">
+            <div class="session-title">U15 AA — Round 3</div>
+            <div class="session-meta">Apr 22, 2026 &middot; 6:00 PM &middot; Minto Arena</div>
+            <div class="session-stats">
+              <div class="session-stat"><strong>42</strong> continuing</div>
+              <div class="session-stat"><strong>8</strong> cut</div>
+              <div class="session-stat"><strong>3</strong> missing</div>
+            </div>
+          </div>
+          <div class="page-section-title">Upcoming</div>
+          <div class="session-card upcoming">
+            <div class="session-title">U15 AA — Round 4</div>
+            <div class="session-meta">Apr 25, 2026 &middot; 7:00 PM &middot; Bell Sensplex</div>
+          </div>
+          <div class="session-card upcoming">
+            <div class="session-title">U15 A — Round 3</div>
+            <div class="session-meta">Apr 26, 2026 &middot; 5:30 PM &middot; Minto Arena</div>
+          </div>
+          <div class="page-section-title">Completed</div>
+          <div class="session-card past">
+            <div class="session-title">U15 AA — Round 2</div>
+            <div class="session-meta">Apr 19, 2026 &middot; 6:00 PM</div>
+            <div class="session-stats">
+              <div class="session-stat"><strong>50</strong> continued</div>
+              <div class="session-stat"><strong>12</strong> cut</div>
+            </div>
+          </div>
+          <div class="session-card past">
+            <div class="session-title">U15 AA — Round 1</div>
+            <div class="session-meta">Apr 15, 2026 &middot; 6:00 PM</div>
+            <div class="session-stats">
+              <div class="session-stat"><strong>62</strong> continued</div>
+              <div class="session-stat"><strong>0</strong> cut</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item active"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Sessions</div>
+  </div>
+
+  <!-- Settings -->
+  <div class="phone-wrapper">
+    <div class="phone-frame">
+      <div class="phone-screen screen-bg theme-n">
+        <div class="app-header">
+          <div class="header-division">Settings</div>
+          <div class="header-right"><div class="header-avatar">JD</div></div>
+        </div>
+        <div class="content-area">
+          <div class="user-card">
+            <div class="user-avatar">JD</div>
+            <div>
+              <div class="user-name">Jane Donovan</div>
+              <div class="user-email">jane.donovan@gmail.com</div>
+              <div class="user-email" style="margin-top:2px; color:var(--gold); font-weight:600;">Nepean Wildcats</div>
+            </div>
+          </div>
+          <div class="settings-section-label">Admin</div>
+          <div class="settings-card">
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon gold">&#9998;</div><div class="settings-label">Corrections <span class="settings-badge">3</span></div></div><div class="settings-chevron">&#8250;</div></div>
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon gold">+</div><div class="settings-label">Add Player</div></div><div class="settings-chevron">&#8250;</div></div>
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon gold">&#8645;</div><div class="settings-label">Scraper Config</div></div><div class="settings-chevron">&#8250;</div></div>
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon gold">&#8593;</div><div class="settings-label">CSV Import</div></div><div class="settings-chevron">&#8250;</div></div>
+          </div>
+          <div class="settings-section-label">General</div>
+          <div class="settings-card">
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon green">?</div><div class="settings-label">Help</div></div><div class="settings-chevron">&#8250;</div></div>
+            <div class="settings-row"><div class="settings-row-left"><div class="settings-icon red">&#10140;</div><div class="settings-label">Log Out</div></div><div class="settings-chevron">&#8250;</div></div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item"><div class="nav-icon">&#8962;</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">?</div>Help</div>
+          <div class="nav-item"><div class="nav-icon">&#9782;</div>Teams</div>
+          <div class="nav-item"><div class="nav-icon">&#9776;</div>Sessions</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Settings</div>
+  </div>
+</div>
+
+<script>
+function showTheme(id) {
+  // Update tabs
+  document.querySelectorAll('.theme-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  // Hide all
+  document.querySelectorAll('.theme-section').forEach(s => s.classList.remove('visible'));
+
+  if (id === 'all') {
+    document.querySelectorAll('.theme-section').forEach(s => s.classList.add('visible'));
+  } else {
+    document.getElementById('section-' + id).classList.add('visible');
+  }
+}
+</script>
+
+</body>
+</html>

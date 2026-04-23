@@ -14,10 +14,11 @@ Last updated: 2026-04-23
 | 18 | Scraper manual fallback & final team size validation — paste jersey numbers when scraper finds 0, team size warnings | FR-039 | Specced ([018](018-scraper-fallback-team-validation.md)) |
 | 19 | Retest long-press drag — separate branch, review [DRAG-UX-RESEARCH.md](../prd/DRAG-UX-RESEARCH.md) | FR-039 | Skipped ([019](019-skipped-retest-long-press.md)) |
 | 20 | Test sandbox association — clone NGHA U15 data into hidden test association for safe feature testing | — | Done |
-| 21 | Fix Dashboard Favourite Logic | — | Not started |
-| 22 | UI/UX drag additions — separate branch, review [DRAG-UX-RESEARCH.md](../prd/DRAG-UX-RESEARCH.md) | FR-039 | Not started |
-| 23 | Player row swipe to edit/add note + row readability improvements — separate branch, review [DRAG-UX-RESEARCH.md](../prd/DRAG-UX-RESEARCH.md). **Also includes:** (1) Enlarge drag handle — icon `GripVertical size={14}` → `size={20}` in `player-row.tsx:112`, touch target `.player-drag-handle` from `w-10` (40px) → `width: 2.75rem` (44px, Apple HIG minimum) in `globals.css:412`; (2) Increase player row font size (currently inherits base/`text-sm`); (3) Reduce left margin/padding on `.player-row` (currently `px-5` in `globals.css:396`). Drag handle values from branch `feature/long-press-retest` — tested well on mobile. | FR-039 | Not started |
-| 24 | Onboarding — division selector darker font + sessions yellow | — | Not started |
+| 21 | Light mode (gold scale theme) | — | Specced ([021](021-light-mode.md)) |
+| 22 | Fix Dashboard Favourite Logic | — | Not started |
+| 23 | UI/UX drag additions — separate branch, review [DRAG-UX-RESEARCH.md](../prd/DRAG-UX-RESEARCH.md) | FR-039 | Not started |
+| 24 | Player row swipe to edit/add note + row readability improvements — separate branch, review [DRAG-UX-RESEARCH.md](../prd/DRAG-UX-RESEARCH.md). **Also includes:** (1) Enlarge drag handle — icon `GripVertical size={14}` → `size={20}` in `player-row.tsx:112`, touch target `.player-drag-handle` from `w-10` (40px) → `width: 2.75rem` (44px, Apple HIG minimum) in `globals.css:412`; (2) Increase player row font size (currently inherits base/`text-sm`); (3) Reduce left margin/padding on `.player-row` (currently `px-5` in `globals.css:396`). Drag handle values from branch `feature/long-press-retest` — tested well on mobile. | FR-039 | Not started |
+| 25 | Onboarding — division selector darker font + sessions yellow | — | Not started |
 | 101 | Rework Help Page — expand content, mockups, deeper feature guidance | — | Not started |
 | 102 | Bulk status updates | FR-022 | Not started |
 | 103 | Extended corrections (status, position, team changes) | FR-025–027 | Partial (name/jersey via 006) |
