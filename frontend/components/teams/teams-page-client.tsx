@@ -1,13 +1,12 @@
 "use client"
 
-import { useState, useCallback, useRef, useMemo } from "react"
+import { useState, useCallback, useRef } from "react"
 import { Plus } from "lucide-react"
 import type { TryoutPlayer, Team } from "@/types"
 import { ViewToggle } from "./view-toggle"
 import { PositionFilter } from "./position-filter"
 import { PredictionBoard } from "./prediction-board"
 import { PreviousTeamsView } from "./previous-teams-view"
-import { SwipeContext } from "./player-row"
 import { LongPressMenu } from "./long-press-menu"
 import { AddPlayerSheet } from "./add-player-sheet"
 import {
@@ -54,8 +53,6 @@ export function TeamsPageClient({
   const [currentPreviousOrders, setCurrentPreviousOrders] = useState(savedPreviousOrders)
   const [isResetting, setIsResetting] = useState(false)
   const [annotations, setAnnotations] = useState<Annotations>(initialAnnotations)
-  const [swipeOpenRowId, setSwipeOpenRowId] = useState<string | null>(null)
-  const swipeCtx = useMemo(() => ({ openRowId: swipeOpenRowId, setOpenRowId: setSwipeOpenRowId }), [swipeOpenRowId])
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   const savePreviousTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
@@ -193,7 +190,7 @@ export function TeamsPageClient({
     : dragHint
 
   return (
-    <SwipeContext.Provider value={swipeCtx}>
+    <>
       <ViewToggle activeView={activeView} onViewChange={setActiveView} />
       <PositionFilter
         activePosition={activePosition}
@@ -263,6 +260,6 @@ export function TeamsPageClient({
           onDelete={() => handleDelete(selectedPlayer.id)}
         />
       )}
-    </SwipeContext.Provider>
+    </>
   )
 }

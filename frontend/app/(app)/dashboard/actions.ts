@@ -40,6 +40,7 @@ export type FavoriteStatus = {
   division: string
   originalName: string | null
   previousTeam: string | null
+  roundType: "round1" | "regular" | "final" | null
 }
 
 export async function getDashboardData(
@@ -263,8 +264,7 @@ export async function getDashboardData(
   })
 
   // --- Build favorite statuses ---
-  const favoriteStatuses: FavoriteStatus[] = []
-
+  const favByJersey = new Map<string, FavPlayerInput>()
   for (const fav of favData ?? []) {
     const player = fav.tryout_players as unknown as {
       id: string
@@ -274,73 +274,74 @@ export async function getDashboardData(
       division: string
       status: string
       team_id: string | null
-      association_id: string
-      deleted_at: string | null
       previous_team: string | null
     }
-
     const displayName = fav.custom_name || player.name
     const originalName = fav.custom_name && fav.custom_name !== player.name
       ? player.name
       : null
-
-    // Check made_team first
-    if (player.status === "made_team") {
-      const team = player.team_id ? teamsMap.get(player.team_id) : null
-      favoriteStatuses.push({
-        playerId: player.id,
-        playerName: displayName,
-        jerseyNumber: player.jersey_number,
-        position: player.position ?? "?",
-        statusText: team ? `Made ${team.name}` : "Made Team",
-        statusType: "made_team",
-        division: player.division,
-        originalName,
-        previousTeam: player.previous_team,
-      })
-      continue
-    }
-
-    // Derive status from rounds
-    const playerStatus = derivePlayerStatus(
-      player.jersey_number,
-      allRounds,
-      player.status
-    )
-
-    favoriteStatuses.push({
-      playerId: player.id,
-      playerName: displayName,
+    favByJersey.set(player.jersey_number, {
+      id: player.id,
       jerseyNumber: player.jersey_number,
       position: player.position ?? "?",
-      statusText: playerStatus.statusText,
-      statusType: playerStatus.statusType,
       division: player.division,
-      originalName,
+      dbStatus: player.status,
+      teamId: player.team_id,
       previousTeam: player.previous_team,
+      displayName,
+      originalName,
     })
   }
 
-  // Sort: missing first, then by level rank, then jersey number
-  favoriteStatuses.sort((a, b) => {
-    const aMissing = a.statusType === "missing" ? 0 : 1
-    const bMissing = b.statusType === "missing" ? 0 : 1
-    if (aMissing !== bMissing) return aMissing - bMissing
-
-    const jA = parseInt(a.jerseyNumber ?? "999", 10)
-    const jB = parseInt(b.jerseyNumber ?? "999", 10)
-    return jA - jB
-  })
+  const favoriteStatuses = deriveFavouriteStatuses(
+    allRounds, favJerseyNumbers, favByJersey, teamsMap
+  )
 
   return { heroCards, favoriteStatuses }
 }
 
-function derivePlayerStatus(
-  jerseyNumber: string,
-  allRounds: { team_level: string, round_number: number, jersey_numbers: string[], created_at: string }[],
-  playerDbStatus: string
-): { statusText: string, statusType: "continuing" | "cut" | "missing" | "registered" } {
-  // Group rounds by level
+type FavPlayerInput = {
+  id: string
+  jerseyNumber: string
+  position: string
+  division: string
+  dbStatus: string
+  teamId: string | null
+  previousTeam: string | null
+  displayName: string
+  originalName: string | null
+}
+
+function deriveFavouriteStatuses(
+  allRounds: { team_level: string; round_number: number; jersey_numbers: string[]; is_final_team: boolean; created_at: string }[],
+  favouriteJerseyNumbers: Set<string>,
+  favouritesByJersey: Map<string, FavPlayerInput>,
+  teamsMap: Map<string, { id: string; name: string }>
+): FavoriteStatus[] {
+  const result: FavoriteStatus[] = []
+  const handledJerseys = new Set<string>()
+
+  // 1. Handle made_team DB overrides first
+  for (const [jersey, player] of favouritesByJersey) {
+    if (player.dbStatus === "made_team") {
+      const team = player.teamId ? teamsMap.get(player.teamId) : null
+      result.push({
+        playerId: player.id,
+        playerName: player.displayName,
+        jerseyNumber: player.jerseyNumber,
+        position: player.position,
+        statusText: team ? `Made ${team.name}` : "Made Team",
+        statusType: "made_team",
+        division: player.division,
+        originalName: player.originalName,
+        previousTeam: player.previousTeam,
+        roundType: "final",
+      })
+      handledJerseys.add(jersey)
+    }
+  }
+
+  // 2. Group rounds by level
   const roundsByLevel = new Map<string, typeof allRounds>()
   for (const r of allRounds) {
     const existing = roundsByLevel.get(r.team_level) ?? []
@@ -348,94 +349,163 @@ function derivePlayerStatus(
     roundsByLevel.set(r.team_level, existing)
   }
 
-  // For each level (AA -> C), check if the player is in the latest round (continuing)
-  // or was in ANY earlier round but not the latest (cut)
-  let latestAppearance: { level: string, roundNumber: number, createdAt: string } | null = null
-  let wasCut = false
-  let cutLevel: string | null = null
-  let cutRoundNumber = 0
+  if (allRounds.length === 0) {
+    // No rounds — all remaining favourites are "registered"
+    for (const [jersey, player] of favouritesByJersey) {
+      if (handledJerseys.has(jersey)) continue
+      result.push({
+        playerId: player.id,
+        playerName: player.displayName,
+        jerseyNumber: player.jerseyNumber,
+        position: player.position,
+        statusText: "Registered",
+        statusType: "registered",
+        division: player.division,
+        originalName: player.originalName,
+        previousTeam: player.previousTeam,
+        roundType: null,
+      })
+    }
+    return sortByJersey(result)
+  }
 
-  for (const level of LEVEL_ORDER) {
+  // 3. Find active level(s)
+  const latestDateByLevel = new Map<string, string>()
+  for (const [level, rounds] of roundsByLevel) {
+    latestDateByLevel.set(level, rounds[0].created_at)
+  }
+
+  let primaryLevel = ""
+  let primaryDate = ""
+  for (const [level, date] of latestDateByLevel) {
+    if (date > primaryDate) {
+      primaryDate = date
+      primaryLevel = level
+    }
+  }
+
+  const activeLevels = [primaryLevel]
+
+  // B/C combo: both active if latest rounds are on the same day
+  if (primaryLevel === "B" || primaryLevel === "C") {
+    const otherLevel = primaryLevel === "B" ? "C" : "B"
+    const otherDate = latestDateByLevel.get(otherLevel)
+    if (otherDate) {
+      const primaryDay = primaryDate.slice(0, 10)
+      const otherDay = otherDate.slice(0, 10)
+      if (primaryDay === otherDay) {
+        activeLevels.push(otherLevel)
+      }
+    }
+  }
+
+  // 4. For each active level, categorize players by round type
+  for (const level of activeLevels) {
     const levelRounds = roundsByLevel.get(level)
     if (!levelRounds || levelRounds.length === 0) continue
 
-    // Rounds are sorted desc by round_number already
     const latest = levelRounds[0]
+    const previous = levelRounds.length > 1 ? levelRounds[1] : null
 
-    // Player is in the latest round at this level → continuing
-    if (latest.jersey_numbers.includes(jerseyNumber)) {
-      if (!latestAppearance || latest.created_at > latestAppearance.createdAt) {
-        wasCut = false
-        cutLevel = null
-        latestAppearance = {
-          level,
-          roundNumber: latest.round_number,
-          createdAt: latest.created_at,
+    let roundType: "round1" | "regular" | "final"
+    if (levelRounds.length === 1) {
+      roundType = "round1"
+    } else if (latest.is_final_team) {
+      roundType = "final"
+    } else {
+      roundType = "regular"
+    }
+
+    const pushIfFav = (
+      jn: string,
+      statusText: string,
+      statusType: FavoriteStatus["statusType"],
+      rt: typeof roundType
+    ) => {
+      if (!favouriteJerseyNumbers.has(jn) || handledJerseys.has(jn)) return
+      const player = favouritesByJersey.get(jn)
+      if (!player) return
+      result.push({
+        playerId: player.id,
+        playerName: player.displayName,
+        jerseyNumber: player.jerseyNumber,
+        position: player.position,
+        statusText,
+        statusType,
+        division: player.division,
+        originalName: player.originalName,
+        previousTeam: player.previousTeam,
+        roundType: rt,
+      })
+      handledJerseys.add(jn)
+    }
+
+    if (roundType === "round1") {
+      // Registered: on the Round 1 list
+      for (const jn of latest.jersey_numbers) {
+        pushIfFav(jn, "Registered", "registered", "round1")
+      }
+
+      // Missing: cut from the level above and not on Round 1 list
+      const round1Set = new Set<string>(latest.jersey_numbers)
+      const levelIdx = LEVEL_ORDER.indexOf(level)
+      if (levelIdx > 0) {
+        const levelAbove = LEVEL_ORDER[levelIdx - 1]
+        const aboveRounds = roundsByLevel.get(levelAbove)
+        if (aboveRounds && aboveRounds.length > 0) {
+          const latestAbove = aboveRounds[0]
+          const allAboveJerseys = new Set<string>()
+          for (const r of aboveRounds) {
+            for (const jn of r.jersey_numbers) allAboveJerseys.add(jn)
+          }
+          const stillAtAbove = new Set<string>(latestAbove.jersey_numbers)
+          for (const jn of allAboveJerseys) {
+            if (stillAtAbove.has(jn)) continue // still at above level
+            if (round1Set.has(jn)) continue // appeared at this level
+            pushIfFav(jn, `Not at ${level}`, "missing", "round1")
+          }
+        }
+      }
+    } else if (roundType === "regular") {
+      // Continuing: on latest round
+      const latestSet = new Set<string>(latest.jersey_numbers)
+      for (const jn of latest.jersey_numbers) {
+        pushIfFav(jn, `Continuing R${latest.round_number} (${level})`, "continuing", "regular")
+      }
+
+      // Cut: on previous but not on latest
+      if (previous) {
+        for (const jn of previous.jersey_numbers) {
+          if (latestSet.has(jn)) continue
+          pushIfFav(jn, `Cut R${latest.round_number} (${level})`, "cut", "regular")
         }
       }
     } else {
-      // Check if player was in ANY earlier round at this level → cut
-      for (let i = 1; i < levelRounds.length; i++) {
-        if (levelRounds[i].jersey_numbers.includes(jerseyNumber)) {
-          if (!latestAppearance || levelRounds[i].created_at > latestAppearance.createdAt) {
-            wasCut = true
-            cutLevel = level
-            // The round that cut them is the one after their last appearance
-            cutRoundNumber = levelRounds[i - 1].round_number
-            latestAppearance = {
-              level,
-              roundNumber: levelRounds[i].round_number,
-              createdAt: levelRounds[i].created_at,
-            }
-          }
-          break
+      // Final team
+      const finalSet = new Set<string>(latest.jersey_numbers)
+      for (const jn of latest.jersey_numbers) {
+        pushIfFav(jn, "Made Team", "made_team", "final")
+      }
+
+      // Final Cut: on previous but not on final
+      if (previous) {
+        for (const jn of previous.jersey_numbers) {
+          if (finalSet.has(jn)) continue
+          pushIfFav(jn, "Final Cut", "cut", "final")
         }
       }
     }
   }
 
-  if (!latestAppearance) {
-    // No rounds data for this player
-    const label = playerDbStatus === "trying_out" ? "Trying Out"
-      : playerDbStatus === "registered" ? "Registered"
-      : playerDbStatus.charAt(0).toUpperCase() + playerDbStatus.slice(1).replace(/_/g, " ")
-    // Only show "registered" if no rounds exist at all (tryouts haven't started).
-    // If rounds exist but player isn't in any, their level likely hasn't started yet — show as continuing.
-    const anyRoundsExist = allRounds.length > 0
-    return { statusText: label, statusType: anyRoundsExist ? "continuing" : "registered" }
-  }
+  return sortByJersey(result)
+}
 
-  if (wasCut && cutLevel) {
-    // Check if missing from next level
-    const levelIdx = LEVEL_ORDER.indexOf(cutLevel)
-    const nextLevel = levelIdx < LEVEL_ORDER.length - 1 ? LEVEL_ORDER[levelIdx + 1] : null
-
-    let statusText = `Cut R${cutRoundNumber} (${cutLevel})`
-    let statusType: "cut" | "missing" = "cut"
-
-    if (nextLevel) {
-      const nextLevelRounds = roundsByLevel.get(nextLevel)
-      // Only check for missing if next level has rounds WITH posted jersey numbers
-      const nextLevelHasNumbers = nextLevelRounds?.some((r) => r.jersey_numbers.length > 0)
-      if (nextLevelHasNumbers) {
-        const seenAtNextLevel = nextLevelRounds?.some((r) =>
-          r.jersey_numbers.includes(jerseyNumber)
-        )
-        if (!seenAtNextLevel) {
-          statusText += ` \u00b7 Not at ${nextLevel}`
-          statusType = "missing"
-        }
-      }
-    }
-
-    return { statusText, statusType }
-  }
-
-  // Continuing
-  return {
-    statusText: `Continuing R${latestAppearance.roundNumber} (${latestAppearance.level})`,
-    statusType: "continuing",
-  }
+function sortByJersey(statuses: FavoriteStatus[]): FavoriteStatus[] {
+  return statuses.sort((a, b) => {
+    const jA = parseInt(a.jerseyNumber ?? "999", 10)
+    const jB = parseInt(b.jerseyNumber ?? "999", 10)
+    return jA - jB
+  })
 }
 
 export type FavouritePagePlayer = FavoriteStatus & {
@@ -482,7 +552,10 @@ export async function getMyFavouritesPageData(
 
   const teamsMap = new Map((teamsData ?? []).map((t) => [t.id, t]))
 
-  const result: FavouritePagePlayer[] = []
+  // Build favourite lookup maps
+  const favJerseyNumbers = new Set<string>()
+  const favByJersey = new Map<string, FavPlayerInput>()
+  const annotationsByJersey = new Map<string, { notes: string | null; customName: string | null; playerRawName: string }>()
 
   for (const fav of favData ?? []) {
     const player = fav.tryout_players as unknown as {
@@ -493,50 +566,43 @@ export async function getMyFavouritesPageData(
       division: string
       status: string
       team_id: string | null
-      association_id: string
-      deleted_at: string | null
       previous_team: string | null
     }
-
     const displayName = fav.custom_name || player.name
     const originalName = fav.custom_name && fav.custom_name !== player.name
       ? player.name
       : null
-
-    let statusText: string
-    let statusType: FavoriteStatus["statusType"]
-
-    if (player.status === "made_team") {
-      const team = player.team_id ? teamsMap.get(player.team_id) : null
-      statusText = team ? `Made ${team.name}` : "Made Team"
-      statusType = "made_team"
-    } else {
-      const derived = derivePlayerStatus(player.jersey_number, allRounds, player.status)
-      statusText = derived.statusText
-      statusType = derived.statusType
-    }
-
-    result.push({
-      playerId: player.id,
-      playerName: displayName,
+    favJerseyNumbers.add(player.jersey_number)
+    favByJersey.set(player.jersey_number, {
+      id: player.id,
       jerseyNumber: player.jersey_number,
       position: player.position ?? "?",
-      statusText,
-      statusType,
       division: player.division,
-      originalName,
+      dbStatus: player.status,
+      teamId: player.team_id,
       previousTeam: player.previous_team,
+      displayName,
+      originalName,
+    })
+    annotationsByJersey.set(player.jersey_number, {
       notes: fav.notes ?? null,
       customName: fav.custom_name ?? null,
       playerRawName: player.name,
     })
   }
 
-  // Sort by jersey number within each status group
-  result.sort((a, b) => {
-    const jA = parseInt(a.jerseyNumber ?? "999", 10)
-    const jB = parseInt(b.jerseyNumber ?? "999", 10)
-    return jA - jB
+  const statuses = deriveFavouriteStatuses(
+    allRounds, favJerseyNumbers, favByJersey, teamsMap
+  )
+
+  const result: FavouritePagePlayer[] = statuses.map((s) => {
+    const ann = annotationsByJersey.get(s.jerseyNumber)
+    return {
+      ...s,
+      notes: ann?.notes ?? null,
+      customName: ann?.customName ?? null,
+      playerRawName: ann?.playerRawName ?? s.playerName,
+    }
   })
 
   return result

@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useCallback, useRef, useEffect, useContext, useMemo } from "react"
+import { useState, useCallback } from "react"
 import Link from "next/link"
-import { Heart, ChevronLeft } from "lucide-react"
+import { Heart, ChevronLeft, GripVertical, SquarePen } from "lucide-react"
 import { LongPressMenu } from "@/components/teams/long-press-menu"
-import { SwipeContext } from "@/components/teams/player-row"
 import { toggleFavorite } from "@/app/(app)/annotations/actions"
 import { saveCustomName, savePlayerNote } from "@/app/(app)/annotations/actions"
 import { submitCorrection } from "@/app/(app)/corrections/actions"
@@ -15,7 +14,7 @@ type MyFavouritesClientProps = {
   favourites: FavouritePagePlayer[]
 }
 
-const STATUS_ORDER = ["continuing", "cut", "missing", "made_team", "registered"]
+const STATUS_ORDER = ["continuing", "made_team", "cut", "missing", "registered"]
 
 const STATUS_LABELS: Record<string, string> = {
   continuing: "Continuing",
@@ -48,8 +47,16 @@ function buildStatusGroups(favs: FavouritePagePlayer[]): StatusGroup[] {
 }
 
 function getMissingLevel(statusText: string): string {
-  const match = statusText.match(/Not at (\w+)/)
+  const match = statusText.match(/(?:Missing|Not) at (\w+)/)
   return match ? match[1] : ""
+}
+
+function getStatusLabel(statusType: string, players: FavouritePagePlayer[]): string {
+  if (statusType === "cut") {
+    const isFinal = players.some((p) => p.roundType === "final")
+    return isFinal ? "Final Cut" : "Cut"
+  }
+  return STATUS_LABELS[statusType] ?? statusType
 }
 
 function buildTryoutPlayer(fav: FavouritePagePlayer): TryoutPlayer {
@@ -71,15 +78,10 @@ function buildTryoutPlayer(fav: FavouritePagePlayer): TryoutPlayer {
   } as unknown as TryoutPlayer
 }
 
-/* ── Swipeable Favourite Row ─────────────────────── */
+/* ── Favourite Row ────────────────────────────────── */
 
-const SWIPE_THRESHOLD = 50
-const DIRECTION_LOCK_RATIO = 1.5
-const DIRECTION_LOCK_MIN = 15
-
-function FavSwipeRow({
+function FavRow({
   fav,
-  rowIdx,
   isUnhearted,
   isCut,
   isMissing,
@@ -88,7 +90,6 @@ function FavSwipeRow({
   onEdit,
 }: {
   fav: FavouritePagePlayer
-  rowIdx: number
   isUnhearted: boolean
   isCut: boolean
   isMissing: boolean
@@ -96,130 +97,56 @@ function FavSwipeRow({
   onToggleHeart: (id: string) => void
   onEdit: (fav: FavouritePagePlayer) => void
 }) {
-  const { openRowId, setOpenRowId } = useContext(SwipeContext)
-  const isSwiped = openRowId === fav.playerId
-
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
-  const swipeOffsetRef = useRef(0)
-  const directionLockedRef = useRef<"horizontal" | "vertical" | null>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
-
-  // Reset inline transform when another row opens (isSwiped becomes false)
-  useEffect(() => {
-    if (!isSwiped && contentRef.current) {
-      contentRef.current.style.transition = "transform 200ms ease-out"
-      contentRef.current.style.transform = "translateX(0px)"
-    }
-  }, [isSwiped])
-
-  useEffect(() => {
-    if (!isSwiped) return
-    const handleScroll = () => setOpenRowId(null)
-    window.addEventListener("scroll", handleScroll, { passive: true, capture: true })
-    return () => window.removeEventListener("scroll", handleScroll, true)
-  }, [isSwiped, setOpenRowId])
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    const touch = e.touches[0]
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY }
-    swipeOffsetRef.current = isSwiped ? -80 : 0
-    directionLockedRef.current = null
-  }, [isSwiped])
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!touchStartRef.current) return
-    const touch = e.touches[0]
-    const dx = touch.clientX - touchStartRef.current.x
-    const dy = touch.clientY - touchStartRef.current.y
-    const absDx = Math.abs(dx)
-    const absDy = Math.abs(dy)
-
-    if (!directionLockedRef.current) {
-      if (absDx < DIRECTION_LOCK_MIN && absDy < DIRECTION_LOCK_MIN) return
-      directionLockedRef.current = absDx > absDy * DIRECTION_LOCK_RATIO ? "horizontal" : "vertical"
-    }
-
-    if (directionLockedRef.current !== "horizontal") return
-
-    e.preventDefault()
-    const offset = Math.min(0, Math.max(-80, swipeOffsetRef.current + dx))
-    if (contentRef.current) {
-      contentRef.current.style.transition = "none"
-      contentRef.current.style.transform = `translateX(${offset}px)`
-    }
-  }, [])
-
-  const handleTouchEnd = useCallback(() => {
-    if (!touchStartRef.current || !contentRef.current) {
-      touchStartRef.current = null
-      return
-    }
-
-    const currentTransform = contentRef.current.style.transform
-    const match = currentTransform.match(/translateX\((-?\d+(?:\.\d+)?)px\)/)
-    const currentOffset = match ? parseFloat(match[1]) : 0
-
-    contentRef.current.style.transition = "transform 200ms ease-out"
-
-    if (currentOffset < -SWIPE_THRESHOLD) {
-      contentRef.current.style.transform = "translateX(-80px)"
-      setOpenRowId(fav.playerId)
-    } else {
-      contentRef.current.style.transform = "translateX(0px)"
-      if (isSwiped) setOpenRowId(null)
-    }
-
-    touchStartRef.current = null
-    directionLockedRef.current = null
-  }, [isSwiped, fav.playerId, setOpenRowId])
-
-  const handleClick = useCallback(() => {
-    if (isSwiped) {
-      setOpenRowId(null)
-      return
-    }
-    onEdit(fav)
-  }, [isSwiped, onEdit, fav, setOpenRowId])
-
-  const handleEditAction = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    setOpenRowId(null)
-    onEdit(fav)
-  }, [onEdit, fav, setOpenRowId])
-
-  const rowClasses = [
-    "my-favourites-row",
-    isCut ? "my-favourites-row-cut" : "",
+  const rowClass = [
+    "continuation-player-row",
+    isCut ? "continuation-player-row-cut" : "",
     isMissing ? "my-favourites-row-missing" : "",
     isUnhearted ? "my-favourites-row-unhearted" : "",
-    rowIdx % 2 === 0 ? "my-favourites-row-even" : "my-favourites-row-odd",
   ].filter(Boolean).join(" ")
 
   return (
-    <div className="player-row-swipe-container">
-      <div
-        ref={contentRef}
-        className={`${rowClasses} player-row-swipe-content${isSwiped ? " swiped" : ""}`}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onClick={handleClick}
-        role="button"
-        tabIndex={0}
-        aria-label={`Edit player ${fav.playerName}`}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault()
-            onEdit(fav)
-          }
-        }}
-      >
-        <span className={isCut ? "player-jersey my-favourites-jersey-cut" : "player-jersey"}>
-          #{fav.jerseyNumber}
-        </span>
-        {fav.position !== "?" && (
-          <span className="player-position">{fav.position}</span>
+    <div
+      className={rowClass}
+      onClick={() => onEdit(fav)}
+      role="button"
+      tabIndex={0}
+      aria-label={`Edit player ${fav.playerName}`}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          onEdit(fav)
+        }
+      }}
+    >
+      <span className="player-drag-handle">
+        <GripVertical size={20} />
+      </span>
+      <span className={isCut ? "player-jersey continuation-jersey-cut" : "player-jersey"}>
+        #{fav.jerseyNumber}
+      </span>
+      {fav.position !== "?" && (
+        <span className="player-position">{fav.position}</span>
+      )}
+      <span className="player-name">
+        {fav.playerName}
+        {fav.originalName && (
+          <span className="custom-name-indicator">{fav.originalName}</span>
         )}
+      </span>
+      {missingLevel && (
+        <span className="my-favourites-missing-level">Not at {missingLevel}</span>
+      )}
+      <span className="continuation-row-right">
+        <span
+          className={fav.notes ? "note-btn note-btn-active" : "note-btn"}
+          title={fav.notes || undefined}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation()
+            onEdit(fav)
+          }}
+        >
+          <SquarePen size={14} />
+        </span>
         <button
           className={isUnhearted ? "favorite-btn" : "favorite-btn favorite-btn-active"}
           onClick={(e) => {
@@ -229,26 +156,10 @@ function FavSwipeRow({
         >
           <Heart size={14} fill={isUnhearted ? "none" : "currentColor"} />
         </button>
-        <span className="player-name">
-          {fav.playerName}
-          {fav.originalName && (
-            <span className="custom-name-indicator">{fav.originalName}</span>
-          )}
-        </span>
-        {missingLevel && (
-          <span className="my-favourites-missing-level">Not at {missingLevel}</span>
-        )}
         {fav.previousTeam && (
           <span className="player-prev-team">{fav.previousTeam}</span>
         )}
-      </div>
-      <button
-        className="player-row-swipe-action"
-        onClick={handleEditAction}
-        aria-label={`Edit ${fav.playerName}`}
-      >
-        Edit
-      </button>
+      </span>
     </div>
   )
 }
@@ -259,8 +170,6 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
   const [unhearted, setUnhearted] = useState<Set<string>>(new Set())
   const [selectedPlayer, setSelectedPlayer] = useState<FavouritePagePlayer | null>(null)
   const [localFavourites, setLocalFavourites] = useState(favourites)
-  const [swipeOpenRowId, setSwipeOpenRowId] = useState<string | null>(null)
-  const swipeCtx = useMemo(() => ({ openRowId: swipeOpenRowId, setOpenRowId: setSwipeOpenRowId }), [swipeOpenRowId])
 
   const statusGroups = buildStatusGroups(localFavourites)
   const totalCount = localFavourites.length
@@ -331,7 +240,6 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
   }
 
   return (
-    <SwipeContext.Provider value={swipeCtx}>
       <div className="my-favourites-page">
         <Link href="/dashboard" className="my-favourites-back-line">
           <ChevronLeft size={12} />
@@ -344,7 +252,7 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
             <div className="my-favourites-group">
               <div className={`my-favourites-group-header my-favourites-group-header-${group.statusType}`}>
                 {group.statusType === "missing" && "\u26A0 "}
-                {STATUS_LABELS[group.statusType]} ({group.players.length})
+                {getStatusLabel(group.statusType, group.players)} ({group.players.length})
               </div>
               {group.players.map((fav, rowIdx) => {
                 const isUnhearted = unhearted.has(fav.playerId)
@@ -353,10 +261,9 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
                 const missingLevel = isMissing ? getMissingLevel(fav.statusText) : ""
 
                 return (
-                  <FavSwipeRow
+                  <FavRow
                     key={fav.playerId}
                     fav={fav}
-                    rowIdx={rowIdx}
                     isUnhearted={isUnhearted}
                     isCut={isCut}
                     isMissing={isMissing}
@@ -390,6 +297,5 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
           />
         )}
       </div>
-    </SwipeContext.Provider>
   )
 }

@@ -459,44 +459,6 @@
   letter-spacing: 0.02em;
 }
 
-/* ── Swipe-to-Edit ──────────────────────────── */
-
-.player-row-swipe-container {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-}
-
-.player-row-swipe-content {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  transform: translateX(0);
-  transition: transform 200ms ease-out;
-}
-
-.player-row-swipe-content.swiped {
-  transform: translateX(-80px);
-}
-
-.player-row-swipe-action {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 80px;
-  z-index: 0;
-  background: var(--dm-gold);
-  color: oklch(0.15 0 0);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-  border: none;
-  padding: 0;
-}
 
 /* ── Suggested Player (pending approval) ──────── */
 
@@ -1648,7 +1610,7 @@ body:has(.admin-shell) {
 }
 
 .dashboard-fav-card-made_team {
-  border-left-color: var(--dm-gold);
+  border-left-color: var(--dm-official-green);
 }
 
 .dashboard-fav-card-registered {
@@ -1677,7 +1639,7 @@ body:has(.admin-shell) {
 }
 
 .dashboard-fav-count-made_team {
-  color: var(--dm-gold);
+  color: var(--dm-official-green);
 }
 
 .dashboard-fav-count-registered {
@@ -2238,6 +2200,7 @@ body:has(.admin-shell) {
 
 .my-favourites-group-header-cut {
   color: var(--dm-red);
+  padding-top: 24px;
 }
 
 .my-favourites-group-header-missing {
@@ -2245,7 +2208,8 @@ body:has(.admin-shell) {
 }
 
 .my-favourites-group-header-made_team {
-  color: var(--dm-gold);
+  color: var(--dm-official-green);
+  padding-top: 24px;
 }
 
 .my-favourites-group-header-registered {
