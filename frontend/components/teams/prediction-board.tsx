@@ -166,7 +166,7 @@ type PredictionBoardProps = {
   positionFilter?: string | null
   annotations?: Annotations
   onOrderChange?: (division: string, playerIds: string[]) => void
-  onPlayerLongPress?: (player: TryoutPlayer) => void
+  onPlayerEdit?: (player: TryoutPlayer) => void
   onToggleFavorite?: (playerId: string) => void
 }
 
@@ -178,7 +178,7 @@ export function PredictionBoard({
   positionFilter,
   annotations,
   onOrderChange,
-  onPlayerLongPress,
+  onPlayerEdit,
   onToggleFavorite,
 }: PredictionBoardProps) {
   const sorted = useMemo(() => sortTeams(teams), [teams])
@@ -411,7 +411,7 @@ export function PredictionBoard({
           isOfficial={section.isOfficial}
           index={i}
           annotations={annotations}
-          onPlayerLongPress={onPlayerLongPress}
+          onPlayerEdit={onPlayerEdit}
           onToggleFavorite={onToggleFavorite}
         />
       ))}

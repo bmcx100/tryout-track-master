@@ -281,3 +281,44 @@ in order before claiming the work is done:
 4. **Run every Playwright test above.** Open the browser, follow each test's steps exactly, and verify each expected result using browser snapshots. If a test fails, fix the code and re-run it.
 5. **Do not skip any test.** Every test in the Playwright Test Plan must pass before this spec is considered complete.
 6. **Revert all test mutations.** Check the Test Mutations Log and undo every data change made during testing. Confirm with the user that all test data has been cleaned up.
+
+## Implementation Notes (2026-04-24)
+
+Changes made beyond the original spec during implementation:
+
+### Row layout reordered
+Both `PlayerRow` (teams) and `ContinuationPlayerRow` (sessions) now use the same element order:
+**Handle / Jersey / Position / Name / (right-justified group: Edit icon / Heart / Prev team)**
+
+The right-justified group uses `.continuation-row-right` (`flex items-center gap-1.5 ml-auto`).
+
+### Edit icon replaces note icon
+- `FileText` replaced with `SquarePen` (edit details icon) from Lucide
+- Always visible on every row: faded when inactive (`.note-btn`, opacity 0.4), gold when player has a note (`.note-btn-active`)
+- Tapping opens the player detail sheet
+
+### IP badge moved
+IP badge moved from the right-justified group to inline after the player name (inside `.player-name` span), with `ml-2` spacing.
+
+### Row heights unified
+- Both `.player-row` (teams) and `.continuation-player-row` (sessions) set to `height: 44px`
+- Left padding: `0.25rem` (handles flush to left edge)
+- Gap: `gap-1`
+- Team header padding reduced from `py-2.5` to `py-1.5`
+
+### Optimistic annotation updates fixed
+`RoundSection` was reading stale annotation data from `useState`-initialized `orderedList`. Fixed by reading `annotations` prop directly at render time instead of from baked-in `PlayerEntry` objects.
+
+### Bottom nav optimistic feedback
+- `BottomNav` switched from `Link` to `<a>` with `router.push()` for optimistic tab highlighting
+- Tapped tab immediately highlights before page loads (`pendingHref` state)
+- Press animation: `scale(0.85)` on `:active` state
+
+### New priority item
+Added priority #26: "Sessions column sort header" with draft at `docs/specs/drafts/sessions-column-sort.md`.
+
+### Additional files modified (not in original spec)
+- `frontend/components/continuations/round-section.tsx` — annotation read fix
+- `frontend/components/layout/bottom-nav.tsx` — optimistic nav feedback
+- `docs/specs/PRIORITIES.md` — added #26
+- `docs/specs/drafts/sessions-column-sort.md` — new draft

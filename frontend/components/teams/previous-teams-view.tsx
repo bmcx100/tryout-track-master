@@ -119,7 +119,7 @@ function PreviousTeamSection({
   allPlayers,
   index,
   annotations,
-  onPlayerLongPress,
+  onPlayerEdit,
   onToggleFavorite,
   onBulkToggleFavorite,
 }: {
@@ -128,7 +128,7 @@ function PreviousTeamSection({
   allPlayers: TryoutPlayer[]
   index: number
   annotations?: Annotations
-  onPlayerLongPress?: (player: TryoutPlayer) => void
+  onPlayerEdit?: (player: TryoutPlayer) => void
   onToggleFavorite?: (playerId: string) => void
   onBulkToggleFavorite?: (playerIds: string[], setFavorite: boolean) => void
 }) {
@@ -188,7 +188,7 @@ function PreviousTeamSection({
                 isSuggested={!!player.suggested_by}
                 customName={ann?.customName}
                 noteText={ann?.notes}
-                onLongPress={onPlayerLongPress}
+                onEdit={onPlayerEdit}
                 onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(player.id) : undefined}
               />
             )
@@ -209,7 +209,7 @@ type PreviousTeamsViewProps = {
   positionFilter?: string | null
   annotations?: Annotations
   onOrderChange?: (previousTeam: string, playerIds: string[]) => void
-  onPlayerLongPress?: (player: TryoutPlayer) => void
+  onPlayerEdit?: (player: TryoutPlayer) => void
   onToggleFavorite?: (playerId: string) => void
   onBulkToggleFavorite?: (playerIds: string[], setFavorite: boolean) => void
 }
@@ -220,7 +220,7 @@ export function PreviousTeamsView({
   positionFilter,
   annotations,
   onOrderChange,
-  onPlayerLongPress,
+  onPlayerEdit,
   onToggleFavorite,
   onBulkToggleFavorite,
 }: PreviousTeamsViewProps) {
@@ -343,7 +343,7 @@ export function PreviousTeamsView({
           allPlayers={allPlayersByGroup[label] ?? groupPlayers}
           index={i}
           annotations={annotations}
-          onPlayerLongPress={onPlayerLongPress}
+          onPlayerEdit={onPlayerEdit}
           onToggleFavorite={onToggleFavorite}
           onBulkToggleFavorite={onBulkToggleFavorite}
         />

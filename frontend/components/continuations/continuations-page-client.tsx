@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import type { ContinuationRound, TryoutPlayer } from "@/types"
 import { RoundSection, getSessionInfo } from "./round-section"
@@ -8,6 +8,7 @@ import { SessionsToggle } from "./sessions-toggle"
 import { PositionFilter } from "@/components/teams/position-filter"
 import { LongPressMenu } from "@/components/teams/long-press-menu"
 import { PlayerPicker } from "./player-picker"
+import { SwipeContext } from "@/components/teams/player-row"
 import { AddPlayerSheet } from "./add-player-sheet"
 import {
   toggleFavorite,
@@ -58,6 +59,8 @@ export function ContinuationsPageClient({
   useEffect(() => { setCurrentOrders(initialSavedOrders ?? {}) }, [initialSavedOrders])
   const [selectedPlayer, setSelectedPlayer] = useState<TryoutPlayer | null>(null)
   const [linkingJerseyNumber, setLinkingJerseyNumber] = useState<string | null>(null)
+  const [swipeOpenRowId, setSwipeOpenRowId] = useState<string | null>(null)
+  const swipeCtx = useMemo(() => ({ openRowId: swipeOpenRowId, setOpenRowId: setSwipeOpenRowId }), [swipeOpenRowId])
   const [addingPlayer, setAddingPlayer] = useState<{ jerseyNumber: string } | null>(null)
 
   // Build jersey-number-to-player lookup (keyed by jersey_number)
@@ -253,6 +256,7 @@ export function ContinuationsPageClient({
   const ipCount = ipPlayers.length
 
   return (
+    <SwipeContext.Provider value={swipeCtx}>
     <div className="continuations-page">
       {/* Summary card with dropdown + badges */}
       <div className="sessions-summary-card">
@@ -324,7 +328,7 @@ export function ContinuationsPageClient({
         positionFilter={activePosition}
         savedOrder={currentOrders[activeRound.id]}
         onToggleFavorite={handleToggleFavorite}
-        onPlayerLongPress={setSelectedPlayer}
+        onPlayerEdit={setSelectedPlayer}
         onLinkUnknown={handleLinkUnknown}
         onOrderChange={handleOrderChange}
       />
@@ -369,5 +373,6 @@ export function ContinuationsPageClient({
         />
       )}
     </div>
+    </SwipeContext.Provider>
   )
 }

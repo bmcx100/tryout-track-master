@@ -40,7 +40,7 @@ type RoundSectionProps = {
   positionFilter?: string | null
   savedOrder?: string[]
   onToggleFavorite: (playerId: string) => void
-  onPlayerLongPress?: (player: TryoutPlayer) => void
+  onPlayerEdit?: (player: TryoutPlayer) => void
   onLinkUnknown?: (jerseyNumber: string) => void
   onOrderChange?: (jerseyNumbers: string[]) => void
 }
@@ -189,7 +189,7 @@ export function RoundSection({
   positionFilter,
   savedOrder,
   onToggleFavorite,
-  onPlayerLongPress,
+  onPlayerEdit,
   onLinkUnknown,
   onOrderChange,
 }: RoundSectionProps) {
@@ -312,26 +312,29 @@ export function RoundSection({
         {displayCuts.length === 0 ? (
           <p className="continuations-empty-cuts">No cuts yet</p>
         ) : (
-          displayCuts.map((p) => (
-            <ContinuationPlayerRow
-              key={p.jerseyNumber}
-              jerseyNumber={p.jerseyNumber}
-              player={p.player}
-              isFavorite={p.isFavorite}
-              noteText={p.noteText}
-              isInjured={false}
-              isCut={false}
-              customName={p.customName}
-              onToggleFavorite={() => {
-                if (p.player) onToggleFavorite(p.player.id)
-              }}
-              onLongPress={onPlayerLongPress}
-              onLinkUnknown={!p.player && onLinkUnknown
-                ? () => onLinkUnknown(p.jerseyNumber)
-                : undefined
-              }
-            />
-          ))
+          displayCuts.map((p) => {
+            const ann = p.player ? annotations[p.player.id] : undefined
+            return (
+              <ContinuationPlayerRow
+                key={p.jerseyNumber}
+                jerseyNumber={p.jerseyNumber}
+                player={p.player}
+                isFavorite={ann?.isFavorite ?? false}
+                noteText={ann?.notes ?? null}
+                isInjured={false}
+                isCut={false}
+                customName={ann?.customName ?? null}
+                onToggleFavorite={() => {
+                  if (p.player) onToggleFavorite(p.player.id)
+                }}
+                onEdit={onPlayerEdit}
+                onLinkUnknown={!p.player && onLinkUnknown
+                  ? () => onLinkUnknown(p.jerseyNumber)
+                  : undefined
+                }
+              />
+            )
+          })
         )}
       </div>
     )
@@ -348,27 +351,30 @@ export function RoundSection({
         items={displayPlayers.map((p) => p.jerseyNumber)}
         strategy={verticalListSortingStrategy}
       >
-        {displayPlayers.map((p) => (
-          <ContinuationPlayerRow
-            key={p.jerseyNumber}
-            jerseyNumber={p.jerseyNumber}
-            player={p.player}
-            isFavorite={p.isFavorite}
-            noteText={p.noteText}
-            isInjured={p.isInjured}
-            isCut={false}
-            customName={p.customName}
-            sortableId={p.jerseyNumber}
-            onToggleFavorite={() => {
-              if (p.player) onToggleFavorite(p.player.id)
-            }}
-            onLongPress={onPlayerLongPress}
-            onLinkUnknown={!p.player && onLinkUnknown
-              ? () => onLinkUnknown(p.jerseyNumber)
-              : undefined
-            }
-          />
-        ))}
+        {displayPlayers.map((p) => {
+          const ann = p.player ? annotations[p.player.id] : undefined
+          return (
+            <ContinuationPlayerRow
+              key={p.jerseyNumber}
+              jerseyNumber={p.jerseyNumber}
+              player={p.player}
+              isFavorite={ann?.isFavorite ?? false}
+              noteText={ann?.notes ?? null}
+              isInjured={p.isInjured}
+              isCut={false}
+              customName={ann?.customName ?? null}
+              sortableId={p.jerseyNumber}
+              onToggleFavorite={() => {
+                if (p.player) onToggleFavorite(p.player.id)
+              }}
+              onEdit={onPlayerEdit}
+              onLinkUnknown={!p.player && onLinkUnknown
+                ? () => onLinkUnknown(p.jerseyNumber)
+                : undefined
+              }
+            />
+          )
+        })}
       </SortableContext>
     )
   }

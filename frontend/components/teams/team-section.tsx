@@ -14,7 +14,7 @@ type TeamSectionProps = {
   isOfficial: boolean
   index: number
   annotations?: Annotations
-  onPlayerLongPress?: (player: TryoutPlayer) => void
+  onPlayerEdit?: (player: TryoutPlayer) => void
   onToggleFavorite?: (playerId: string) => void
 }
 
@@ -24,7 +24,7 @@ export function TeamSection({
   isOfficial,
   index,
   annotations,
-  onPlayerLongPress,
+  onPlayerEdit,
   onToggleFavorite,
 }: TeamSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true)
@@ -67,7 +67,7 @@ export function TeamSection({
                 isSuggested={!!player.suggested_by}
                 customName={ann?.customName}
                 noteText={ann?.notes}
-                onLongPress={onPlayerLongPress}
+                onEdit={onPlayerEdit}
                 onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(player.id) : undefined}
               />
             )

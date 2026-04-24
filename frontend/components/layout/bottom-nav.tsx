@@ -1,7 +1,7 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useCallback, useState, useEffect } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { Home, Users, ListChecks, HelpCircle } from "lucide-react"
 
 const tabs = [
@@ -13,20 +13,40 @@ const tabs = [
 
 export function BottomNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const [pendingHref, setPendingHref] = useState<string | null>(null)
+
+  const handleTap = useCallback((e: React.MouseEvent, href: string) => {
+    e.preventDefault()
+    if (pathname.startsWith(href)) return
+    setPendingHref(href)
+    router.push(href)
+  }, [pathname, router])
+
+  // Clear pending state once pathname catches up
+  const isNavigating = !!(pendingHref && !pathname.startsWith(pendingHref))
+  const activeHref = isNavigating ? pendingHref : null
+
+  useEffect(() => {
+    if (pendingHref && pathname.startsWith(pendingHref)) {
+      setPendingHref(null)
+    }
+  }, [pathname, pendingHref])
 
   return (
     <nav className="bottom-nav">
       {tabs.map((tab) => {
-        const isActive = pathname.startsWith(tab.href)
+        const isActive = (activeHref ? activeHref === tab.href : pathname.startsWith(tab.href))
         return (
-          <Link
+          <a
             key={tab.label}
             href={tab.href}
             className={isActive ? "bottom-nav-item-active" : "bottom-nav-item"}
+            onClick={(e) => handleTap(e, tab.href)}
           >
             <tab.icon className="bottom-nav-icon" />
             <span>{tab.label}</span>
-          </Link>
+          </a>
         )
       })}
     </nav>
