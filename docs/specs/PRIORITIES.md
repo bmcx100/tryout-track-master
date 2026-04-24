@@ -15,8 +15,8 @@ Last updated: 2026-04-24
 | 19 | Retest long-press drag — separate branch, review [DRAG-UX-RESEARCH.md](../prd/DRAG-UX-RESEARCH.md) | FR-039 | Skipped ([019](019-skipped-retest-long-press.md)) |
 | 20 | Test sandbox association — clone NGHA U15 data into hidden test association for safe feature testing | — | Done |
 | 21 | Player row swipe to edit/add note + row readability improvements — swipe-left reveals Edit button, 44x44pt drag handle flush to left edge, all row text to text-base | FR-039 | Done |
-| 23 | Player detail form redesign — Save/Cancel buttons, single-page layout, field grouping | FR-021 | Draft ([drafts/player-detail-form.md](drafts/player-detail-form.md)) |
-| 24 | Fix Favourite Logic — round-driven derivation | — | Specced ([023](023-fix-favourite-logic.md)) |
+| 23 | Fix Favourite Logic — round-driven derivation | — | Specced ([023](023-fix-favourite-logic.md)) |
+| 24 | Player detail form redesign — Save/Cancel buttons, single-page layout, field grouping | FR-021 | Draft ([drafts/player-detail-form.md](drafts/player-detail-form.md)) |
 | 25 | UI/UX drag additions — separate branch, review [DRAG-UX-RESEARCH.md](../prd/DRAG-UX-RESEARCH.md) | FR-039 | Not started |
 | 26 | Sessions column sort header — table-style header row, click to sort by any column, coexists with drag | FR-039 | Draft ([drafts/sessions-column-sort.md](drafts/sessions-column-sort.md)) |
 | 27 | Onboarding — division selector darker font + sessions yellow | — | Not started |
