@@ -220,9 +220,9 @@ export function ContinuationPlayerRow({
           {customName && player && customName !== player.name && (
             <span className="custom-name-indicator">{player.name}</span>
           )}
-          {isInjured && <span className="ip-badge">IP</span>}
-          {isNew && <span className="new-badge">NEW</span>}
         </span>
+        {isInjured && <span className="ip-badge">IP</span>}
+        {isNew && <span className="new-badge">NEW</span>}
         <span className="continuation-row-right">
           <span
             className={noteText ? "note-btn note-btn-active" : "note-btn"}
