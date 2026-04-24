@@ -39,6 +39,7 @@ type RoundSectionProps = {
   activeView: "continuing" | "cuts"
   positionFilter?: string | null
   savedOrder?: string[]
+  newPlayers?: string[]
   onToggleFavorite: (playerId: string) => void
   onPlayerEdit?: (player: TryoutPlayer) => void
   onLinkUnknown?: (jerseyNumber: string) => void
@@ -188,6 +189,7 @@ export function RoundSection({
   activeView,
   positionFilter,
   savedOrder,
+  newPlayers,
   onToggleFavorite,
   onPlayerEdit,
   onLinkUnknown,
@@ -200,6 +202,11 @@ export function RoundSection({
   const ipPlayers = useMemo(
     () => activeRound.ip_players ?? [],
     [activeRound.ip_players]
+  )
+
+  const newPlayersSet = useMemo(
+    () => new Set(newPlayers ?? []),
+    [newPlayers]
   )
 
   // Build the full round's ordered list (all jersey numbers)
@@ -302,41 +309,98 @@ export function RoundSection({
     })
   }, [onOrderChange])
 
+  // Mutable ordered state for cuts drag updates
+  const [cutOrderedList, setCutOrderedList] = useState<PlayerEntry[]>(cutPlayers)
+
+  const handleCutDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    setCutOrderedList((prev) => {
+      const activeEntry = prev.find((p) => p.jerseyNumber === active.id)
+      const overEntry = prev.find((p) => p.jerseyNumber === over.id)
+      if (!activeEntry || !overEntry) return prev
+
+      const activePos = getPositionRank(activeEntry.player)
+      const overPos = getPositionRank(overEntry.player)
+
+      if (activePos === overPos) {
+        const oldIndex = prev.findIndex((p) => p.jerseyNumber === active.id)
+        const newIndex = prev.findIndex((p) => p.jerseyNumber === over.id)
+        return enforcePositionGroups(arrayMove(prev, oldIndex, newIndex))
+      } else {
+        const groups: Record<number, PlayerEntry[]> = {}
+        for (const p of prev) {
+          const rank = getPositionRank(p.player)
+          if (!groups[rank]) groups[rank] = []
+          groups[rank].push(p)
+        }
+        const posGroup = [...(groups[activePos] ?? [])]
+        const idx = posGroup.findIndex((p) => p.jerseyNumber === activeEntry.jerseyNumber)
+        if (idx === -1) return prev
+        posGroup.splice(idx, 1)
+        if (overPos < activePos) {
+          posGroup.unshift(activeEntry)
+        } else {
+          posGroup.push(activeEntry)
+        }
+        groups[activePos] = posGroup
+        const result: PlayerEntry[] = []
+        for (const rank of [0, 1, 2, 3]) {
+          if (groups[rank]) result.push(...groups[rank])
+        }
+        return result
+      }
+    })
+  }, [])
+
   if (activeView === "cuts") {
     const displayCuts = positionFilter
-      ? cutPlayers.filter((p) => matchesPositionFilter(p, positionFilter))
-      : cutPlayers
+      ? cutOrderedList.filter((p) => matchesPositionFilter(p, positionFilter))
+      : cutOrderedList
 
     return (
-      <div className="continuations-cuts-list">
-        {displayCuts.length === 0 ? (
-          <p className="continuations-empty-cuts">No cuts yet</p>
-        ) : (
-          displayCuts.map((p) => {
-            const ann = p.player ? annotations[p.player.id] : undefined
-            return (
-              <ContinuationPlayerRow
-                key={p.jerseyNumber}
-                jerseyNumber={p.jerseyNumber}
-                player={p.player}
-                isFavorite={ann?.isFavorite ?? false}
-                noteText={ann?.notes ?? null}
-                isInjured={false}
-                isCut={false}
-                customName={ann?.customName ?? null}
-                onToggleFavorite={() => {
-                  if (p.player) onToggleFavorite(p.player.id)
-                }}
-                onEdit={onPlayerEdit}
-                onLinkUnknown={!p.player && onLinkUnknown
-                  ? () => onLinkUnknown(p.jerseyNumber)
-                  : undefined
-                }
-              />
-            )
-          })
-        )}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleCutDragEnd}
+      >
+        <div className="continuations-cuts-list">
+          {displayCuts.length === 0 ? (
+            <p className="continuations-empty-cuts">No cuts yet</p>
+          ) : (
+            <SortableContext
+              items={displayCuts.map((p) => p.jerseyNumber)}
+              strategy={verticalListSortingStrategy}
+            >
+              {displayCuts.map((p) => {
+                const ann = p.player ? annotations[p.player.id] : undefined
+                return (
+                  <ContinuationPlayerRow
+                    key={p.jerseyNumber}
+                    jerseyNumber={p.jerseyNumber}
+                    player={p.player}
+                    isFavorite={ann?.isFavorite ?? false}
+                    noteText={ann?.notes ?? null}
+                    isInjured={false}
+                    isCut={false}
+                    customName={ann?.customName ?? null}
+                    sortableId={p.jerseyNumber}
+                    onToggleFavorite={() => {
+                      if (p.player) onToggleFavorite(p.player.id)
+                    }}
+                    onEdit={onPlayerEdit}
+                    onLinkUnknown={!p.player && onLinkUnknown
+                      ? () => onLinkUnknown(p.jerseyNumber)
+                      : undefined
+                    }
+                  />
+                )
+              })}
+            </SortableContext>
+          )}
+        </div>
+      </DndContext>
     )
   }
 
@@ -361,6 +425,7 @@ export function RoundSection({
               isFavorite={ann?.isFavorite ?? false}
               noteText={ann?.notes ?? null}
               isInjured={p.isInjured}
+              isNew={newPlayersSet.has(p.jerseyNumber)}
               isCut={false}
               customName={ann?.customName ?? null}
               sortableId={p.jerseyNumber}

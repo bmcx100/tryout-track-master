@@ -327,6 +327,7 @@ export function ContinuationsPageClient({
         activeView={activeView}
         positionFilter={activePosition}
         savedOrder={currentOrders[activeRound.id]}
+        newPlayers={newPlayers}
         onToggleFavorite={handleToggleFavorite}
         onPlayerEdit={setSelectedPlayer}
         onLinkUnknown={handleLinkUnknown}

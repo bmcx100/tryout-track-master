@@ -2113,6 +2113,17 @@ body:has(.admin-shell) {
   letter-spacing: 0.04em;
 }
 
+.new-badge {
+  @apply flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold ml-2 inline-flex items-center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  vertical-align: middle;
+  line-height: 1;
+  background: oklch(0.55 0.15 145 / 20%);
+  color: oklch(0.75 0.15 145);
+  letter-spacing: 0.04em;
+}
+
 .notes-indicator {
   @apply ml-1 inline-flex;
   color: oklch(0.85 0 0);

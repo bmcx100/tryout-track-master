@@ -13,6 +13,7 @@ type ContinuationPlayerRowProps = {
   isFavorite: boolean
   noteText?: string | null
   isInjured: boolean
+  isNew?: boolean
   isCut: boolean
   customName?: string | null
   sortableId?: string
@@ -31,6 +32,7 @@ export function ContinuationPlayerRow({
   isFavorite,
   noteText,
   isInjured,
+  isNew,
   isCut,
   customName,
   sortableId,
@@ -219,6 +221,7 @@ export function ContinuationPlayerRow({
             <span className="custom-name-indicator">{player.name}</span>
           )}
           {isInjured && <span className="ip-badge">IP</span>}
+          {isNew && <span className="new-badge">NEW</span>}
         </span>
         <span className="continuation-row-right">
           <span
