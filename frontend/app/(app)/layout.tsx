@@ -5,6 +5,7 @@ import { getPendingCorrectionsCount } from "@/app/(app)/corrections/actions"
 import { DivisionSwitcher } from "@/components/layout/division-switcher"
 import { BottomNav } from "@/components/layout/bottom-nav"
 import { OnboardingManager } from "@/components/shared/onboarding-manager"
+import { NavLoadingProvider, NavLoadingContent } from "@/components/shared/nav-loading-provider"
 
 export default async function AppLayout({
   children,
@@ -33,21 +34,25 @@ export default async function AppLayout({
     : false
 
   return (
-    <div className="app-shell">
-      <div className="app-shell-content">
-        <DivisionSwitcher
-          divisions={divisions}
-          activeDivision={activeDivision}
-          associationId={associationId}
-          abbreviation={association.abbreviation}
-          initials={initials}
-          hasPendingCorrections={hasPendingCorrections}
-          associations={associations}
-        />
-        {children}
+    <NavLoadingProvider>
+      <div className="app-shell">
+        <div className="app-shell-content">
+          <DivisionSwitcher
+            divisions={divisions}
+            activeDivision={activeDivision}
+            associationId={associationId}
+            abbreviation={association.abbreviation}
+            initials={initials}
+            hasPendingCorrections={hasPendingCorrections}
+            associations={associations}
+          />
+          <NavLoadingContent>
+            {children}
+          </NavLoadingContent>
+        </div>
+        <BottomNav />
+        <OnboardingManager />
       </div>
-      <BottomNav />
-      <OnboardingManager />
-    </div>
+    </NavLoadingProvider>
   )
 }

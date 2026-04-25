@@ -1,8 +1,9 @@
 "use client"
 
-import { useCallback, useState, useEffect } from "react"
+import { useCallback, useTransition, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { Home, Users, ListChecks, HelpCircle } from "lucide-react"
+import { useNavLoading } from "@/components/shared/nav-loading-provider"
 
 const tabs = [
   { href: "/dashboard", label: "Home", icon: Home },
@@ -14,29 +15,32 @@ const tabs = [
 export function BottomNav() {
   const pathname = usePathname()
   const router = useRouter()
-  const [pendingHref, setPendingHref] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+  const { targetHref, startNavigation, endNavigation } = useNavLoading()
 
   const handleTap = useCallback((e: React.MouseEvent, href: string) => {
     e.preventDefault()
     if (pathname.startsWith(href)) return
-    setPendingHref(href)
-    router.push(href)
-  }, [pathname, router])
+    startNavigation(href)
+    startTransition(() => {
+      router.push(href)
+    })
+  }, [pathname, router, startNavigation, startTransition])
 
-  // Clear pending state once pathname catches up
-  const isNavigating = !!(pendingHref && !pathname.startsWith(pendingHref))
-  const activeHref = isNavigating ? pendingHref : null
-
+  // End navigation when transition completes
   useEffect(() => {
-    if (pendingHref && pathname.startsWith(pendingHref)) {
-      setPendingHref(null)
+    if (!isPending && targetHref) {
+      endNavigation()
     }
-  }, [pathname, pendingHref])
+  }, [isPending, targetHref, endNavigation])
+
+  // Determine active tab: use targetHref during navigation for optimistic highlight
+  const activeBase = targetHref ?? pathname
 
   return (
     <nav className="bottom-nav">
       {tabs.map((tab) => {
-        const isActive = (activeHref ? activeHref === tab.href : pathname.startsWith(tab.href))
+        const isActive = activeBase.startsWith(tab.href)
         return (
           <a
             key={tab.label}

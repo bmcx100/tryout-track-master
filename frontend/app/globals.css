@@ -4049,3 +4049,224 @@ button.division-badge.onboarding-highlight {
   @apply text-xs;
   color: var(--dm-dust);
 }
+
+/* ============================================================
+   Skeleton Loading — Navigation transition skeletons
+   ============================================================ */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.18 0 0) 0%,
+    oklch(0.24 0 0) 40%,
+    oklch(0.18 0 0) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-block {
+  @apply rounded-lg;
+  background: oklch(0.18 0 0);
+  background: linear-gradient(
+    90deg,
+    oklch(0.18 0 0) 0%,
+    oklch(0.24 0 0) 40%,
+    oklch(0.18 0 0) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-line {
+  @apply rounded;
+  height: 12px;
+  background: linear-gradient(
+    90deg,
+    oklch(0.18 0 0) 0%,
+    oklch(0.24 0 0) 40%,
+    oklch(0.18 0 0) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-line-short {
+  @apply rounded;
+  height: 12px;
+  width: 60%;
+  background: linear-gradient(
+    90deg,
+    oklch(0.18 0 0) 0%,
+    oklch(0.24 0 0) 40%,
+    oklch(0.18 0 0) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-circle {
+  @apply rounded-full;
+  background: linear-gradient(
+    90deg,
+    oklch(0.18 0 0) 0%,
+    oklch(0.24 0 0) 40%,
+    oklch(0.18 0 0) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-card {
+  @apply rounded-xl;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+}
+
+.skeleton-row {
+  @apply flex items-center gap-3;
+  height: 44px;
+  padding: 0 16px;
+}
+
+.skeleton-toggle {
+  @apply flex rounded-2xl;
+  height: 40px;
+  padding: 2px;
+  background: oklch(0.76 0.14 85 / 15%);
+  border: 1px solid oklch(0.76 0.14 85 / 10%);
+}
+
+.skeleton-toggle-pill {
+  @apply flex-1 rounded-2xl;
+  background: linear-gradient(
+    90deg,
+    oklch(0.20 0 0) 0%,
+    oklch(0.25 0 0) 40%,
+    oklch(0.20 0 0) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-chip {
+  @apply rounded-lg;
+  height: 28px;
+  width: 40px;
+  background: linear-gradient(
+    90deg,
+    oklch(0.18 0 0) 0%,
+    oklch(0.24 0 0) 40%,
+    oklch(0.18 0 0) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Page-specific skeleton containers */
+
+.skeleton-dashboard {
+  @apply flex flex-col px-4 pb-20;
+  gap: 12px;
+}
+
+.skeleton-help {
+  @apply flex flex-col px-4 pb-20;
+  gap: 12px;
+}
+
+.skeleton-teams {
+  @apply flex flex-col pb-20;
+}
+
+.skeleton-sessions {
+  @apply flex flex-col pb-20;
+}
+
+/* Skeleton page elements */
+
+.skeleton-hero-card {
+  @apply rounded-2xl;
+  height: 110px;
+  background: linear-gradient(
+    135deg,
+    oklch(0.20 0.02 85) 0%,
+    oklch(0.16 0.01 85) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-fav-card {
+  @apply flex items-center gap-3 rounded-xl;
+  height: 54px;
+  padding: 14px 16px;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+  border-left: 4px solid oklch(0.76 0.14 85 / 20%);
+}
+
+.skeleton-team-header {
+  @apply flex items-center px-5;
+  height: 40px;
+  background: linear-gradient(
+    90deg,
+    oklch(0.18 0 0) 0%,
+    oklch(0.24 0 0) 40%,
+    oklch(0.18 0 0) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-session-subheader {
+  @apply flex items-center px-5;
+  height: 28px;
+  background: linear-gradient(
+    90deg,
+    oklch(0.16 0 0) 0%,
+    oklch(0.22 0 0) 40%,
+    oklch(0.16 0 0) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-player-row {
+  @apply flex items-center gap-3;
+  height: 44px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--dm-border-subtle);
+}
+
+.skeleton-filter-row {
+  @apply flex items-center gap-2;
+  padding: 4px 20px;
+}
+
+.skeleton-summary-card {
+  @apply rounded-xl;
+  height: 48px;
+  margin: 0 16px;
+  padding: 12px 14px;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+}
+
+.skeleton-section-header {
+  @apply flex items-center gap-2;
+  padding: 12px 16px 8px;
+}
+
+.skeleton-help-card {
+  @apply flex items-center gap-4 rounded-xl;
+  height: 84px;
+  padding: 20px;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+}
