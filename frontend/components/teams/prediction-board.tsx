@@ -11,7 +11,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
-import type { TryoutPlayer, Team } from "@/types"
+import type { TryoutPlayer, Team, Annotations } from "@/types"
 import { TeamSection } from "./team-section"
 
 /* ── Constants ───────────────────────────────────────── */
@@ -155,8 +155,6 @@ function splitByPosition(players: TryoutPlayer[]) {
 }
 
 /* ── Component ───────────────────────────────────────── */
-
-type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
 
 type PredictionBoardProps = {
   players: TryoutPlayer[]

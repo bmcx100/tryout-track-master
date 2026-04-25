@@ -2829,6 +2829,10 @@ body:has(.admin-shell) {
   border-bottom: 1px solid var(--dm-border);
 }
 
+.detail-sheet-header-left {
+  @apply flex items-center gap-2;
+}
+
 .detail-sheet-title {
   @apply text-base font-bold;
   color: var(--dm-umber);
@@ -2846,9 +2850,52 @@ body:has(.admin-shell) {
   @apply flex flex-col gap-4 mb-4;
 }
 
+.detail-sheet-edit-row {
+  @apply flex items-start gap-3;
+}
+
+.detail-sheet-edit-row-spread {
+  @apply flex items-center gap-4;
+}
+
+.detail-sheet-edit-row-spread > .detail-sheet-heart-icon {
+  margin-left: 20px;
+}
+
+.detail-sheet-edit-row-spaced {
+  @apply flex items-start gap-6;
+  justify-content: flex-start;
+}
+
+.detail-sheet-field-inline {
+  @apply flex items-center gap-2;
+}
+
+.detail-sheet-field-inline .detail-sheet-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-sheet-field-half {
+  width: 50%;
+  max-width: 50%;
+}
+
+.detail-sheet-field-narrow {
+  width: fit-content;
+}
+
+.detail-sheet-input-narrow {
+  width: 5rem;
+}
+
+.detail-sheet-field-half .detail-sheet-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .detail-sheet-readonly {
-  @apply flex flex-col gap-3 rounded-xl p-4;
-  background: var(--dm-sandstone);
+  @apply flex flex-col gap-3;
 }
 
 .detail-sheet-field {
@@ -2858,6 +2905,30 @@ body:has(.admin-shell) {
 .detail-sheet-field-label {
   @apply text-xs font-semibold uppercase tracking-wider;
   color: var(--dm-dust);
+}
+
+.detail-sheet-select {
+  @apply rounded-lg border px-3 py-2 text-sm;
+  border-color: var(--dm-border);
+  background: oklch(0.12 0 0);
+  color: var(--dm-umber);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B6B6B' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+}
+
+.detail-sheet-select:focus {
+  border-color: var(--dm-gold);
+}
+
+.detail-sheet-select option {
+  background: oklch(0.10 0 0);
+  color: var(--dm-umber);
+  padding: 0.5rem;
 }
 
 .detail-sheet-input {
@@ -2886,28 +2957,40 @@ body:has(.admin-shell) {
   border-color: var(--dm-gold);
 }
 
-.detail-sheet-heart {
-  @apply flex items-center gap-2 rounded-lg px-3 py-2 text-sm;
+.detail-sheet-heart-icon {
+  @apply flex items-center justify-center;
   color: var(--dm-dust);
-  background: oklch(1 0 0 / 5%);
+  background: none;
   border: none;
   cursor: pointer;
-  transition: all 150ms ease-out;
+  padding: 0;
+  transition: color 150ms ease-out;
 }
 
-.detail-sheet-heart-active {
+.detail-sheet-heart-icon-active {
   color: oklch(0.65 0.20 25);
-  background: oklch(0.65 0.20 25 / 10%);
 }
 
-.detail-sheet-value {
+.detail-sheet-jersey-heart-row {
+  @apply flex items-center justify-between mb-4;
+}
+
+.detail-sheet-jersey-heart-row > .detail-sheet-heart-icon {
+  margin-right: 12px;
+}
+
+.detail-sheet-info-row {
+  @apply flex gap-4 mb-4;
+}
+
+.detail-sheet-info-col {
+  @apply flex flex-col gap-1;
+  flex: 1;
+}
+
+.detail-sheet-info-value {
   @apply text-sm;
   color: var(--dm-umber);
-}
-
-.detail-sheet-value-highlight {
-  color: var(--dm-gold);
-  font-weight: 600;
 }
 
 /* ============================================================
@@ -3245,6 +3328,69 @@ body:has(.admin-shell) {
   color: var(--dm-dust);
   border: none;
   cursor: pointer;
+}
+
+/* ── Detail Sheet: Edit Button ── */
+
+.detail-sheet-edit-btn {
+  @apply flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold;
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+  letter-spacing: -0.01em;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.detail-sheet-edit-btn:hover {
+  background: oklch(0.76 0.14 85 / 25%);
+}
+
+/* ── Detail Sheet: View Elements ── */
+
+.detail-sheet-view-jersey {
+  @apply text-lg font-bold;
+  color: oklch(0.72 0 0);
+}
+
+.detail-sheet-view-position {
+  @apply rounded px-1.5 py-0.5 text-xs font-bold uppercase;
+  background: oklch(1 0 0 / 8%);
+  color: var(--dm-dust);
+}
+
+/* ── Detail Sheet: Save / Cancel Actions ── */
+
+.detail-sheet-actions {
+  @apply flex gap-3 mt-2;
+}
+
+.detail-sheet-save-btn {
+  @apply flex-1 rounded-xl py-3 text-sm font-semibold;
+  background: var(--dm-gold);
+  color: oklch(0.15 0 0);
+  border: none;
+  cursor: pointer;
+}
+
+.detail-sheet-cancel-btn {
+  @apply flex-1 rounded-xl py-3 text-sm font-semibold;
+  background: oklch(1 0 0 / 8%);
+  color: var(--dm-dust);
+  border: none;
+  cursor: pointer;
+}
+
+/* ── Detail Sheet: Custom Value Indicator ── */
+
+.detail-sheet-custom-value {
+  font-style: italic;
+}
+
+/* ── Detail Sheet: Field margin helper ── */
+
+.detail-sheet-field-mb {
+  @apply mb-4;
 }
 
 /* ============================================================

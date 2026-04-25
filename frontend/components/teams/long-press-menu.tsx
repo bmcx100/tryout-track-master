@@ -1,35 +1,72 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Heart, X, Trash2 } from "lucide-react"
+import { Heart, X, Trash2, Pencil } from "lucide-react"
 import type { TryoutPlayer } from "@/types"
 
 type LongPressMenuProps = {
   player: TryoutPlayer
   isFavorite: boolean
   customName: string | null
+  customJersey: string | null
+  customPosition: string | null
+  customPreviousTeam: string | null
+  customTeam: string | null
   note: string | null
   onClose: () => void
   onToggleFavorite: () => void
-  onSaveName: (name: string) => void
+  onSaveAnnotations: (annotations: {
+    customName?: string | null
+    customJersey?: string | null
+    customPosition?: string | null
+    customPreviousTeam?: string | null
+    customTeam?: string | null
+  }) => void
   onSaveNote: (note: string) => void
   onSubmitCorrection: (fieldName: string, oldValue: string, newValue: string) => void
   isAdmin?: boolean
   onAdminUpdate?: (updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string }) => Promise<{ error?: string }>
   onDelete?: () => void
   context?: "teams" | "continuations"
+  teams?: { id: string, name: string }[]
 }
 
 const POSITIONS = ["F", "D", "G"]
+
+const STATUS_OPTIONS = [
+  { value: "", label: "—" },
+  { value: "trying_out", label: "Trying Out" },
+  { value: "cut", label: "Cut" },
+  { value: "made_team", label: "Made Team" },
+  { value: "moved_up", label: "Moved Up" },
+  { value: "moved_down", label: "Moved Down" },
+  { value: "withdrew", label: "Withdrew" },
+  { value: "registered", label: "Registered" },
+]
+
+function fieldLabel(fieldName: string): string {
+  switch (fieldName) {
+    case "name": return "Name"
+    case "jersey_number": return "Jersey #"
+    case "position": return "Position"
+    case "previous_team": return "Previous Team"
+    case "team": return "Team"
+    default: return fieldName
+  }
+}
 
 export function LongPressMenu({
   player,
   isFavorite,
   customName,
+  customJersey,
+  customPosition,
+  customPreviousTeam,
+  customTeam,
   note,
   onClose,
   onToggleFavorite,
-  onSaveName,
+  onSaveAnnotations,
   onSaveNote,
   onSubmitCorrection,
   isAdmin = false,
@@ -37,12 +74,20 @@ export function LongPressMenu({
   onDelete,
   context = "teams",
 }: LongPressMenuProps) {
+  const [editing, setEditing] = useState(false)
   const [nameValue, setNameValue] = useState(
     isAdmin ? (player.name ?? "") : (customName ?? player.name ?? "")
   )
-  const [jerseyValue, setJerseyValue] = useState(player.jersey_number ?? "")
-  const [positionValue, setPositionValue] = useState(player.position ?? "?")
-  const [previousTeamValue, setPreviousTeamValue] = useState(player.previous_team ?? "")
+  const [jerseyValue, setJerseyValue] = useState(
+    isAdmin ? (player.jersey_number ?? "") : (customJersey ?? player.jersey_number ?? "")
+  )
+  const [positionValue, setPositionValue] = useState(
+    isAdmin ? (player.position ?? "?") : (customPosition ?? player.position ?? "?")
+  )
+  const [previousTeamValue, setPreviousTeamValue] = useState(
+    isAdmin ? (player.previous_team ?? "") : (customPreviousTeam ?? player.previous_team ?? "")
+  )
+  const [teamValue, setTeamValue] = useState(customTeam ?? "")
   const [noteValue, setNoteValue] = useState(note ?? "")
   const [showCorrectionPopup, setShowCorrectionPopup] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -52,14 +97,11 @@ export function LongPressMenu({
   const [pendingAdminUpdates, setPendingAdminUpdates] = useState<Record<string, string> | null>(null)
   const noteSaved = useRef(false)
 
-  // Capture values at mount time for correction detection
-  const nameAtOpen = useRef(isAdmin ? (player.name ?? "") : (customName ?? player.name ?? ""))
-  const jerseyAtOpen = useRef(player.jersey_number ?? "")
-  const previousTeamAtOpen = useRef(player.previous_team ?? "")
-
-  // Official DB values for correction submission
+  // Official DB values for correction comparison
   const officialName = player.name ?? ""
   const officialJersey = player.jersey_number ?? ""
+  const officialPosition = player.position ?? "?"
+  const officialPreviousTeam = player.previous_team ?? ""
 
   // Lock body scroll while detail sheet is open
   useEffect(() => {
@@ -70,14 +112,27 @@ export function LongPressMenu({
     }
   }, [])
 
-  const handleClose = async () => {
-    // Save note if changed
-    if (noteValue !== (note ?? "") && !noteSaved.current) {
+  const handleNoteBlur = () => {
+    if (noteValue !== (note ?? "")) {
       onSaveNote(noteValue.trim())
+      noteSaved.current = true
     }
+  }
 
+  const handleCancel = () => {
+    // Reset all values to what they were when the sheet opened
+    setNameValue(isAdmin ? (player.name ?? "") : (customName ?? player.name ?? ""))
+    setJerseyValue(isAdmin ? (player.jersey_number ?? "") : (customJersey ?? player.jersey_number ?? ""))
+    setPositionValue(isAdmin ? (player.position ?? "?") : (customPosition ?? player.position ?? "?"))
+    setPreviousTeamValue(isAdmin ? (player.previous_team ?? "") : (customPreviousTeam ?? player.previous_team ?? ""))
+    setTeamValue(customTeam ?? "")
+    setAdminError(null)
+    setEditing(false)
+  }
+
+  const handleSave = async () => {
     if (isAdmin && onAdminUpdate) {
-      // Admin mode: collect changed fields and save directly
+      // Admin mode: save directly to tryout_players
       const updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string } = {}
       const trimmedName = nameValue.trim()
       const trimmedJersey = jerseyValue.trim()
@@ -89,10 +144,10 @@ export function LongPressMenu({
       if (trimmedJersey && trimmedJersey !== officialJersey) {
         updates.jersey_number = trimmedJersey
       }
-      if (positionValue !== (player.position ?? "?")) {
+      if (positionValue !== officialPosition) {
         updates.position = positionValue
       }
-      if (trimmedPreviousTeam !== previousTeamAtOpen.current) {
+      if (trimmedPreviousTeam !== officialPreviousTeam) {
         updates.previous_team = trimmedPreviousTeam || undefined
       }
 
@@ -110,31 +165,59 @@ export function LongPressMenu({
           return
         }
       }
+      setEditing(false)
       onClose()
     } else {
-      // Parent mode: save custom name if changed from what it was when opened
+      // Parent mode: save custom annotations
       const trimmedName = nameValue.trim()
-      if (trimmedName !== nameAtOpen.current) {
-        onSaveName(trimmedName === officialName ? "" : trimmedName)
-      }
+      const trimmedJersey = jerseyValue.trim()
+      const trimmedPreviousTeam = previousTeamValue.trim()
+      const trimmedTeam = teamValue.trim()
 
-      // Detect corrections: user changed value during this session AND it differs from official
+      const annots: Record<string, string | null> = {}
+      // Save custom values (null if same as official)
+      annots.customName = trimmedName && trimmedName !== officialName ? trimmedName : null
+      annots.customJersey = trimmedJersey && trimmedJersey !== officialJersey ? trimmedJersey : null
+      annots.customPosition = positionValue !== officialPosition ? positionValue : null
+      annots.customPreviousTeam = trimmedPreviousTeam && trimmedPreviousTeam !== officialPreviousTeam ? trimmedPreviousTeam : null
+      annots.customTeam = trimmedTeam || null
+
+      onSaveAnnotations(annots)
+
+      // Detect corrections: compare current values to official DB values
       const corrections: { fieldName: string, oldValue: string, newValue: string }[] = []
-      if (trimmedName !== nameAtOpen.current && trimmedName && trimmedName !== officialName) {
+      if (trimmedName && trimmedName !== officialName) {
         corrections.push({ fieldName: "name", oldValue: officialName, newValue: trimmedName })
       }
-      const trimmedJersey = jerseyValue.trim()
-      if (trimmedJersey !== jerseyAtOpen.current && trimmedJersey && trimmedJersey !== officialJersey) {
+      if (trimmedJersey && trimmedJersey !== officialJersey) {
         corrections.push({ fieldName: "jersey_number", oldValue: officialJersey, newValue: trimmedJersey })
+      }
+      if (positionValue !== officialPosition && positionValue !== "?") {
+        corrections.push({ fieldName: "position", oldValue: officialPosition, newValue: positionValue })
+      }
+      if (trimmedPreviousTeam && trimmedPreviousTeam !== officialPreviousTeam) {
+        corrections.push({ fieldName: "previous_team", oldValue: officialPreviousTeam, newValue: trimmedPreviousTeam })
+      }
+      if (trimmedTeam) {
+        corrections.push({ fieldName: "team", oldValue: "", newValue: trimmedTeam })
       }
 
       if (corrections.length > 0) {
         setPendingCorrections(corrections)
         setShowCorrectionPopup(true)
       } else {
+        setEditing(false)
         onClose()
       }
     }
+  }
+
+  const handleClose = () => {
+    // Save note if changed
+    if (noteValue !== (note ?? "") && !noteSaved.current) {
+      onSaveNote(noteValue.trim())
+    }
+    onClose()
   }
 
   const handleSubmitCorrections = () => {
@@ -148,13 +231,6 @@ export function LongPressMenu({
   const handleSkipCorrections = () => {
     setShowCorrectionPopup(false)
     onClose()
-  }
-
-  const handleNoteBlur = () => {
-    if (noteValue !== (note ?? "")) {
-      onSaveNote(noteValue.trim())
-      noteSaved.current = true
-    }
   }
 
   const handleJerseyWarningConfirm = async () => {
@@ -183,6 +259,16 @@ export function LongPressMenu({
     setShowDeleteConfirm(false)
     onDelete?.()
   }
+
+  // Display values (show custom when available, for read-only mode)
+  const displayJersey = isAdmin ? (player.jersey_number ?? "") : (customJersey ?? player.jersey_number ?? "")
+  const displayName = isAdmin ? (player.name ?? "") : (customName ?? player.name ?? "")
+  const displayPosition = isAdmin ? (player.position ?? "?") : (customPosition ?? player.position ?? "?")
+  const displayPreviousTeam = isAdmin ? (player.previous_team ?? "") : (customPreviousTeam ?? player.previous_team ?? "")
+  const displayTeam = customTeam ?? ""
+
+  // Made team status text
+  const madeTeamText = player.status === "made_team" ? "Made Team" : null
 
   // Jersey warning popup (admin in continuations context)
   if (showJerseyWarning) {
@@ -219,7 +305,7 @@ export function LongPressMenu({
           <div className="correction-popup-changes">
             {pendingCorrections.map((c) => (
               <p key={c.fieldName} className="correction-popup-change">
-                {c.fieldName === "name" ? "Name" : "Jersey #"}: {c.oldValue} &rarr; {c.newValue}
+                {fieldLabel(c.fieldName)}: {c.oldValue || "(none)"} &rarr; {c.newValue}
               </p>
             ))}
           </div>
@@ -242,13 +328,24 @@ export function LongPressMenu({
       <div className="detail-sheet">
         <div className="detail-sheet-handle" />
 
-        {/* Header with close button and optional delete */}
+        {/* Header: name + position badge, edit, close */}
         <div className="detail-sheet-header">
-          <span className="detail-sheet-title">Player Details</span>
+          <div className="detail-sheet-header-left">
+            <span className="detail-sheet-title">{displayName}</span>
+            {displayPosition && displayPosition !== "?" && (
+              <span className="detail-sheet-view-position">{displayPosition}</span>
+            )}
+          </div>
           <div className="detail-sheet-header-actions">
             {isAdmin && onDelete && (
               <button className="detail-sheet-delete-btn" onClick={handleDeleteClick}>
                 <Trash2 size={18} />
+              </button>
+            )}
+            {!editing && (
+              <button className="detail-sheet-edit-btn" onClick={() => setEditing(true)}>
+                <Pencil size={14} />
+                <span>Edit</span>
               </button>
             )}
             <button className="detail-sheet-close" onClick={handleClose}>
@@ -262,115 +359,166 @@ export function LongPressMenu({
           <div className="detail-sheet-error">{adminError}</div>
         )}
 
-        {/* Editable section */}
-        <div className="detail-sheet-editable">
-          <div className="detail-sheet-field">
-            <label className="detail-sheet-field-label">Jersey Number</label>
-            <input
-              className="detail-sheet-input"
-              type="text"
-              value={jerseyValue}
-              onChange={(e) => { setJerseyValue(e.target.value); setAdminError(null) }}
-            />
-          </div>
-
-          <div className="detail-sheet-field">
-            <label className="detail-sheet-field-label">Favorite</label>
-            <button
-              className={isFavorite ? "detail-sheet-heart detail-sheet-heart-active" : "detail-sheet-heart"}
-              onClick={onToggleFavorite}
-            >
-              <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
-              <span>{isFavorite ? "Favorited" : "Add to Favorites"}</span>
-            </button>
-          </div>
-
-          <div className="detail-sheet-field">
-            <label className="detail-sheet-field-label">Name</label>
-            <input
-              className="detail-sheet-input"
-              type="text"
-              value={nameValue}
-              onChange={(e) => setNameValue(e.target.value)}
-            />
-          </div>
-
-          <div className="detail-sheet-field">
-            <label className="detail-sheet-field-label">Notes</label>
-            <textarea
-              className="detail-sheet-textarea"
-              value={noteValue}
-              onChange={(e) => setNoteValue(e.target.value)}
-              onBlur={handleNoteBlur}
-              placeholder="Add private notes..."
-              rows={3}
-            />
-          </div>
-        </div>
-
-        {/* Position — editable for admin, read-only for parent */}
-        <div className={isAdmin ? "detail-sheet-editable" : "detail-sheet-readonly"}>
-          <div className="detail-sheet-field">
-            <label className="detail-sheet-field-label">Position</label>
-            {isAdmin ? (
-              <div className="detail-sheet-position-selector">
-                {POSITIONS.map((pos) => (
-                  <button
-                    key={pos}
-                    className={
-                      positionValue === pos
-                        ? "detail-sheet-position-btn detail-sheet-position-btn-active"
-                        : "detail-sheet-position-btn"
-                    }
-                    onClick={() => setPositionValue(pos)}
-                  >
-                    {pos}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <span className="detail-sheet-value">{player.position || "Unknown"}</span>
-            )}
-          </div>
-
-          {!isAdmin && (
-            <>
-              <div className="detail-sheet-field">
-                <label className="detail-sheet-field-label">Previous Team</label>
-                <span className="detail-sheet-value">{player.previous_team || "None"}</span>
-              </div>
-
-              {player.status === "made_team" && (
-                <div className="detail-sheet-field">
-                  <label className="detail-sheet-field-label">Made Team</label>
-                  <span className="detail-sheet-value detail-sheet-value-highlight">Yes</span>
+        {editing ? (
+          /* ── Edit Mode ── */
+          <>
+            <div className="detail-sheet-editable">
+              <div className="detail-sheet-edit-row-spread">
+                <div className="detail-sheet-field-inline">
+                  <label className="detail-sheet-field-label">Name</label>
+                  <input
+                    className="detail-sheet-input"
+                    type="text"
+                    value={nameValue}
+                    onChange={(e) => setNameValue(e.target.value)}
+                  />
                 </div>
-              )}
-            </>
-          )}
 
-          {isAdmin && (
-            <>
-              <div className="detail-sheet-field">
-                <label className="detail-sheet-field-label">Previous Team</label>
-                <input
-                  className="detail-sheet-input"
-                  type="text"
-                  value={previousTeamValue}
-                  onChange={(e) => setPreviousTeamValue(e.target.value)}
-                  placeholder="e.g. U13 AA"
-                />
+                <button
+                  className={isFavorite ? "detail-sheet-heart-icon detail-sheet-heart-icon-active" : "detail-sheet-heart-icon"}
+                  onClick={onToggleFavorite}
+                >
+                  <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
+                </button>
               </div>
 
-              {player.status === "made_team" && (
+              <div className="detail-sheet-edit-row-spaced">
                 <div className="detail-sheet-field">
-                  <label className="detail-sheet-field-label">Made Team</label>
-                  <span className="detail-sheet-value detail-sheet-value-highlight">Yes</span>
+                  <label className="detail-sheet-field-label">Number</label>
+                  <input
+                    className="detail-sheet-input detail-sheet-input-narrow"
+                    type="text"
+                    value={jerseyValue}
+                    onChange={(e) => { setJerseyValue(e.target.value); setAdminError(null) }}
+                  />
                 </div>
-              )}
-            </>
-          )}
-        </div>
+
+                <div className="detail-sheet-field">
+                  <label className="detail-sheet-field-label">Position</label>
+                  <div className="detail-sheet-position-selector">
+                    {POSITIONS.map((pos) => (
+                      <button
+                        key={pos}
+                        className={
+                          positionValue === pos
+                            ? "detail-sheet-position-btn detail-sheet-position-btn-active"
+                            : "detail-sheet-position-btn"
+                        }
+                        onClick={() => setPositionValue(pos)}
+                      >
+                        {pos}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="detail-sheet-edit-row">
+                <div className="detail-sheet-field detail-sheet-field-half">
+                  <label className="detail-sheet-field-label">Previous Team</label>
+                  <input
+                    className="detail-sheet-input"
+                    type="text"
+                    value={previousTeamValue}
+                    onChange={(e) => setPreviousTeamValue(e.target.value)}
+                    placeholder="e.g. U13 AA"
+                  />
+                </div>
+
+                {!isAdmin && (
+                  <div className="detail-sheet-field detail-sheet-field-half">
+                    <label className="detail-sheet-field-label">Status</label>
+                    <select
+                      className="detail-sheet-select"
+                      value={teamValue}
+                      onChange={(e) => setTeamValue(e.target.value)}
+                    >
+                      {STATUS_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Notes — always editable */}
+            <div className="detail-sheet-field detail-sheet-field-mb">
+              <label className="detail-sheet-field-label">Notes</label>
+              <textarea
+                className="detail-sheet-textarea"
+                value={noteValue}
+                onChange={(e) => setNoteValue(e.target.value)}
+                onBlur={handleNoteBlur}
+                placeholder="Add private notes..."
+                rows={2}
+              />
+            </div>
+
+            {/* Save / Cancel actions */}
+            <div className="detail-sheet-actions">
+              <button className="detail-sheet-save-btn" onClick={handleSave}>
+                Save
+              </button>
+              <button className="detail-sheet-cancel-btn" onClick={handleCancel}>
+                Cancel
+              </button>
+            </div>
+          </>
+        ) : (
+          /* ── Read-Only Mode ── */
+          <>
+            {/* Jersey + heart row */}
+            <div className="detail-sheet-jersey-heart-row">
+              <span className="detail-sheet-view-jersey">#{displayJersey}</span>
+              <button
+                className={isFavorite ? "detail-sheet-heart-icon detail-sheet-heart-icon-active" : "detail-sheet-heart-icon"}
+                onClick={onToggleFavorite}
+              >
+                <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
+              </button>
+            </div>
+
+            {/* Previous Team + Status on one row */}
+            <div className="detail-sheet-info-row">
+              <div className="detail-sheet-info-col">
+                <label className="detail-sheet-field-label">Previous Team</label>
+                <span className="detail-sheet-info-value">{displayPreviousTeam || "None"}</span>
+              </div>
+              <div className="detail-sheet-info-col">
+                {displayTeam ? (
+                  <>
+                    <label className="detail-sheet-field-label">Team</label>
+                    <span className="detail-sheet-info-value">{displayTeam}</span>
+                  </>
+                ) : madeTeamText ? (
+                  <>
+                    <label className="detail-sheet-field-label">Team</label>
+                    <span className="detail-sheet-info-value">{madeTeamText}</span>
+                  </>
+                ) : (
+                  <>
+                    <label className="detail-sheet-field-label">Status</label>
+                    <span className="detail-sheet-info-value">{player.status === "trying_out" ? "Trying Out" : player.status ?? "Unknown"}</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Notes — always editable */}
+            <div className="detail-sheet-field">
+              <label className="detail-sheet-field-label">Notes</label>
+              <textarea
+                className="detail-sheet-textarea"
+                value={noteValue}
+                onChange={(e) => setNoteValue(e.target.value)}
+                onBlur={handleNoteBlur}
+                placeholder="Add private notes..."
+                rows={2}
+              />
+            </div>
+          </>
+        )}
 
         {/* Delete confirmation overlay */}
         {showDeleteConfirm && (

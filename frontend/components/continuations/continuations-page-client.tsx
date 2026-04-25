@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import type { ContinuationRound, TryoutPlayer } from "@/types"
+import type { ContinuationRound, TryoutPlayer, Annotations } from "@/types"
 import { RoundSection, getSessionInfo } from "./round-section"
 import { SessionsToggle } from "./sessions-toggle"
 import { PositionFilter } from "@/components/teams/position-filter"
@@ -17,11 +17,9 @@ import {
   saveContinuationOrder,
   resetContinuationOrder,
 } from "@/app/(app)/continuations/actions"
-import { saveCustomName } from "@/app/(app)/annotations/actions"
+import { savePlayerAnnotations } from "@/app/(app)/annotations/actions"
 import { submitCorrection } from "@/app/(app)/corrections/actions"
 import { adminUpdatePlayer } from "@/app/(app)/players/actions"
-
-type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
 
 type ContinuationsPageClientProps = {
   players: TryoutPlayer[]
@@ -32,6 +30,8 @@ type ContinuationsPageClientProps = {
   isAdmin: boolean
   savedOrders?: Record<string, string[]>
 }
+
+const EMPTY_ANN = { isFavorite: false, notes: null, customName: null, customJersey: null, customPosition: null, customPreviousTeam: null, customTeam: null } as const
 
 export function ContinuationsPageClient({
   players,
@@ -82,9 +82,8 @@ export function ContinuationsPageClient({
       return {
         ...prev,
         [playerId]: {
+          ...(existing ?? EMPTY_ANN),
           isFavorite: existing ? !existing.isFavorite : true,
-          notes: existing?.notes ?? null,
-          customName: existing?.customName ?? null,
         },
       }
     })
@@ -98,25 +97,36 @@ export function ContinuationsPageClient({
         return {
           ...prev,
           [playerId]: {
+            ...(existing ?? EMPTY_ANN),
             isFavorite: existing ? !existing.isFavorite : false,
-            notes: existing?.notes ?? null,
-            customName: existing?.customName ?? null,
           },
         }
       })
     }
   }, [])
 
-  const handleSaveName = useCallback((playerId: string, customName: string) => {
+  const handleSaveAnnotations = useCallback((playerId: string, annots: {
+    customName?: string | null
+    customJersey?: string | null
+    customPosition?: string | null
+    customPreviousTeam?: string | null
+    customTeam?: string | null
+  }) => {
     setAnnotations((prev) => {
-      const existing = prev[playerId]
-      const nameValue = customName || null
-      if (existing) {
-        return { ...prev, [playerId]: { ...existing, customName: nameValue } }
+      const existing = prev[playerId] ?? { ...EMPTY_ANN }
+      return {
+        ...prev,
+        [playerId]: {
+          ...existing,
+          customName: annots.customName !== undefined ? (annots.customName || null) : existing.customName,
+          customJersey: annots.customJersey !== undefined ? (annots.customJersey || null) : existing.customJersey,
+          customPosition: annots.customPosition !== undefined ? (annots.customPosition || null) : existing.customPosition,
+          customPreviousTeam: annots.customPreviousTeam !== undefined ? (annots.customPreviousTeam || null) : existing.customPreviousTeam,
+          customTeam: annots.customTeam !== undefined ? (annots.customTeam || null) : existing.customTeam,
+        },
       }
-      return { ...prev, [playerId]: { isFavorite: false, notes: null, customName: nameValue } }
     })
-    saveCustomName(playerId, customName)
+    savePlayerAnnotations(playerId, annots)
   }, [])
 
   const handleSaveNote = useCallback((playerId: string, note: string) => {
@@ -126,7 +136,7 @@ export function ContinuationsPageClient({
       if (existing) {
         return { ...prev, [playerId]: { ...existing, notes: noteValue } }
       }
-      return { ...prev, [playerId]: { isFavorite: false, notes: noteValue, customName: null } }
+      return { ...prev, [playerId]: { ...EMPTY_ANN, notes: noteValue } }
     })
     savePlayerNote(playerId, note)
   }, [])
@@ -335,10 +345,14 @@ export function ContinuationsPageClient({
           player={selectedPlayer}
           isFavorite={selectedAnn?.isFavorite ?? false}
           customName={selectedAnn?.customName ?? null}
+          customJersey={selectedAnn?.customJersey ?? null}
+          customPosition={selectedAnn?.customPosition ?? null}
+          customPreviousTeam={selectedAnn?.customPreviousTeam ?? null}
+          customTeam={selectedAnn?.customTeam ?? null}
           note={selectedAnn?.notes ?? null}
           onClose={() => setSelectedPlayer(null)}
           onToggleFavorite={() => handleToggleFavorite(selectedPlayer.id)}
-          onSaveName={(name) => handleSaveName(selectedPlayer.id, name)}
+          onSaveAnnotations={(annots) => handleSaveAnnotations(selectedPlayer.id, annots)}
           onSaveNote={(note) => handleSaveNote(selectedPlayer.id, note)}
           onSubmitCorrection={(fieldName, oldValue, newValue) =>
             handleSubmitCorrection(selectedPlayer.id, fieldName, oldValue, newValue)

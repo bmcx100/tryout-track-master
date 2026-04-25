@@ -176,6 +176,52 @@ export async function reviewCorrection(
         .eq("id", correction.player_id)
 
       if (updateError) return { error: updateError.message }
+    } else if (correction.field_name === "position") {
+      const valid = ["F", "D", "G"]
+      if (!valid.includes(correction.new_value)) {
+        return { error: `Invalid position: ${correction.new_value}. Must be F, D, or G.` }
+      }
+      const { error: updateError } = await supabase
+        .from("tryout_players")
+        .update({ position: correction.new_value })
+        .eq("id", correction.player_id)
+
+      if (updateError) return { error: updateError.message }
+    } else if (correction.field_name === "previous_team") {
+      const { error: updateError } = await supabase
+        .from("tryout_players")
+        .update({ previous_team: correction.new_value })
+        .eq("id", correction.player_id)
+
+      if (updateError) return { error: updateError.message }
+    } else if (correction.field_name === "team") {
+      // Look up team by name for this player's association+division
+      const { data: player } = await supabase
+        .from("tryout_players")
+        .select("division, association_id")
+        .eq("id", correction.player_id)
+        .single()
+
+      if (player) {
+        const { data: team } = await supabase
+          .from("teams")
+          .select("id")
+          .eq("association_id", player.association_id)
+          .eq("division", player.division)
+          .ilike("name", correction.new_value)
+          .maybeSingle()
+
+        if (!team) {
+          return { error: `Team "${correction.new_value}" not found in this division` }
+        }
+
+        const { error: updateError } = await supabase
+          .from("tryout_players")
+          .update({ team_id: team.id })
+          .eq("id", correction.player_id)
+
+        if (updateError) return { error: updateError.message }
+      }
     }
   }
 

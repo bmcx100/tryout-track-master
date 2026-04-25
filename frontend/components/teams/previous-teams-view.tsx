@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable"
-import type { TryoutPlayer } from "@/types"
+import type { TryoutPlayer, Annotations } from "@/types"
 import { PlayerRow } from "./player-row"
 
 /* ── Sorting helpers ─────────────────────────────────── */
@@ -187,6 +187,8 @@ function PreviousTeamSection({
                 isFavorite={ann?.isFavorite}
                 isSuggested={!!player.suggested_by}
                 customName={ann?.customName}
+                customJersey={ann?.customJersey}
+                customPosition={ann?.customPosition}
                 noteText={ann?.notes}
                 onEdit={onPlayerEdit}
                 onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(player.id) : undefined}
@@ -200,8 +202,6 @@ function PreviousTeamSection({
 }
 
 /* ── Main component ──────────────────────────────────── */
-
-type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
 
 type PreviousTeamsViewProps = {
   players: TryoutPlayer[]

@@ -34,23 +34,27 @@ export async function toggleFavorite(playerId: string): Promise<{ isFavorite: bo
 
 export async function getPlayerAnnotations(
   associationId: string
-): Promise<Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>> {
+): Promise<Record<string, { isFavorite: boolean, notes: string | null, customName: string | null, customJersey: string | null, customPosition: string | null, customPreviousTeam: string | null, customTeam: string | null }>> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return {}
 
   const { data: annotations } = await supabase
     .from("player_annotations")
-    .select("player_id, is_favorite, notes, custom_name, tryout_players!inner(association_id)")
+    .select("player_id, is_favorite, notes, custom_name, custom_jersey, custom_position, custom_previous_team, custom_team, tryout_players!inner(association_id)")
     .eq("user_id", user.id)
     .eq("tryout_players.association_id", associationId)
 
-  const result: Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }> = {}
+  const result: Record<string, { isFavorite: boolean, notes: string | null, customName: string | null, customJersey: string | null, customPosition: string | null, customPreviousTeam: string | null, customTeam: string | null }> = {}
   for (const ann of annotations ?? []) {
     result[ann.player_id] = {
       isFavorite: ann.is_favorite,
       notes: ann.notes,
       customName: ann.custom_name,
+      customJersey: (ann as Record<string, unknown>).custom_jersey as string | null,
+      customPosition: (ann as Record<string, unknown>).custom_position as string | null,
+      customPreviousTeam: (ann as Record<string, unknown>).custom_previous_team as string | null,
+      customTeam: (ann as Record<string, unknown>).custom_team as string | null,
     }
   }
   return result
@@ -78,27 +82,43 @@ export async function bulkToggleFavorite(
   return {}
 }
 
-export async function saveCustomName(
+export async function savePlayerAnnotations(
   playerId: string,
-  customName: string
+  annotations: {
+    customName?: string | null
+    customJersey?: string | null
+    customPosition?: string | null
+    customPreviousTeam?: string | null
+    customTeam?: string | null
+  }
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: "Not authenticated" }
 
+  const row: Record<string, unknown> = {
+    user_id: user.id,
+    player_id: playerId,
+  }
+  if (annotations.customName !== undefined) row.custom_name = annotations.customName || null
+  if (annotations.customJersey !== undefined) row.custom_jersey = annotations.customJersey || null
+  if (annotations.customPosition !== undefined) row.custom_position = annotations.customPosition || null
+  if (annotations.customPreviousTeam !== undefined) row.custom_previous_team = annotations.customPreviousTeam || null
+  if (annotations.customTeam !== undefined) row.custom_team = annotations.customTeam || null
+
   const { error } = await supabase
     .from("player_annotations")
-    .upsert(
-      {
-        user_id: user.id,
-        player_id: playerId,
-        custom_name: customName || null,
-      },
-      { onConflict: "user_id,player_id" }
-    )
+    .upsert(row, { onConflict: "user_id,player_id" })
 
   if (error) return { error: error.message }
   return {}
+}
+
+export async function saveCustomName(
+  playerId: string,
+  customName: string
+): Promise<{ error?: string }> {
+  return savePlayerAnnotations(playerId, { customName })
 }
 
 export async function getMyPlayers(
@@ -110,10 +130,10 @@ export async function getMyPlayers(
 
   const { data: annotations } = await supabase
     .from("player_annotations")
-    .select("player_id, is_favorite, custom_name, tryout_players!inner(*)")
+    .select("player_id, is_favorite, custom_name, custom_jersey, custom_position, custom_previous_team, custom_team, tryout_players!inner(*)")
     .eq("user_id", user.id)
     .eq("tryout_players.association_id", associationId)
-    .or("is_favorite.eq.true,custom_name.neq.")
+    .or("is_favorite.eq.true,custom_name.neq.,custom_jersey.neq.,custom_position.neq.,custom_previous_team.neq.,custom_team.neq.")
 
   if (!annotations || annotations.length === 0) return []
 
@@ -176,7 +196,7 @@ export async function getMyPlayersCount(
     .select("player_id, tryout_players!inner(association_id)", { count: "exact", head: true })
     .eq("user_id", user.id)
     .eq("tryout_players.association_id", associationId)
-    .or("is_favorite.eq.true,custom_name.neq.")
+    .or("is_favorite.eq.true,custom_name.neq.,custom_jersey.neq.,custom_position.neq.,custom_previous_team.neq.,custom_team.neq.")
 
   return count ?? 0
 }

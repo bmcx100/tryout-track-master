@@ -12,6 +12,8 @@ type PlayerRowProps = {
   isFavorite?: boolean
   isSuggested?: boolean
   customName?: string | null
+  customJersey?: string | null
+  customPosition?: string | null
   noteText?: string | null
   onEdit?: (player: TryoutPlayer) => void
   onToggleFavorite?: () => void
@@ -23,6 +25,8 @@ export function PlayerRow({
   isFavorite,
   isSuggested,
   customName,
+  customJersey,
+  customPosition,
   noteText,
   onEdit,
   onToggleFavorite,
@@ -50,6 +54,10 @@ export function PlayerRow({
   }, [onEdit, player])
 
   const displayName = customName || player.name
+  const displayJersey = customJersey ?? player.jersey_number
+  const displayPosition = customPosition ?? player.position
+  const hasCustomJersey = customJersey && customJersey !== player.jersey_number
+  const hasCustomPosition = customPosition && customPosition !== player.position
 
   return (
     <div
@@ -73,9 +81,9 @@ export function PlayerRow({
       >
         {isLocked ? <Check size={14} /> : <GripVertical size={20} />}
       </span>
-      <span className="player-jersey">#{player.jersey_number}</span>
-      {player.position && player.position !== "?" && (
-        <span className="player-position">{player.position}</span>
+      <span className={hasCustomJersey ? "player-jersey detail-sheet-custom-value" : "player-jersey"}>#{displayJersey}</span>
+      {displayPosition && displayPosition !== "?" && (
+        <span className={hasCustomPosition ? "player-position detail-sheet-custom-value" : "player-position"}>{displayPosition}</span>
       )}
       <span className="player-name">
         {displayName}

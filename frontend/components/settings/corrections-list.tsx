@@ -212,7 +212,7 @@ export function CorrectionsList({ initialCorrections }: CorrectionsListProps) {
             </div>
             <div className="corrections-field-change">
               <span className="corrections-field-label">
-                {c.field_name === "name" ? "Name" : "Jersey #"}
+                {c.field_name === "name" ? "Name" : c.field_name === "jersey_number" ? "Jersey #" : c.field_name === "position" ? "Position" : c.field_name === "previous_team" ? "Previous Team" : c.field_name === "team" ? "Team" : c.field_name}
               </span>
               <span className="corrections-change">
                 {c.old_value} &rarr; {c.new_value}

@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable"
-import type { ContinuationRound, TryoutPlayer } from "@/types"
+import type { ContinuationRound, TryoutPlayer, Annotations } from "@/types"
 import { ContinuationPlayerRow } from "./continuation-player-row"
 
 type SessionData = {
@@ -26,8 +26,6 @@ type SessionData = {
   end_time: string
   jersey_numbers: string[]
 }
-
-type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
 
 type RoundSectionProps = {
   teamLevel: string

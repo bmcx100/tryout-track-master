@@ -16,6 +16,17 @@ export type PlayerWithTeam = TryoutPlayer & {
   teams: { name: string } | null
 }
 
+// Shared annotation type used across teams, continuations, and dashboard
+export type Annotations = Record<string, {
+  isFavorite: boolean
+  notes: string | null
+  customName: string | null
+  customJersey: string | null
+  customPosition: string | null
+  customPreviousTeam: string | null
+  customTeam: string | null
+}>
+
 // Status display labels
 export const STATUS_LABELS: Record<string, string> = {
   registered: "Registered",

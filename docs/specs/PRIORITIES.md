@@ -2,7 +2,7 @@
 
 Last updated: 2026-04-24
 
-**Completed:** 001 (Previous teams sorting), 002 (Position filter), 003 (Continuations tracker), 004 (Division switcher), 005 (Continuations auto-scraper), 006 (Player management — parent), 007 (Admin CRUD & continuations linking), 008 (Bulk heart by previous team), 009 (Dashboard redesign), 010 (Association picker), 011 (Dashboard favourites summary), 012 (My Favourites page), 013 (Onboarding tooltips & help page), 014 (Sessions card & toggle), 015 (Dashboard hero cards & favourites), 016 (Sessions position filter & drag sorting), 017 (Scraper robustness & Final Team), 018 (Scraper manual fallback & team validation), 022 (Player row swipe & readability), 023 (Fix favourite logic)
+**Completed:** 001 (Previous teams sorting), 002 (Position filter), 003 (Continuations tracker), 004 (Division switcher), 005 (Continuations auto-scraper), 006 (Player management — parent), 007 (Admin CRUD & continuations linking), 008 (Bulk heart by previous team), 009 (Dashboard redesign), 010 (Association picker), 011 (Dashboard favourites summary), 012 (My Favourites page), 013 (Onboarding tooltips & help page), 014 (Sessions card & toggle), 015 (Dashboard hero cards & favourites), 016 (Sessions position filter & drag sorting), 017 (Scraper robustness & Final Team), 018 (Scraper manual fallback & team validation), 022 (Player row swipe & readability), 023 (Fix favourite logic), 024 (Player detail form redesign)
 
 | # | Feature | PRD Ref | Status |
 |---|---------|---------|--------|
@@ -16,9 +16,9 @@ Last updated: 2026-04-24
 | 20 | Test sandbox association — clone NGHA U15 data into hidden test association for safe feature testing | — | Done |
 | 21 | Player row swipe to edit/add note + row readability improvements — swipe-left reveals Edit button, 44x44pt drag handle flush to left edge, all row text to text-base | FR-039 | Done |
 | 23 | Fix Favourite Logic — round-driven derivation | — | Done |
-| 24 | Player detail form redesign — read-only/edit modes, extended annotations & corrections for all fields | FR-021 | Specced ([024](024-player-detail-form.md)) |
+| 24 | Player detail form redesign — read-only/edit modes, extended annotations & corrections for all fields | FR-021 | Done |
 | 25 | UI/UX drag additions — separate branch, review [DRAG-UX-RESEARCH.md](../prd/DRAG-UX-RESEARCH.md) | FR-039 | Not started |
-| 26 | Sessions column sort header — table-style header row, click to sort by any column, coexists with drag | FR-039 | Draft ([drafts/sessions-column-sort.md](drafts/sessions-column-sort.md)) |
+| 26 | Sessions column sort header — table-style header row, click to sort by any column, coexists with drag | FR-039 | Specced ([026](026-sessions-column-sort.md)) |
 | 27 | Onboarding — division selector darker font + sessions yellow | — | Not started |
 | 100 | Light mode (gold scale theme) | — | Specced ([021](021-light-mode.md)) |
 | 101 | Rework Help Page — expand content, mockups, deeper feature guidance | — | Not started |

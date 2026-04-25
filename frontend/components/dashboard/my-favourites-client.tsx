@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Heart, ChevronLeft, GripVertical, SquarePen } from "lucide-react"
 import { LongPressMenu } from "@/components/teams/long-press-menu"
 import { toggleFavorite } from "@/app/(app)/annotations/actions"
-import { saveCustomName, savePlayerNote } from "@/app/(app)/annotations/actions"
+import { savePlayerAnnotations, savePlayerNote } from "@/app/(app)/annotations/actions"
 import { submitCorrection } from "@/app/(app)/corrections/actions"
 import type { FavouritePagePlayer } from "@/app/(app)/dashboard/actions"
 import type { TryoutPlayer } from "@/types"
@@ -187,17 +187,25 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
     await toggleFavorite(playerId)
   }, [])
 
-  const handleSaveName = useCallback((playerId: string, name: string) => {
-    setLocalFavourites((prev) =>
-      prev.map((f) => {
-        if (f.playerId !== playerId) return f
-        const nameValue = name || null
-        const displayName = name || f.playerRawName
-        const originalName = nameValue && nameValue !== f.playerRawName ? f.playerRawName : null
-        return { ...f, customName: nameValue, playerName: displayName, originalName }
-      })
-    )
-    saveCustomName(playerId, name)
+  const handleSaveAnnotations = useCallback((playerId: string, annots: {
+    customName?: string | null
+    customJersey?: string | null
+    customPosition?: string | null
+    customPreviousTeam?: string | null
+    customTeam?: string | null
+  }) => {
+    if (annots.customName !== undefined) {
+      setLocalFavourites((prev) =>
+        prev.map((f) => {
+          if (f.playerId !== playerId) return f
+          const nameValue = annots.customName || null
+          const displayName = annots.customName || f.playerRawName
+          const originalName = nameValue && nameValue !== f.playerRawName ? f.playerRawName : null
+          return { ...f, customName: nameValue, playerName: displayName, originalName }
+        })
+      )
+    }
+    savePlayerAnnotations(playerId, annots)
   }, [])
 
   const handleSaveNote = useCallback((playerId: string, note: string) => {
@@ -286,10 +294,14 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
             player={buildTryoutPlayer(selectedPlayer)}
             isFavorite={!unhearted.has(selectedPlayer.playerId)}
             customName={selectedPlayer.customName}
+            customJersey={null}
+            customPosition={null}
+            customPreviousTeam={null}
+            customTeam={null}
             note={selectedPlayer.notes}
             onClose={() => setSelectedPlayer(null)}
             onToggleFavorite={handleDetailSheetToggleFavorite}
-            onSaveName={(name) => handleSaveName(selectedPlayer.playerId, name)}
+            onSaveAnnotations={(annots) => handleSaveAnnotations(selectedPlayer.playerId, annots)}
             onSaveNote={(note) => handleSaveNote(selectedPlayer.playerId, note)}
             onSubmitCorrection={(fieldName, oldValue, newValue) =>
               handleSubmitCorrection(selectedPlayer.playerId, fieldName, oldValue, newValue)

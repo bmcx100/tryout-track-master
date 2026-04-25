@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from "react"
 import { Plus } from "lucide-react"
-import type { TryoutPlayer, Team } from "@/types"
+import type { TryoutPlayer, Team, Annotations } from "@/types"
 import { ViewToggle } from "./view-toggle"
 import { PositionFilter } from "./position-filter"
 import { PredictionBoard } from "./prediction-board"
@@ -15,11 +15,9 @@ import {
   resetPredictionOrders,
   resetPreviousTeamOrders,
 } from "@/app/(app)/teams/actions"
-import { toggleFavorite, bulkToggleFavorite, saveCustomName, savePlayerNote } from "@/app/(app)/annotations/actions"
+import { toggleFavorite, bulkToggleFavorite, savePlayerAnnotations, savePlayerNote } from "@/app/(app)/annotations/actions"
 import { submitCorrection, suggestPlayer } from "@/app/(app)/corrections/actions"
 import { adminUpdatePlayer, adminDeletePlayer } from "@/app/(app)/players/actions"
-
-type Annotations = Record<string, { isFavorite: boolean, notes: string | null, customName: string | null }>
 
 type TeamsPageClientProps = {
   players: TryoutPlayer[]
@@ -31,6 +29,8 @@ type TeamsPageClientProps = {
   annotations: Annotations
   role: string
 }
+
+const EMPTY_ANN = { isFavorite: false, notes: null, customName: null, customJersey: null, customPosition: null, customPreviousTeam: null, customTeam: null } as const
 
 export function TeamsPageClient({
   players: initialPlayers,
@@ -98,7 +98,7 @@ export function TeamsPageClient({
       if (existing) {
         return { ...prev, [playerId]: { ...existing, isFavorite: !existing.isFavorite } }
       }
-      return { ...prev, [playerId]: { isFavorite: true, notes: null, customName: null } }
+      return { ...prev, [playerId]: { ...EMPTY_ANN, isFavorite: true } }
     })
     toggleFavorite(playerId)
   }, [])
@@ -111,7 +111,7 @@ export function TeamsPageClient({
         if (existing) {
           next[id] = { ...existing, isFavorite: setFavorite }
         } else {
-          next[id] = { isFavorite: setFavorite, notes: null, customName: null }
+          next[id] = { ...EMPTY_ANN, isFavorite: setFavorite }
         }
       }
       return next
@@ -119,16 +119,28 @@ export function TeamsPageClient({
     bulkToggleFavorite(playerIds, setFavorite)
   }, [])
 
-  const handleSaveName = useCallback((playerId: string, customName: string) => {
+  const handleSaveAnnotations = useCallback((playerId: string, annots: {
+    customName?: string | null
+    customJersey?: string | null
+    customPosition?: string | null
+    customPreviousTeam?: string | null
+    customTeam?: string | null
+  }) => {
     setAnnotations((prev) => {
-      const existing = prev[playerId]
-      const nameValue = customName || null
-      if (existing) {
-        return { ...prev, [playerId]: { ...existing, customName: nameValue } }
+      const existing = prev[playerId] ?? { ...EMPTY_ANN }
+      return {
+        ...prev,
+        [playerId]: {
+          ...existing,
+          customName: annots.customName !== undefined ? (annots.customName || null) : existing.customName,
+          customJersey: annots.customJersey !== undefined ? (annots.customJersey || null) : existing.customJersey,
+          customPosition: annots.customPosition !== undefined ? (annots.customPosition || null) : existing.customPosition,
+          customPreviousTeam: annots.customPreviousTeam !== undefined ? (annots.customPreviousTeam || null) : existing.customPreviousTeam,
+          customTeam: annots.customTeam !== undefined ? (annots.customTeam || null) : existing.customTeam,
+        },
       }
-      return { ...prev, [playerId]: { isFavorite: false, notes: null, customName: nameValue } }
     })
-    saveCustomName(playerId, customName)
+    savePlayerAnnotations(playerId, annots)
   }, [])
 
   const handleSaveNote = useCallback((playerId: string, note: string) => {
@@ -138,7 +150,7 @@ export function TeamsPageClient({
       if (existing) {
         return { ...prev, [playerId]: { ...existing, notes: noteValue } }
       }
-      return { ...prev, [playerId]: { isFavorite: false, notes: noteValue, customName: null } }
+      return { ...prev, [playerId]: { ...EMPTY_ANN, notes: noteValue } }
     })
     savePlayerNote(playerId, note)
   }, [])
@@ -247,10 +259,14 @@ export function TeamsPageClient({
           player={selectedPlayer}
           isFavorite={selectedAnn?.isFavorite ?? false}
           customName={selectedAnn?.customName ?? null}
+          customJersey={selectedAnn?.customJersey ?? null}
+          customPosition={selectedAnn?.customPosition ?? null}
+          customPreviousTeam={selectedAnn?.customPreviousTeam ?? null}
+          customTeam={selectedAnn?.customTeam ?? null}
           note={selectedAnn?.notes ?? null}
           onClose={() => setSelectedPlayer(null)}
           onToggleFavorite={() => handleToggleFavorite(selectedPlayer.id)}
-          onSaveName={(name) => handleSaveName(selectedPlayer.id, name)}
+          onSaveAnnotations={(annots) => handleSaveAnnotations(selectedPlayer.id, annots)}
           onSaveNote={(note) => handleSaveNote(selectedPlayer.id, note)}
           onSubmitCorrection={(fieldName, oldValue, newValue) =>
             handleSubmitCorrection(selectedPlayer.id, fieldName, oldValue, newValue)
