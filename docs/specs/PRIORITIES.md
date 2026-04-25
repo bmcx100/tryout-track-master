@@ -2,7 +2,7 @@
 
 Last updated: 2026-04-25
 
-**Completed:** 001 (Previous teams sorting), 002 (Position filter), 003 (Continuations tracker), 004 (Division switcher), 005 (Continuations auto-scraper), 006 (Player management — parent), 007 (Admin CRUD & continuations linking), 008 (Bulk heart by previous team), 009 (Dashboard redesign), 010 (Association picker), 011 (Dashboard favourites summary), 012 (My Favourites page), 013 (Onboarding tooltips & help page), 014 (Sessions card & toggle), 015 (Dashboard hero cards & favourites), 016 (Sessions position filter & drag sorting), 017 (Scraper robustness & Final Team), 018 (Scraper manual fallback & team validation), 022 (Player row swipe & readability), 023 (Fix favourite logic), 024 (Player detail form redesign), 025 (Nav loading skeletons), 026 (Sessions column sort header), 027 (Team group drag reorder), 028 (Onboarding styling), 029 (Position filter count)
+**Completed:** 001 (Previous teams sorting), 002 (Position filter), 003 (Continuations tracker), 004 (Division switcher), 005 (Continuations auto-scraper), 006 (Player management — parent), 007 (Admin CRUD & continuations linking), 008 (Bulk heart by previous team), 009 (Dashboard redesign), 010 (Association picker), 011 (Dashboard favourites summary), 012 (My Favourites page), 013 (Onboarding tooltips & help page), 014 (Sessions card & toggle), 015 (Dashboard hero cards & favourites), 016 (Sessions position filter & drag sorting), 017 (Scraper robustness & Final Team), 018 (Scraper manual fallback & team validation), 022 (Player row swipe & readability), 023 (Fix favourite logic), 024 (Player detail form redesign), 025 (Nav loading skeletons), 026 (Sessions column sort header), 027 (Team group drag reorder), 028 (Onboarding styling), 029 (Position filter count), 031 (Admin continuations redesign), 033 (Complete level + dashboard favourites)
 
 | # | Feature | PRD Ref | Status |
 |---|---------|---------|--------|
@@ -24,7 +24,8 @@ Last updated: 2026-04-25
 | 29 | Teams position filter — adjust team heading player count when filter active | FR-039 | Done |
 | 30 | Corrections redesign — collapsible cards, parent view, stale data warnings | FR-025–027 | Specced ([030](030-corrections-redesign.md)) |
 | 31 | Admin Continuations Redesign — unified manage page, edit/delete rounds, estimated cuts | FR-039 | Specced ([031](031-admin-continuations-redesign.md)) |
-| 33 | Complete Level + Dashboard/Favourites multi-level fix — Current Rounds/Completed Teams toggle, persistent Made Team, fix favourite derivation | FR-039 | Specced ([033](033-complete-level-dashboard-favourites.md)) |
+| 33 | Complete Level + Dashboard/Favourites multi-level fix — Current Rounds/Completed Teams toggle, persistent Made Team, fix favourite derivation | FR-039 | Done |
+| 34 | Estimated players by position — F/D/G/Total fields, dashboard position breakdown, auto-calculated R2+ counts | FR-039 | Specced ([034](034-estimated-players-by-position.md)) |
 | 100 | Light mode (gold scale theme) | — | Specced ([021](021-light-mode.md)) |
 | 101 | Rework Help Page — expand content, mockups, deeper feature guidance | — | Not started |
 | 102 | Bulk status updates | FR-022 | Not started |

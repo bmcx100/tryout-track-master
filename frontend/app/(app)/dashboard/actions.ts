@@ -28,6 +28,11 @@ export type HeroCard = {
   favouritesCutFinal: number
   rosterPlayers?: HeroPlayerRow[]
   cutPlayers?: HeroPlayerRow[]
+  positionCountF: number | null
+  positionCountD: number | null
+  positionCountG: number | null
+  positionCountUnknown: number
+  positionSource: "estimated" | "calculated" | null
 }
 
 export type FavoriteStatus = {
@@ -93,6 +98,18 @@ export async function getDashboardData(
     .eq("is_completed", true)
 
   const completedLevels = new Set((completedData ?? []).map((cl) => cl.team_level))
+
+  // 5. Fetch tryout_players for position lookups
+  const { data: divPlayers } = await supabase
+    .from("tryout_players")
+    .select("jersey_number, position")
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .is("deleted_at", null)
+
+  const positionByJersey = new Map<string, string>(
+    (divPlayers ?? []).map((p) => [p.jersey_number, p.position ?? "?"])
+  )
 
   // --- Group rounds by team level ---
   const roundsByLevel = new Map<string, typeof allRounds>()
@@ -182,6 +199,46 @@ export async function getDashboardData(
       }
     }
 
+    // Compute position counts
+    let positionCountF: number | null = null
+    let positionCountD: number | null = null
+    let positionCountG: number | null = null
+    let positionCountUnknown = 0
+    let positionSource: "estimated" | "calculated" | null = null
+
+    if (latest.jersey_numbers.length > 0) {
+      // Calculate from actual player data
+      let fCount = 0, dCount = 0, gCount = 0, unknownCount = 0
+      for (const jn of latest.jersey_numbers) {
+        const pos = positionByJersey.get(jn) ?? "?"
+        if (pos === "F") fCount++
+        else if (pos === "D") dCount++
+        else if (pos === "G") gCount++
+        else unknownCount++
+      }
+      positionCountF = fCount
+      positionCountD = dCount
+      positionCountG = gCount
+      positionCountUnknown = unknownCount
+      positionSource = "calculated"
+    } else if (
+      latest.estimated_players_f != null ||
+      latest.estimated_players_d != null ||
+      latest.estimated_players_g != null
+    ) {
+      // Use estimated values (Round 1 with no jersey numbers)
+      positionCountF = latest.estimated_players_f ?? null
+      positionCountD = latest.estimated_players_d ?? null
+      positionCountG = latest.estimated_players_g ?? null
+      positionCountUnknown = 0
+      positionSource = "estimated"
+    }
+
+    // Use estimated_players as totalPlayers when jersey_numbers is empty
+    const effectiveTotalPlayers = totalPlayers === 0 && latest.estimated_players
+      ? latest.estimated_players
+      : totalPlayers
+
     heroCards.push({
       division,
       teamLevel: level,
@@ -191,10 +248,15 @@ export async function getDashboardData(
       continuingCount,
       cutCount,
       missingCount,
-      totalPlayers,
+      totalPlayers: effectiveTotalPlayers,
       isRoundOne,
       favouritesOnTeam,
       favouritesCutFinal,
+      positionCountF,
+      positionCountD,
+      positionCountG,
+      positionCountUnknown,
+      positionSource,
     })
 
     // Populate player rows for final team cards

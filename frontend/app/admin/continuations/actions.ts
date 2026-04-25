@@ -30,6 +30,9 @@ export async function updateRound(
     round_number?: number
     is_final_team?: boolean
     estimated_players?: number | null
+    estimated_players_f?: number | null
+    estimated_players_d?: number | null
+    estimated_players_g?: number | null
   }
 ): Promise<{ error?: string }> {
   const supabase = await createClient()

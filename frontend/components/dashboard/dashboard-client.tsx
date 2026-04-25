@@ -72,6 +72,30 @@ function getStatusLabel(statusType: string, players: FavoriteStatus[]): string {
   return statusType
 }
 
+function renderPositionBreakdown(card: HeroCard) {
+  if (!card.positionSource) return null
+  const hasData = (card.positionCountF != null && card.positionCountF > 0) ||
+    (card.positionCountD != null && card.positionCountD > 0) ||
+    (card.positionCountG != null && card.positionCountG > 0)
+  if (!hasData) return null
+
+  if (card.isRoundOne && card.positionSource === "estimated") {
+    const parts: string[] = []
+    if (card.positionCountF != null && card.positionCountF > 0) parts.push(`${card.positionCountF}F`)
+    if (card.positionCountD != null && card.positionCountD > 0) parts.push(`${card.positionCountD}D`)
+    if (card.positionCountG != null && card.positionCountG > 0) parts.push(`${card.positionCountG}G`)
+    if (card.positionCountUnknown > 0) parts.push(`${card.positionCountUnknown}?`)
+    return <div className="dashboard-hero-position-breakdown">{parts.join(" / ")}</div>
+  }
+
+  const parts: string[] = []
+  if (card.positionCountF != null) parts.push(`F: ${card.positionCountF}`)
+  if (card.positionCountD != null) parts.push(`D: ${card.positionCountD}`)
+  if (card.positionCountG != null) parts.push(`G: ${card.positionCountG}`)
+  if (card.positionCountUnknown > 0) parts.push(`?: ${card.positionCountUnknown}`)
+  return <div className="dashboard-hero-position-breakdown">{parts.join(" | ")}</div>
+}
+
 function renderFinalTeamHeroCard(card: HeroCard) {
   return (
     <Link key={card.teamLevel} href="/continuations" className="dashboard-hero-card dashboard-hero-card-link">
@@ -90,6 +114,7 @@ function renderFinalTeamHeroCard(card: HeroCard) {
           <div className="dashboard-hero-stat-label">Cuts</div>
         </div>
       </div>
+      {renderPositionBreakdown(card)}
     </Link>
   )
 }
@@ -131,6 +156,7 @@ function renderHeroCard(card: HeroCard) {
           </>
         )}
       </div>
+      {renderPositionBreakdown(card)}
     </Link>
   )
 }

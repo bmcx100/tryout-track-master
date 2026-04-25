@@ -128,6 +128,9 @@ export type Database = {
           created_at: string
           division: string
           estimated_players: number | null
+          estimated_players_d: number | null
+          estimated_players_f: number | null
+          estimated_players_g: number | null
           id: string
           ip_players: string[]
           is_final_team: boolean
@@ -145,6 +148,9 @@ export type Database = {
           created_at?: string
           division: string
           estimated_players?: number | null
+          estimated_players_d?: number | null
+          estimated_players_f?: number | null
+          estimated_players_g?: number | null
           id?: string
           ip_players?: string[]
           is_final_team?: boolean
@@ -162,6 +168,9 @@ export type Database = {
           created_at?: string
           division?: string
           estimated_players?: number | null
+          estimated_players_d?: number | null
+          estimated_players_f?: number | null
+          estimated_players_g?: number | null
           id?: string
           ip_players?: string[]
           is_final_team?: boolean

@@ -85,6 +85,10 @@ export function AdminContinuationsClient({
   const [sessionInfo, setSessionInfo] = useState("")
   const [isFinalTeam, setIsFinalTeam] = useState(false)
   const [estimatedPlayers, setEstimatedPlayers] = useState<string>("")
+  const [estimatedPlayersF, setEstimatedPlayersF] = useState<string>("")
+  const [estimatedPlayersD, setEstimatedPlayersD] = useState<string>("")
+  const [estimatedPlayersG, setEstimatedPlayersG] = useState<string>("")
+  const [scrapeEstTotalManual, setScrapeEstTotalManual] = useState(false)
   const [showManualEntry, setShowManualEntry] = useState(false)
   const [manualText, setManualText] = useState("")
   const [showSizeWarning, setShowSizeWarning] = useState(false)
@@ -115,6 +119,10 @@ export function AdminContinuationsClient({
     session_info?: string
     is_final_team?: boolean
     estimated_players?: string
+    estimated_players_f?: string
+    estimated_players_d?: string
+    estimated_players_g?: string
+    total_manually_edited?: boolean
     jersey_numbers?: string[]
   }>>({})
   const [saving, setSaving] = useState<string | null>(null)
@@ -154,6 +162,10 @@ export function AdminContinuationsClient({
       setDetectedTeamLevel(scrapeResult.teamLevel)
       setIsFinalTeam(false)
       setEstimatedPlayers("")
+      setEstimatedPlayersF("")
+      setEstimatedPlayersD("")
+      setEstimatedPlayersG("")
+      setScrapeEstTotalManual(false)
       const nextRound = await getNextRoundNumber(associationId, division, defaultTeamLevel)
       setRoundNumber(nextRound)
       setScraping(false)
@@ -211,8 +223,17 @@ export function AdminContinuationsClient({
 
       // If estimated players was set, update the confirmed round
       const ep = parseInt(estimatedPlayers, 10)
-      if (!isNaN(ep) && ep > 0) {
-        await updateRound(newDraftId, { estimated_players: ep })
+      const epF = parseInt(estimatedPlayersF, 10)
+      const epD = parseInt(estimatedPlayersD, 10)
+      const epG = parseInt(estimatedPlayersG, 10)
+      const hasEstimates = (!isNaN(ep) && ep > 0) || (!isNaN(epF) && epF > 0) || (!isNaN(epD) && epD > 0) || (!isNaN(epG) && epG > 0)
+      if (hasEstimates) {
+        await updateRound(newDraftId, {
+          estimated_players: !isNaN(ep) && ep > 0 ? ep : null,
+          estimated_players_f: !isNaN(epF) && epF > 0 ? epF : null,
+          estimated_players_d: !isNaN(epD) && epD > 0 ? epD : null,
+          estimated_players_g: !isNaN(epG) && epG > 0 ? epG : null,
+        })
       }
 
       setDraftId(newDraftId)
@@ -255,6 +276,10 @@ export function AdminContinuationsClient({
     setSessionInfo("")
     setIsFinalTeam(false)
     setEstimatedPlayers("")
+    setEstimatedPlayersF("")
+    setEstimatedPlayersD("")
+    setEstimatedPlayersG("")
+    setScrapeEstTotalManual(false)
     setError(null)
     setShowManualEntry(false)
     setShowSizeWarning(false)
@@ -292,6 +317,10 @@ export function AdminContinuationsClient({
       session_info: edits?.session_info ?? round.session_info ?? "",
       is_final_team: edits?.is_final_team ?? round.is_final_team,
       estimated_players: edits?.estimated_players ?? (round.estimated_players?.toString() ?? ""),
+      estimated_players_f: edits?.estimated_players_f ?? (round.estimated_players_f?.toString() ?? ""),
+      estimated_players_d: edits?.estimated_players_d ?? (round.estimated_players_d?.toString() ?? ""),
+      estimated_players_g: edits?.estimated_players_g ?? (round.estimated_players_g?.toString() ?? ""),
+      total_manually_edited: edits?.total_manually_edited ?? false,
       jersey_numbers: edits?.jersey_numbers ?? round.jersey_numbers,
     }
   }
@@ -302,6 +331,9 @@ export function AdminContinuationsClient({
     if (edits.session_info !== undefined && edits.session_info !== (round.session_info ?? "")) return true
     if (edits.is_final_team !== undefined && edits.is_final_team !== round.is_final_team) return true
     if (edits.estimated_players !== undefined && edits.estimated_players !== (round.estimated_players?.toString() ?? "")) return true
+    if (edits.estimated_players_f !== undefined && edits.estimated_players_f !== (round.estimated_players_f?.toString() ?? "")) return true
+    if (edits.estimated_players_d !== undefined && edits.estimated_players_d !== (round.estimated_players_d?.toString() ?? "")) return true
+    if (edits.estimated_players_g !== undefined && edits.estimated_players_g !== (round.estimated_players_g?.toString() ?? "")) return true
     if (edits.jersey_numbers !== undefined) {
       const orig = round.jersey_numbers
       const edited = edits.jersey_numbers
@@ -325,10 +357,16 @@ export function AdminContinuationsClient({
     setSaving(round.id)
 
     const ep = parseInt(state.estimated_players, 10)
+    const epF = parseInt(state.estimated_players_f, 10)
+    const epD = parseInt(state.estimated_players_d, 10)
+    const epG = parseInt(state.estimated_players_g, 10)
     const { error: saveErr } = await updateRound(round.id, {
       session_info: state.session_info || null,
       is_final_team: state.is_final_team,
       estimated_players: !isNaN(ep) && ep > 0 ? ep : null,
+      estimated_players_f: !isNaN(epF) && epF > 0 ? epF : null,
+      estimated_players_d: !isNaN(epD) && epD > 0 ? epD : null,
+      estimated_players_g: !isNaN(epG) && epG > 0 ? epG : null,
       jersey_numbers: state.jersey_numbers,
     })
 
@@ -348,6 +386,9 @@ export function AdminContinuationsClient({
               session_info: state.session_info || null,
               is_final_team: state.is_final_team,
               estimated_players: !isNaN(ep) && ep > 0 ? ep : null,
+              estimated_players_f: !isNaN(epF) && epF > 0 ? epF : null,
+              estimated_players_d: !isNaN(epD) && epD > 0 ? epD : null,
+              estimated_players_g: !isNaN(epG) && epG > 0 ? epG : null,
               jersey_numbers: state.jersey_numbers,
             }
           : r
@@ -491,6 +532,42 @@ export function AdminContinuationsClient({
   // Count badges
   const activeCount = activeTeamLevelKeys.length
   const completedCount = completedTeamLevelKeys.length
+
+  // Auto-calculate total from F+D+G for scrape confirmation
+  const handleScrapePositionChange = (field: "F" | "D" | "G", value: string) => {
+    const setters = { F: setEstimatedPlayersF, D: setEstimatedPlayersD, G: setEstimatedPlayersG }
+    setters[field](value)
+    if (!scrapeEstTotalManual) {
+      const fVal = field === "F" ? parseInt(value, 10) : parseInt(estimatedPlayersF, 10)
+      const dVal = field === "D" ? parseInt(value, 10) : parseInt(estimatedPlayersD, 10)
+      const gVal = field === "G" ? parseInt(value, 10) : parseInt(estimatedPlayersG, 10)
+      const anySet = !isNaN(fVal) || !isNaN(dVal) || !isNaN(gVal)
+      if (anySet) {
+        setEstimatedPlayers(((fVal || 0) + (dVal || 0) + (gVal || 0)).toString())
+      }
+    }
+  }
+
+  // Auto-calculate total from F+D+G for round editor
+  const handleRoundPositionChange = (roundId: string, field: "estimated_players_f" | "estimated_players_d" | "estimated_players_g", value: string) => {
+    updateEdit(roundId, field, value)
+    const edits = roundEdits[roundId]
+    const round = publishedRounds.find((r) => r.id === roundId)
+    if (!edits?.total_manually_edited) {
+      const getVal = (f: "estimated_players_f" | "estimated_players_d" | "estimated_players_g") => {
+        if (f === field) return parseInt(value, 10)
+        if (edits?.[f] !== undefined) return parseInt(edits[f] ?? "", 10)
+        return round?.[f] != null ? round[f] : NaN
+      }
+      const fVal = getVal("estimated_players_f")
+      const dVal = getVal("estimated_players_d")
+      const gVal = getVal("estimated_players_g")
+      const anySet = !isNaN(fVal) || !isNaN(dVal) || !isNaN(gVal)
+      if (anySet) {
+        updateEdit(roundId, "estimated_players", ((fVal || 0) + (dVal || 0) + (gVal || 0)).toString())
+      }
+    }
+  }
 
   return (
     <div className="admin-continuations-page">
@@ -655,14 +732,55 @@ export function AdminContinuationsClient({
                 <div className="scrape-summary-row">
                   <span className="scrape-summary-label">Est. Players</span>
                   <span className="scrape-summary-value">
-                    <input
-                      type="number"
-                      min={0}
-                      className="admin-estimated-input"
-                      placeholder="optional"
-                      value={estimatedPlayers}
-                      onChange={(e) => setEstimatedPlayers(e.target.value)}
-                    />
+                    <div className="admin-estimated-group">
+                      <div className="admin-estimated-field">
+                        <span className="admin-estimated-field-label">All</span>
+                        <input
+                          type="number"
+                          min={0}
+                          className="admin-estimated-input admin-estimated-input-total"
+                          placeholder="0"
+                          value={estimatedPlayers}
+                          onChange={(e) => {
+                            setEstimatedPlayers(e.target.value)
+                            setScrapeEstTotalManual(true)
+                          }}
+                        />
+                      </div>
+                      <div className="admin-estimated-field">
+                        <span className="admin-estimated-field-label">F</span>
+                        <input
+                          type="number"
+                          min={0}
+                          className="admin-estimated-input"
+                          placeholder="0"
+                          value={estimatedPlayersF}
+                          onChange={(e) => handleScrapePositionChange("F", e.target.value)}
+                        />
+                      </div>
+                      <div className="admin-estimated-field">
+                        <span className="admin-estimated-field-label">D</span>
+                        <input
+                          type="number"
+                          min={0}
+                          className="admin-estimated-input"
+                          placeholder="0"
+                          value={estimatedPlayersD}
+                          onChange={(e) => handleScrapePositionChange("D", e.target.value)}
+                        />
+                      </div>
+                      <div className="admin-estimated-field">
+                        <span className="admin-estimated-field-label">G</span>
+                        <input
+                          type="number"
+                          min={0}
+                          className="admin-estimated-input"
+                          placeholder="0"
+                          value={estimatedPlayersG}
+                          onChange={(e) => handleScrapePositionChange("G", e.target.value)}
+                        />
+                      </div>
+                    </div>
                   </span>
                 </div>
               </div>
@@ -938,14 +1056,55 @@ export function AdminContinuationsClient({
                           {/* Estimated players */}
                           <div className="admin-round-field">
                             <label className="admin-round-field-label">Estimated Players</label>
-                            <input
-                              type="number"
-                              min={0}
-                              className="admin-estimated-input"
-                              placeholder="not set"
-                              value={state.estimated_players}
-                              onChange={(e) => updateEdit(round.id, "estimated_players", e.target.value)}
-                            />
+                            <div className="admin-estimated-group">
+                              <div className="admin-estimated-field">
+                                <span className="admin-estimated-field-label">All</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  className="admin-estimated-input admin-estimated-input-total"
+                                  placeholder="0"
+                                  value={state.estimated_players}
+                                  onChange={(e) => {
+                                    updateEdit(round.id, "estimated_players", e.target.value)
+                                    updateEdit(round.id, "total_manually_edited", true)
+                                  }}
+                                />
+                              </div>
+                              <div className="admin-estimated-field">
+                                <span className="admin-estimated-field-label">F</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  className="admin-estimated-input"
+                                  placeholder="0"
+                                  value={state.estimated_players_f}
+                                  onChange={(e) => handleRoundPositionChange(round.id, "estimated_players_f", e.target.value)}
+                                />
+                              </div>
+                              <div className="admin-estimated-field">
+                                <span className="admin-estimated-field-label">D</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  className="admin-estimated-input"
+                                  placeholder="0"
+                                  value={state.estimated_players_d}
+                                  onChange={(e) => handleRoundPositionChange(round.id, "estimated_players_d", e.target.value)}
+                                />
+                              </div>
+                              <div className="admin-estimated-field">
+                                <span className="admin-estimated-field-label">G</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  className="admin-estimated-input"
+                                  placeholder="0"
+                                  value={state.estimated_players_g}
+                                  onChange={(e) => handleRoundPositionChange(round.id, "estimated_players_g", e.target.value)}
+                                />
+                              </div>
+                            </div>
                           </div>
 
                           {/* Session info */}

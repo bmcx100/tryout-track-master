@@ -3065,16 +3065,40 @@ body:has(.admin-shell) {
 }
 
 .admin-estimated-input {
-  @apply rounded-lg px-3 py-1.5 text-sm;
+  @apply rounded-lg px-2 py-1.5 text-sm;
   background: oklch(0.22 0 0);
   border: 1px solid oklch(0.3 0 0);
   color: var(--dm-umber);
-  width: 100px;
+  width: 4rem;
+}
+
+.admin-estimated-input-total {
+  border-color: oklch(0.4 0 0);
 }
 
 .admin-estimated-input::placeholder {
   color: var(--dm-dust);
   opacity: 0.6;
+}
+
+.admin-estimated-group {
+  @apply flex gap-2 items-end;
+}
+
+.admin-estimated-field {
+  @apply flex flex-col gap-1;
+}
+
+.admin-estimated-field-label {
+  @apply text-xs;
+  color: var(--dm-dust);
+}
+
+.dashboard-hero-position-breakdown {
+  @apply text-xs mt-1;
+  color: var(--dm-dust);
+  opacity: 0.8;
+  text-align: center;
 }
 
 .admin-detected-hint {
