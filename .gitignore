@@ -10,6 +10,7 @@ node_modules/
 
 # testing
 coverage/
+specs/temp-testing-screenshots
 
 # next.js
 .next/

@@ -3,7 +3,9 @@ export function SkeletonSessions() {
     <div className="skeleton-sessions">
       {/* Summary card / round selector */}
       <div style={{ padding: "8px 0" }}>
-        <div className="skeleton-summary-card" />
+        <div className="skeleton-summary-card">
+          <div className="skeleton-block" style={{ width: 148, height: 19, borderRadius: 8, marginLeft: 14, marginTop: 12 }} />
+        </div>
       </div>
 
       {/* Sessions toggle bar */}
@@ -14,13 +16,9 @@ export function SkeletonSessions() {
         </div>
       </div>
 
-      {/* Position filter chips */}
+      {/* Position filter bar */}
       <div className="skeleton-filter-row">
-        <div className="skeleton-chip" style={{ width: 36 }} />
-        <div className="skeleton-chip" style={{ width: 28 }} />
-        <div className="skeleton-chip" style={{ width: 28 }} />
-        <div className="skeleton-chip" style={{ width: 28 }} />
-        <div className="skeleton-circle" style={{ width: 28, height: 28 }} />
+        <div className="skeleton-block" style={{ width: 150, height: 28, borderRadius: 12 }} />
       </div>
 
       {/* Session groups */}

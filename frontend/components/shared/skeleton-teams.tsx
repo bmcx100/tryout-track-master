@@ -2,20 +2,16 @@ export function SkeletonTeams() {
   return (
     <div className="skeleton-teams">
       {/* View toggle bar */}
-      <div style={{ padding: "12px 20px" }}>
+      <div style={{ padding: "4px 20px" }}>
         <div className="skeleton-toggle">
           <div className="skeleton-toggle-pill" />
           <div className="skeleton-toggle-pill" />
         </div>
       </div>
 
-      {/* Position filter chips */}
+      {/* Position filter bar */}
       <div className="skeleton-filter-row">
-        <div className="skeleton-chip" style={{ width: 36 }} />
-        <div className="skeleton-chip" style={{ width: 28 }} />
-        <div className="skeleton-chip" style={{ width: 28 }} />
-        <div className="skeleton-chip" style={{ width: 28 }} />
-        <div className="skeleton-circle" style={{ width: 28, height: 28 }} />
+        <div className="skeleton-block" style={{ width: 150, height: 28, borderRadius: 12 }} />
       </div>
 
       {/* Instruction line placeholder */}
