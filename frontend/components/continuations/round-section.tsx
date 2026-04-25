@@ -420,6 +420,20 @@ export function RoundSection({
     })
   }, [])
 
+  // Estimated cuts message
+  const estimatedCutsMessage = (() => {
+    if (cutPlayers.length > 0) return null
+    if (!previousRound) return null
+    if (previousRound.jersey_numbers.length === 0 && previousRound.estimated_players != null && previousRound.estimated_players > 0) {
+      const est = previousRound.estimated_players - activeRound.jersey_numbers.length
+      return `~${est} estimated cuts`
+    }
+    if (previousRound.jersey_numbers.length === 0) {
+      return "Cut count unavailable"
+    }
+    return null
+  })()
+
   if (activeView === "cuts") {
     const displayCuts = positionFilter
       ? cutOrderedList.filter((p) => matchesPositionFilter(p, positionFilter))
@@ -433,7 +447,11 @@ export function RoundSection({
       >
         <div className="continuations-cuts-list">
           {displayCuts.length === 0 ? (
-            <p className="continuations-empty-cuts">No cuts yet</p>
+            estimatedCutsMessage ? (
+              <p className="continuations-estimated-cuts">{estimatedCutsMessage}</p>
+            ) : (
+              <p className="continuations-empty-cuts">No cuts yet</p>
+            )
           ) : (
             <SortableContext
               items={displayCuts.map((p) => p.jerseyNumber)}

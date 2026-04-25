@@ -27,7 +27,7 @@ export function TeamSection({
   onPlayerEdit,
   onToggleFavorite,
 }: TeamSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(!isOfficial)
   const tones = ["team-header-tone-1", "team-header-tone-2", "team-header-tone-3"]
   const toneClass = tones[index % 3]
 

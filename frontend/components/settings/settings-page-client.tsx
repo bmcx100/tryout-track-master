@@ -78,11 +78,11 @@ export function SettingsPageClient({
             <span className="settings-row-label">Add Player</span>
             <ChevronRight size={16} className="settings-row-chevron" />
           </Link>
-          <Link href="/settings/scrape" className="settings-row">
+          <Link href="/admin/continuations" className="settings-row">
             <span className="settings-row-icon settings-row-icon-gold">
               <Scan size={18} />
             </span>
-            <span className="settings-row-label">Scrape Continuations</span>
+            <span className="settings-row-label">Continuations</span>
             <ChevronRight size={16} className="settings-row-chevron" />
           </Link>
         </section>

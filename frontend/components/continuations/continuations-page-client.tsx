@@ -235,7 +235,19 @@ export function ContinuationsPageClient({
   const cuts = previousRound
     ? previousRound.jersey_numbers.filter((jn) => !activeRound.jersey_numbers.includes(jn))
     : []
-  const cutCount = cuts.length
+
+  // Estimated cuts: when previous round has no jersey list but has estimated_players
+  let cutCount = cuts.length
+  let isEstimatedCuts = false
+  if (
+    previousRound &&
+    previousRound.jersey_numbers.length === 0 &&
+    previousRound.estimated_players != null &&
+    previousRound.estimated_players > 0
+  ) {
+    cutCount = previousRound.estimated_players - activeRound.jersey_numbers.length
+    isEstimatedCuts = true
+  }
   const newPlayers = previousRound
     ? activeRound.jersey_numbers.filter((jn) => !previousRound.jersey_numbers.includes(jn))
     : []
@@ -309,6 +321,7 @@ export function ContinuationsPageClient({
         continuingCount={totalContinuing}
         cutCount={cutCount}
         isFinalTeam={activeRound.is_final_team}
+        isEstimatedCuts={isEstimatedCuts}
       />
 
       {/* Position filter */}

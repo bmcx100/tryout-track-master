@@ -127,6 +127,7 @@ export type Database = {
           association_id: string
           created_at: string
           division: string
+          estimated_players: number | null
           id: string
           ip_players: string[]
           is_final_team: boolean
@@ -143,6 +144,7 @@ export type Database = {
           association_id: string
           created_at?: string
           division: string
+          estimated_players?: number | null
           id?: string
           ip_players?: string[]
           is_final_team?: boolean
@@ -159,6 +161,7 @@ export type Database = {
           association_id?: string
           created_at?: string
           division?: string
+          estimated_players?: number | null
           id?: string
           ip_players?: string[]
           is_final_team?: boolean

@@ -8,6 +8,7 @@ type SessionsToggleProps = {
   continuingCount: number
   cutCount: number
   isFinalTeam?: boolean
+  isEstimatedCuts?: boolean
 }
 
 const VIEWS = [
@@ -20,7 +21,7 @@ const FINAL_VIEWS = [
   { label: "Final Cuts", value: "cuts" as const },
 ]
 
-export function SessionsToggle({ activeView, onViewChange, continuingCount, cutCount, isFinalTeam }: SessionsToggleProps) {
+export function SessionsToggle({ activeView, onViewChange, continuingCount, cutCount, isFinalTeam, isEstimatedCuts }: SessionsToggleProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [pill, setPill] = useState({ left: 0, width: 0 })
@@ -28,7 +29,8 @@ export function SessionsToggle({ activeView, onViewChange, continuingCount, cutC
   const views = isFinalTeam ? FINAL_VIEWS : VIEWS
   const activeIndex = views.findIndex((v) => v.value === activeView)
 
-  const counts = [continuingCount, cutCount]
+  const cutDisplay = isEstimatedCuts ? `~${cutCount}` : `${cutCount}`
+  const countDisplays = [`${continuingCount}`, cutDisplay]
 
   useEffect(() => {
     const btn = btnRefs.current[activeIndex]
@@ -52,7 +54,7 @@ export function SessionsToggle({ activeView, onViewChange, continuingCount, cutC
           className={activeView === view.value ? "sessions-toggle-btn active" : "sessions-toggle-btn"}
           onClick={() => onViewChange(view.value)}
         >
-          {view.label} ({counts[i]})
+          {view.label} ({countDisplays[i]})
         </button>
       ))}
     </div>

@@ -2713,6 +2713,34 @@ body:has(.admin-shell) {
   cursor: pointer;
 }
 
+.scrape-final-team-label input[type="checkbox"] {
+  @apply rounded;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: oklch(0.22 0 0);
+  border: 1px solid oklch(0.4 0 0);
+  cursor: pointer;
+  position: relative;
+}
+
+.scrape-final-team-label input[type="checkbox"]:checked {
+  background: var(--dm-gold);
+  border-color: var(--dm-gold);
+}
+
+.scrape-final-team-label input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid oklch(0.15 0 0);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
 .scrape-jersey-vertical {
   @apply flex flex-col gap-0 mb-4 rounded-xl overflow-hidden;
   background: oklch(0.15 0 0);
@@ -2918,6 +2946,147 @@ body:has(.admin-shell) {
   @apply text-sm mb-4;
   color: var(--dm-umber);
   line-height: 1.5;
+}
+
+/* ============================================================
+   Admin Continuations Page
+   ============================================================ */
+
+.admin-continuations-page {
+  @apply px-5 py-6;
+}
+
+.admin-team-group {
+  @apply mt-6;
+}
+
+.admin-round-card {
+  @apply rounded-lg mb-3 overflow-hidden;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+}
+
+.admin-round-card-header {
+  @apply flex items-center gap-2 w-full px-4 py-3 text-left text-sm font-medium;
+  color: var(--dm-umber);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.admin-round-card-title {
+  @apply font-semibold;
+}
+
+.admin-round-card-count {
+  @apply text-xs px-2 py-0.5 rounded-full;
+  background: oklch(0.25 0 0);
+  color: var(--dm-dust);
+}
+
+.admin-round-card-session {
+  @apply text-xs flex-1 truncate;
+  color: var(--dm-dust);
+}
+
+.admin-round-card-chevron {
+  @apply ml-auto flex-shrink-0;
+  color: var(--dm-dust);
+}
+
+.admin-round-card-body {
+  @apply px-4 pb-4 pt-1;
+  border-top: 1px solid var(--dm-border);
+}
+
+.admin-round-meta {
+  @apply flex items-center gap-3 mb-3 text-xs;
+  color: var(--dm-dust);
+}
+
+.admin-round-meta-date {
+  color: var(--dm-dust);
+  opacity: 0.7;
+}
+
+.admin-round-field {
+  @apply mb-3;
+}
+
+.admin-round-field-label {
+  @apply block text-xs font-medium mb-1;
+  color: var(--dm-dust);
+}
+
+.admin-jersey-field-header {
+  @apply flex items-center justify-between mb-1;
+}
+
+.admin-jersey-scroll {
+  @apply overflow-y-auto rounded;
+  max-height: 300px;
+  border: 1px solid var(--dm-border);
+  background: var(--dm-dune-alt);
+}
+
+.admin-jersey-section {
+  @apply mb-3;
+}
+
+.admin-jersey-toggle {
+  @apply flex items-center gap-1 text-sm font-medium mb-1;
+  color: var(--dm-gold);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.admin-round-actions {
+  @apply flex items-center gap-3 mt-4;
+}
+
+.admin-delete-btn {
+  @apply flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium;
+  background: oklch(0.20 0.04 25);
+  color: oklch(0.70 0.18 25);
+  border: none;
+  cursor: pointer;
+}
+
+.admin-delete-btn:hover {
+  background: oklch(0.25 0.06 25);
+}
+
+.admin-delete-warning {
+  @apply text-sm mb-4 p-3 rounded-lg;
+  background: oklch(0.20 0.04 25);
+  color: oklch(0.75 0.12 25);
+  line-height: 1.5;
+}
+
+.admin-estimated-input {
+  @apply rounded-lg px-3 py-1.5 text-sm;
+  background: oklch(0.22 0 0);
+  border: 1px solid oklch(0.3 0 0);
+  color: var(--dm-umber);
+  width: 100px;
+}
+
+.admin-estimated-input::placeholder {
+  color: var(--dm-dust);
+  opacity: 0.6;
+}
+
+.admin-detected-hint {
+  @apply text-xs ml-2;
+  color: var(--dm-dust);
+  opacity: 0.7;
+}
+
+.continuations-estimated-cuts {
+  @apply text-sm text-center py-6;
+  color: var(--dm-dust);
+  opacity: 0.8;
 }
 
 /* ============================================================
