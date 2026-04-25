@@ -11,6 +11,7 @@ type TeamSectionProps = {
   players: TryoutPlayer[]
   isOfficial: boolean
   index: number
+  totalPlayerCount?: number
   annotations?: Annotations
   onPlayerEdit?: (player: TryoutPlayer) => void
   onToggleFavorite?: (playerId: string) => void
@@ -21,6 +22,7 @@ export function TeamSection({
   players,
   isOfficial,
   index,
+  totalPlayerCount,
   annotations,
   onPlayerEdit,
   onToggleFavorite,
@@ -41,7 +43,11 @@ export function TeamSection({
           </span>
         </div>
         <div className="team-header-right">
-          <span className="team-count">{players.length} Players</span>
+          <span className="team-count">
+            {totalPlayerCount != null && totalPlayerCount !== players.length
+              ? `${players.length}/${totalPlayerCount}`
+              : players.length} Players
+          </span>
           <ChevronDown
             size={16}
             className="team-chevron"

@@ -94,6 +94,8 @@ export function TeamsPageClient({
     setIsResetting(true)
     setTimeout(() => setIsResetting(false), 500)
 
+    setActivePosition(null)
+
     if (activePosition === null) {
       if (activeView === "predictions") {
         resetPredictionOrders(associationId)

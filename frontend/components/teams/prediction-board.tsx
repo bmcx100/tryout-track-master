@@ -398,12 +398,11 @@ export function PredictionBoard({
 
   // Apply position filter at display level (after distribution)
   const displaySections = positionFilter
-    ? sections
-        .map((s) => ({
-          ...s,
-          players: s.players.filter((p) => p.position === positionFilter),
-        }))
-        .filter((s) => s.players.length > 0)
+    ? sections.map((s) => ({
+        ...s,
+        totalPlayerCount: s.players.length,
+        players: s.players.filter((p) => p.position === positionFilter),
+      }))
     : sections
 
   return (
@@ -419,6 +418,7 @@ export function PredictionBoard({
           players={section.players}
           isOfficial={section.isOfficial}
           index={i}
+          totalPlayerCount={"totalPlayerCount" in section ? section.totalPlayerCount as number : undefined}
           annotations={annotations}
           onPlayerEdit={onPlayerEdit}
           onToggleFavorite={onToggleFavorite}

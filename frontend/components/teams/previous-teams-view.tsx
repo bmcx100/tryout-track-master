@@ -117,6 +117,7 @@ function SortableTeamSection({
   players,
   allPlayers,
   index,
+  positionFilter,
   annotations,
   onPlayerEdit,
   onToggleFavorite,
@@ -126,6 +127,7 @@ function SortableTeamSection({
   players: TryoutPlayer[]
   allPlayers: TryoutPlayer[]
   index: number
+  positionFilter?: string | null
   annotations?: Annotations
   onPlayerEdit?: (player: TryoutPlayer) => void
   onToggleFavorite?: (playerId: string) => void
@@ -193,7 +195,11 @@ function SortableTeamSection({
           </span>
         </div>
         <div className="team-header-right">
-          <span className="team-count">{allPlayers.length} Players</span>
+          <span className="team-count">
+            {positionFilter
+              ? `${players.length}/${allPlayers.length}`
+              : allPlayers.length} Players
+          </span>
           <ChevronDown
             size={16}
             className="team-chevron"
@@ -426,7 +432,6 @@ export function PreviousTeamsView({
   const displayEntries = positionFilter
     ? groupEntries
         .map(([label, gp]) => [label, gp.filter((p) => p.position === positionFilter)] as const)
-        .filter(([, gp]) => gp.length > 0)
     : groupEntries
 
   // Team sortable IDs
@@ -468,6 +473,7 @@ export function PreviousTeamsView({
             players={groupPlayers}
             allPlayers={allPlayersByGroup[label] ?? groupPlayers}
             index={i}
+            positionFilter={positionFilter}
             annotations={annotations}
             onPlayerEdit={onPlayerEdit}
             onToggleFavorite={onToggleFavorite}
