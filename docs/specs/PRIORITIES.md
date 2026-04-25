@@ -24,7 +24,7 @@ Last updated: 2026-04-25
 | 29 | Teams position filter — adjust team heading player count when filter active | FR-039 | Done |
 | 30 | Corrections redesign — collapsible cards, parent view, stale data warnings | FR-025–027 | Specced ([030](030-corrections-redesign.md)) |
 | 31 | Admin Continuations Redesign — unified manage page, edit/delete rounds, estimated cuts | FR-039 | Specced ([031](031-admin-continuations-redesign.md)) |
-| 33 | Close Level + Dashboard/Favourites multi-level fix — manual close/reopen levels, persistent Made Team, fix favourite derivation | FR-039 | Draft ([drafts/close-level-dashboard-favourites.md](drafts/close-level-dashboard-favourites.md)) |
+| 33 | Complete Level + Dashboard/Favourites multi-level fix — Current Rounds/Completed Teams toggle, persistent Made Team, fix favourite derivation | FR-039 | Specced ([033](033-complete-level-dashboard-favourites.md)) |
 | 100 | Light mode (gold scale theme) | — | Specced ([021](021-light-mode.md)) |
 | 101 | Rework Help Page — expand content, mockups, deeper feature guidance | — | Not started |
 | 102 | Bulk status updates | FR-022 | Not started |

@@ -56,6 +56,10 @@ function getStatusLabel(statusType: string, players: FavouritePagePlayer[]): str
     const isFinal = players.some((p) => p.roundType === "final")
     return isFinal ? "Final Cut" : "Cut"
   }
+  if (statusType === "made_team") {
+    const text = players[0]?.statusText
+    return text && text !== "Made Team" ? text : "Made Team"
+  }
   return STATUS_LABELS[statusType] ?? statusType
 }
 

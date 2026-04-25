@@ -27,6 +27,16 @@ export type Annotations = Record<string, {
   customTeam: string | null
 }>
 
+export type ContinuationLevelStatus = {
+  id: string
+  association_id: string
+  division: string
+  team_level: string
+  is_completed: boolean
+  completed_at: string | null
+  completed_by: string | null
+}
+
 // Status display labels
 export const STATUS_LABELS: Record<string, string> = {
   registered: "Registered",

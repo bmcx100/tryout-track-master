@@ -2,7 +2,7 @@
 // Admin Continuations Management
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, ExternalLink, Loader2, TriangleAlert, ChevronDown, Trash2 } from "lucide-react"
+import { ArrowLeft, ExternalLink, Loader2, TriangleAlert, ChevronDown, Trash2, CheckCircle, Undo2 } from "lucide-react"
 import Link from "next/link"
 import {
   scrapeContinuationsPage,
@@ -17,6 +17,8 @@ import {
   deleteRound,
   createEmptyRound,
   getRevertablePlayerCount,
+  completeLevel,
+  uncompleteLevel,
 } from "@/app/admin/continuations/actions"
 import type { ContinuationRound } from "@/types"
 
@@ -27,6 +29,7 @@ type AdminContinuationsClientProps = {
   existingDrafts: ContinuationRound[]
   publishedRounds: ContinuationRound[]
   defaultTeamLevel: string
+  completedLevels: { team_level: string, completed_at: string | null }[]
 }
 
 const PAGE_TYPE_LABELS: Record<string, string> = {
@@ -37,6 +40,7 @@ const PAGE_TYPE_LABELS: Record<string, string> = {
 }
 
 const TEAM_LEVELS = ["AA", "A", "BB", "B", "C"]
+const LEVEL_ORDER = ["AA", "A", "BB", "B", "C"]
 const TEAM_SIZE_MIN = 14
 const TEAM_SIZE_MAX = 19
 
@@ -61,8 +65,12 @@ export function AdminContinuationsClient({
   existingDrafts,
   publishedRounds: initialPublished,
   defaultTeamLevel,
+  completedLevels: initialCompletedLevels,
 }: AdminContinuationsClientProps) {
   const router = useRouter()
+
+  // View toggle state
+  const [activeView, setActiveView] = useState<"current" | "completed">("current")
 
   // Scrape state
   const [scraping, setScraping] = useState(false)
@@ -87,6 +95,18 @@ export function AdminContinuationsClient({
   const [publishedRounds, setPublishedRounds] = useState(initialPublished)
   useEffect(() => { setPublishedRounds(initialPublished) }, [initialPublished])
   const [expandedRoundId, setExpandedRoundId] = useState<string | null>(null)
+
+  // Completed levels state
+  const [completedLevels, setCompletedLevels] = useState(initialCompletedLevels)
+  useEffect(() => { setCompletedLevels(initialCompletedLevels) }, [initialCompletedLevels])
+  const completedSet = new Set(completedLevels.map((cl) => cl.team_level))
+
+  // Complete/uncomplete state
+  const [completeTarget, setCompleteTarget] = useState<{ level: string } | null>(null)
+  const [completing, setCompleting] = useState(false)
+  const [uncompleteTarget, setUncompleteTarget] = useState<{ level: string } | null>(null)
+  const [uncompleting, setUncompleting] = useState(false)
+  const [expandedCompletedLevel, setExpandedCompletedLevel] = useState<string | null>(null)
 
   // Edit state for expanded round
   const [editJerseyModal, setEditJerseyModal] = useState<string | null>(null)
@@ -417,6 +437,38 @@ export function AdminContinuationsClient({
     router.refresh()
   }
 
+  // Complete level handler
+  const handleCompleteLevel = async (teamLevel: string) => {
+    setCompleting(true)
+    const { error: completeErr } = await completeLevel(associationId, division, teamLevel)
+    setCompleting(false)
+    setCompleteTarget(null)
+
+    if (completeErr) {
+      setError(completeErr)
+      return
+    }
+
+    setActiveView("completed")
+    router.refresh()
+  }
+
+  // Uncomplete level handler
+  const handleUncompleteLevel = async (teamLevel: string) => {
+    setUncompleting(true)
+    const { error: uncompleteErr } = await uncompleteLevel(associationId, division, teamLevel)
+    setUncompleting(false)
+    setUncompleteTarget(null)
+
+    if (uncompleteErr) {
+      setError(uncompleteErr)
+      return
+    }
+
+    setActiveView("current")
+    router.refresh()
+  }
+
   // Group published rounds by team level
   const roundsByTeam: Record<string, ContinuationRound[]> = {}
   for (const round of publishedRounds) {
@@ -427,7 +479,18 @@ export function AdminContinuationsClient({
   for (const level of Object.keys(roundsByTeam)) {
     roundsByTeam[level].sort((a, b) => b.round_number - a.round_number)
   }
-  const teamLevelKeys = Object.keys(roundsByTeam).sort()
+
+  // Filter for current (active) vs completed
+  const activeTeamLevelKeys = Object.keys(roundsByTeam)
+    .filter((level) => !completedSet.has(level))
+    .sort()
+  const completedTeamLevelKeys = LEVEL_ORDER.filter(
+    (level) => completedSet.has(level) && roundsByTeam[level]
+  )
+
+  // Count badges
+  const activeCount = activeTeamLevelKeys.length
+  const completedCount = completedTeamLevelKeys.length
 
   return (
     <div className="admin-continuations-page">
@@ -452,378 +515,556 @@ export function AdminContinuationsClient({
 
       <h1 className="scrape-page-title">Continuations</h1>
 
+      {/* Current Rounds / Completed Teams toggle */}
+      <div className="admin-view-toggle">
+        <button
+          className={`admin-view-toggle-btn ${activeView === "current" ? "active" : ""}`}
+          onClick={() => setActiveView("current")}
+        >
+          Current Rounds
+          {activeCount > 0 && <span className="admin-view-toggle-badge">{activeCount}</span>}
+        </button>
+        <button
+          className={`admin-view-toggle-btn ${activeView === "completed" ? "active" : ""}`}
+          onClick={() => setActiveView("completed")}
+        >
+          Completed Teams
+          {completedCount > 0 && <span className="admin-view-toggle-badge">{completedCount}</span>}
+        </button>
+      </div>
+
       {error && <p className="scrape-error">{error}</p>}
 
-      {/* Scrape section */}
-      {!result && !draftId && drafts.length === 0 && (
-        <div className="admin-round-actions">
-          <button className="scrape-confirm-btn" onClick={handleScrape} disabled={scraping}>
-            {scraping ? <Loader2 size={14} className="scrape-spinner" /> : null}
-            Scrape New Round
-          </button>
-          <button className="scrape-discard-btn" onClick={handleShowCreateEmpty}>
-            Create Empty Round
-          </button>
-        </div>
-      )}
-
-      {/* Scraping loading */}
-      {scraping && (
-        <div className="scrape-loading">
-          <Loader2 size={16} className="scrape-spinner" />
-          Fetching continuations page...
-        </div>
-      )}
-
-      {/* Scrape preview */}
-      {result && !draftId && (
-        <div className="scrape-preview">
-          <div className="scrape-summary-card">
-            <div className="scrape-summary-row">
-              <span className="scrape-summary-label">Type</span>
-              <span className="scrape-summary-value scrape-value-light">
-                {PAGE_TYPE_LABELS[result.pageType]}
-              </span>
-            </div>
-            <div className="scrape-summary-row">
-              <span className="scrape-summary-label">Team Level</span>
-              <span className="scrape-summary-value">
-                <select
-                  className="scrape-team-select"
-                  value={teamLevelOverride ?? defaultTeamLevel}
-                  onChange={async (e) => {
-                    const level = e.target.value
-                    setTeamLevelOverride(level)
-                    const nextRound = await getNextRoundNumber(associationId, division, level)
-                    setRoundNumber(nextRound)
-                  }}
-                >
-                  {TEAM_LEVELS.map((level) => (
-                    <option key={level} value={level}>
-                      {division} {level}
-                    </option>
-                  ))}
-                </select>
-                {detectedTeamLevel && detectedTeamLevel !== teamLevelOverride && (
-                  <span className="admin-detected-hint">Detected: {detectedTeamLevel}</span>
-                )}
-              </span>
-            </div>
-            <div className="scrape-summary-row">
-              <span className="scrape-summary-label">Round</span>
-              <span className="scrape-summary-value">
-                <input
-                  type="number"
-                  min={1}
-                  className="scrape-round-input"
-                  value={roundNumber ?? ""}
-                  onChange={(e) => setRoundNumber(parseInt(e.target.value, 10) || 1)}
-                />
-              </span>
-            </div>
-            <div className="scrape-summary-row">
-              <span className="scrape-summary-label">Players</span>
-              <span className="scrape-summary-value scrape-value-light">
-                {result.jerseyNumbers.length} players
-              </span>
-            </div>
-            {result.ipPlayers.length > 0 && (
-              <div className="scrape-summary-row">
-                <span className="scrape-summary-label">IP</span>
-                <span className="scrape-summary-value">
-                  {result.ipPlayers.length} IP
-                </span>
-              </div>
-            )}
-            {result.reportingDate && (
-              <div className="scrape-summary-row">
-                <span className="scrape-summary-label">Report Date</span>
-                <span className="scrape-summary-value">
-                  {result.reportingDate}
-                </span>
-              </div>
-            )}
-            <div className="scrape-summary-row">
-              <span className="scrape-summary-label">Session Info</span>
-              <span className="scrape-summary-value">
-                <input
-                  type="text"
-                  className="scrape-session-info-input"
-                  placeholder="e.g. Game vs Kanata"
-                  value={sessionInfo}
-                  onChange={(e) => setSessionInfo(e.target.value)}
-                />
-              </span>
-            </div>
-            <div className="scrape-summary-row scrape-final-team-row">
-              <span className="scrape-summary-label">Final Team</span>
-              <span className="scrape-summary-value">
-                <label className="scrape-final-team-label scrape-value-light">
-                  <input
-                    type="checkbox"
-                    checked={isFinalTeam}
-                    onChange={(e) => setIsFinalTeam(e.target.checked)}
-                  />
-                  Final Team
-                </label>
-              </span>
-            </div>
-            <div className="scrape-summary-row">
-              <span className="scrape-summary-label">Est. Players</span>
-              <span className="scrape-summary-value">
-                <input
-                  type="number"
-                  min={0}
-                  className="admin-estimated-input"
-                  placeholder="optional"
-                  value={estimatedPlayers}
-                  onChange={(e) => setEstimatedPlayers(e.target.value)}
-                />
-              </span>
-            </div>
-          </div>
-
-          {/* Collapsible jersey list */}
-          {result.jerseyNumbers.length === 0 ? (
-            <div className="scrape-no-players-warning">
-              <TriangleAlert size={16} />
-              <p>No players found on this&nbsp;page</p>
-            </div>
-          ) : (
-            <div className="admin-jersey-section">
-              <button
-                className="admin-jersey-toggle"
-                onClick={() => setScrapeJerseyExpanded(!scrapeJerseyExpanded)}
-              >
-                <ChevronDown
-                  size={14}
-                  style={{
-                    transform: scrapeJerseyExpanded ? "rotate(0deg)" : "rotate(-90deg)",
-                    transition: "transform 200ms",
-                  }}
-                />
-                {result.jerseyNumbers.length} jerseys
+      {/* ============ CURRENT ROUNDS VIEW ============ */}
+      {activeView === "current" && (
+        <>
+          {/* Scrape section */}
+          {!result && !draftId && drafts.length === 0 && (
+            <div className="admin-round-actions">
+              <button className="scrape-confirm-btn" onClick={handleScrape} disabled={scraping}>
+                {scraping ? <Loader2 size={14} className="scrape-spinner" /> : null}
+                Scrape New Round
               </button>
-              {scrapeJerseyExpanded && (
-                <div className="admin-jersey-scroll">
-                  {result.jerseyNumbers.map((num) => (
-                    <div
-                      key={num}
-                      className={`scrape-jersey-row ${result.ipPlayers.includes(num) ? "scrape-jersey-row-ip" : ""}`}
+              <button className="scrape-discard-btn" onClick={handleShowCreateEmpty}>
+                Create Empty Round
+              </button>
+            </div>
+          )}
+
+          {/* Scraping loading */}
+          {scraping && (
+            <div className="scrape-loading">
+              <Loader2 size={16} className="scrape-spinner" />
+              Fetching continuations page...
+            </div>
+          )}
+
+          {/* Scrape preview */}
+          {result && !draftId && (
+            <div className="scrape-preview">
+              <div className="scrape-summary-card">
+                <div className="scrape-summary-row">
+                  <span className="scrape-summary-label">Type</span>
+                  <span className="scrape-summary-value scrape-value-light">
+                    {PAGE_TYPE_LABELS[result.pageType]}
+                  </span>
+                </div>
+                <div className="scrape-summary-row">
+                  <span className="scrape-summary-label">Team Level</span>
+                  <span className="scrape-summary-value">
+                    <select
+                      className="scrape-team-select"
+                      value={teamLevelOverride ?? defaultTeamLevel}
+                      onChange={async (e) => {
+                        const level = e.target.value
+                        setTeamLevelOverride(level)
+                        const nextRound = await getNextRoundNumber(associationId, division, level)
+                        setRoundNumber(nextRound)
+                      }}
                     >
-                      <span className="scrape-jersey-num">{num}</span>
-                      {result.ipPlayers.includes(num) && (
-                        <span className="scrape-ip-tag">IP</span>
-                      )}
+                      {TEAM_LEVELS.map((level) => (
+                        <option key={level} value={level}>
+                          {division} {level}
+                        </option>
+                      ))}
+                    </select>
+                    {detectedTeamLevel && detectedTeamLevel !== teamLevelOverride && (
+                      <span className="admin-detected-hint">Detected: {detectedTeamLevel}</span>
+                    )}
+                  </span>
+                </div>
+                <div className="scrape-summary-row">
+                  <span className="scrape-summary-label">Round</span>
+                  <span className="scrape-summary-value">
+                    <input
+                      type="number"
+                      min={1}
+                      className="scrape-round-input"
+                      value={roundNumber ?? ""}
+                      onChange={(e) => setRoundNumber(parseInt(e.target.value, 10) || 1)}
+                    />
+                  </span>
+                </div>
+                <div className="scrape-summary-row">
+                  <span className="scrape-summary-label">Players</span>
+                  <span className="scrape-summary-value scrape-value-light">
+                    {result.jerseyNumbers.length} players
+                  </span>
+                </div>
+                {result.ipPlayers.length > 0 && (
+                  <div className="scrape-summary-row">
+                    <span className="scrape-summary-label">IP</span>
+                    <span className="scrape-summary-value">
+                      {result.ipPlayers.length} IP
+                    </span>
+                  </div>
+                )}
+                {result.reportingDate && (
+                  <div className="scrape-summary-row">
+                    <span className="scrape-summary-label">Report Date</span>
+                    <span className="scrape-summary-value">
+                      {result.reportingDate}
+                    </span>
+                  </div>
+                )}
+                <div className="scrape-summary-row">
+                  <span className="scrape-summary-label">Session Info</span>
+                  <span className="scrape-summary-value">
+                    <input
+                      type="text"
+                      className="scrape-session-info-input"
+                      placeholder="e.g. Game vs Kanata"
+                      value={sessionInfo}
+                      onChange={(e) => setSessionInfo(e.target.value)}
+                    />
+                  </span>
+                </div>
+                <div className="scrape-summary-row scrape-final-team-row">
+                  <span className="scrape-summary-label">Final Team</span>
+                  <span className="scrape-summary-value">
+                    <label className="scrape-final-team-label scrape-value-light">
+                      <input
+                        type="checkbox"
+                        checked={isFinalTeam}
+                        onChange={(e) => setIsFinalTeam(e.target.checked)}
+                      />
+                      Final Team
+                    </label>
+                  </span>
+                </div>
+                <div className="scrape-summary-row">
+                  <span className="scrape-summary-label">Est. Players</span>
+                  <span className="scrape-summary-value">
+                    <input
+                      type="number"
+                      min={0}
+                      className="admin-estimated-input"
+                      placeholder="optional"
+                      value={estimatedPlayers}
+                      onChange={(e) => setEstimatedPlayers(e.target.value)}
+                    />
+                  </span>
+                </div>
+              </div>
+
+              {/* Collapsible jersey list */}
+              {result.jerseyNumbers.length === 0 ? (
+                <div className="scrape-no-players-warning">
+                  <TriangleAlert size={16} />
+                  <p>No players found on this&nbsp;page</p>
+                </div>
+              ) : (
+                <div className="admin-jersey-section">
+                  <button
+                    className="admin-jersey-toggle"
+                    onClick={() => setScrapeJerseyExpanded(!scrapeJerseyExpanded)}
+                  >
+                    <ChevronDown
+                      size={14}
+                      style={{
+                        transform: scrapeJerseyExpanded ? "rotate(0deg)" : "rotate(-90deg)",
+                        transition: "transform 200ms",
+                      }}
+                    />
+                    {result.jerseyNumbers.length} jerseys
+                  </button>
+                  {scrapeJerseyExpanded && (
+                    <div className="admin-jersey-scroll">
+                      {result.jerseyNumbers.map((num) => (
+                        <div
+                          key={num}
+                          className={`scrape-jersey-row ${result.ipPlayers.includes(num) ? "scrape-jersey-row-ip" : ""}`}
+                        >
+                          <span className="scrape-jersey-num">{num}</span>
+                          {result.ipPlayers.includes(num) && (
+                            <span className="scrape-ip-tag">IP</span>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
-            </div>
-          )}
 
-          {result.pageType === "everyone_continues" && (
-            <p className="scrape-everyone-note">
-              Everyone continues — roster copied from previous&nbsp;round
-            </p>
-          )}
+              {result.pageType === "everyone_continues" && (
+                <p className="scrape-everyone-note">
+                  Everyone continues — roster copied from previous&nbsp;round
+                </p>
+              )}
 
-          <button className="scrape-manual-entry-link scrape-edit-manually" onClick={openManualEntry}>
-            Edit manually
-          </button>
-
-          <div className="scrape-actions">
-            <button
-              className="scrape-confirm-btn"
-              onClick={handleConfirmClick}
-              disabled={confirming}
-            >
-              {confirming ? <Loader2 size={14} className="scrape-spinner" /> : null}
-              Confirm
-            </button>
-            <button
-              className="scrape-discard-btn"
-              onClick={handleDiscard}
-              disabled={confirming}
-            >
-              Discard
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Manual entry modal */}
-      {showManualEntry && (
-        <div className="scrape-modal-overlay" onClick={() => setShowManualEntry(false)}>
-          <div className="scrape-modal-card" onClick={(e) => e.stopPropagation()}>
-            <h2 className="scrape-modal-title">Enter Jersey Numbers</h2>
-            <p className="scrape-modal-text">Paste jersey numbers, one per line or&nbsp;comma-separated</p>
-            <textarea
-              className="scrape-manual-textarea"
-              rows={8}
-              placeholder={"e.g.\n12\n34\n56"}
-              value={manualText}
-              onChange={(e) => setManualText(e.target.value)}
-            />
-            <div className="scrape-modal-actions">
-              <button className="scrape-confirm-btn" onClick={handleApplyManual}>
-                Apply
+              <button className="scrape-manual-entry-link scrape-edit-manually" onClick={openManualEntry}>
+                Edit manually
               </button>
-              <button className="scrape-discard-btn" onClick={() => setShowManualEntry(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Size warning */}
-      {showSizeWarning && (
-        <div className="scrape-modal-overlay" onClick={() => setShowSizeWarning(false)}>
-          <div className="scrape-modal-card" onClick={(e) => e.stopPropagation()}>
-            <p className="scrape-size-confirm-text">
-              This final team has {playerCount} players. Typical team size is&nbsp;16-17. Are you&nbsp;sure?
-            </p>
-            <div className="scrape-modal-actions">
-              <button className="scrape-confirm-btn" onClick={doConfirm}>
-                Yes, confirm
-              </button>
-              <button className="scrape-discard-btn" onClick={() => setShowSizeWarning(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Existing drafts */}
-      {drafts.length > 0 && !result && (
-        <div className="scrape-drafts">
-          <h2 className="settings-section-title">Pending Drafts</h2>
-          {drafts.map((draft) => (
-            <div key={draft.id} className="scrape-draft-card">
-              <div className="scrape-draft-info">
-                <span className="scrape-draft-level">
-                  {draft.division} {draft.team_level} — Round {draft.round_number}
-                </span>
-                <span className="scrape-draft-count">
-                  {draft.jersey_numbers.length} players
-                </span>
-              </div>
-              <div className="scrape-draft-actions">
+              <div className="scrape-actions">
                 <button
-                  className="scrape-confirm-btn scrape-draft-btn"
-                  onClick={() => handleConfirmExisting(draft.id)}
+                  className="scrape-confirm-btn"
+                  onClick={handleConfirmClick}
+                  disabled={confirming}
                 >
+                  {confirming ? <Loader2 size={14} className="scrape-spinner" /> : null}
                   Confirm
                 </button>
                 <button
-                  className="scrape-discard-btn scrape-draft-btn"
-                  onClick={() => handleDiscardExisting(draft.id)}
+                  className="scrape-discard-btn"
+                  onClick={handleDiscard}
+                  disabled={confirming}
                 >
                   Discard
                 </button>
               </div>
             </div>
-          ))}
-        </div>
+          )}
+
+          {/* Manual entry modal */}
+          {showManualEntry && (
+            <div className="scrape-modal-overlay" onClick={() => setShowManualEntry(false)}>
+              <div className="scrape-modal-card" onClick={(e) => e.stopPropagation()}>
+                <h2 className="scrape-modal-title">Enter Jersey Numbers</h2>
+                <p className="scrape-modal-text">Paste jersey numbers, one per line or&nbsp;comma-separated</p>
+                <textarea
+                  className="scrape-manual-textarea"
+                  rows={8}
+                  placeholder={"e.g.\n12\n34\n56"}
+                  value={manualText}
+                  onChange={(e) => setManualText(e.target.value)}
+                />
+                <div className="scrape-modal-actions">
+                  <button className="scrape-confirm-btn" onClick={handleApplyManual}>
+                    Apply
+                  </button>
+                  <button className="scrape-discard-btn" onClick={() => setShowManualEntry(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Size warning */}
+          {showSizeWarning && (
+            <div className="scrape-modal-overlay" onClick={() => setShowSizeWarning(false)}>
+              <div className="scrape-modal-card" onClick={(e) => e.stopPropagation()}>
+                <p className="scrape-size-confirm-text">
+                  This final team has {playerCount} players. Typical team size is&nbsp;16-17. Are you&nbsp;sure?
+                </p>
+                <div className="scrape-modal-actions">
+                  <button className="scrape-confirm-btn" onClick={doConfirm}>
+                    Yes, confirm
+                  </button>
+                  <button className="scrape-discard-btn" onClick={() => setShowSizeWarning(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Existing drafts */}
+          {drafts.length > 0 && !result && (
+            <div className="scrape-drafts">
+              <h2 className="settings-section-title">Pending Drafts</h2>
+              {drafts.map((draft) => (
+                <div key={draft.id} className="scrape-draft-card">
+                  <div className="scrape-draft-info">
+                    <span className="scrape-draft-level">
+                      {draft.division} {draft.team_level} — Round {draft.round_number}
+                    </span>
+                    <span className="scrape-draft-count">
+                      {draft.jersey_numbers.length} players
+                    </span>
+                  </div>
+                  <div className="scrape-draft-actions">
+                    <button
+                      className="scrape-confirm-btn scrape-draft-btn"
+                      onClick={() => handleConfirmExisting(draft.id)}
+                    >
+                      Confirm
+                    </button>
+                    <button
+                      className="scrape-discard-btn scrape-draft-btn"
+                      onClick={() => handleDiscardExisting(draft.id)}
+                    >
+                      Discard
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Create empty round form */}
+          {showCreateEmpty && (
+            <div className="scrape-summary-card">
+              <h2 className="settings-section-title">Create Empty Round</h2>
+              <div className="scrape-summary-row">
+                <span className="scrape-summary-label">Team Level</span>
+                <span className="scrape-summary-value">
+                  <select
+                    className="scrape-team-select"
+                    value={emptyTeamLevel}
+                    onChange={async (e) => {
+                      const level = e.target.value
+                      setEmptyTeamLevel(level)
+                      const nextRound = await getNextRoundNumber(associationId, division, level)
+                      setEmptyRoundNumber(nextRound)
+                    }}
+                  >
+                    {TEAM_LEVELS.map((level) => (
+                      <option key={level} value={level}>
+                        {division} {level}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+              </div>
+              <div className="scrape-summary-row">
+                <span className="scrape-summary-label">Round</span>
+                <span className="scrape-summary-value">
+                  <input
+                    type="number"
+                    min={1}
+                    className="scrape-round-input"
+                    value={emptyRoundNumber ?? ""}
+                    onChange={(e) => setEmptyRoundNumber(parseInt(e.target.value, 10) || 1)}
+                  />
+                </span>
+              </div>
+              <div className="scrape-summary-row">
+                <span className="scrape-summary-label">Session Info</span>
+                <span className="scrape-summary-value">
+                  <input
+                    type="text"
+                    className="scrape-session-info-input"
+                    placeholder="e.g. A-M / N-Z"
+                    value={emptySessionInfo}
+                    onChange={(e) => setEmptySessionInfo(e.target.value)}
+                  />
+                </span>
+              </div>
+              <div className="scrape-actions">
+                <button
+                  className="scrape-confirm-btn"
+                  onClick={handleCreateEmpty}
+                  disabled={creating}
+                >
+                  {creating ? <Loader2 size={14} className="scrape-spinner" /> : null}
+                  Create
+                </button>
+                <button
+                  className="scrape-discard-btn"
+                  onClick={() => setShowCreateEmpty(false)}
+                  disabled={creating}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Published rounds list — active (non-completed) levels only */}
+          {activeTeamLevelKeys.length === 0 && !result && drafts.length === 0 && !showCreateEmpty ? (
+            <p className="scrape-no-url">No active continuations. Scrape or create a round to&nbsp;get&nbsp;started.</p>
+          ) : (
+            activeTeamLevelKeys.map((level) => (
+              <div key={level} className="admin-team-group">
+                <h2 className="settings-section-title">{division} {level}</h2>
+                {roundsByTeam[level].map((round) => {
+                  const isExpanded = expandedRoundId === round.id
+                  const state = getEditState(round)
+                  const changed = hasChanges(round)
+
+                  return (
+                    <div key={round.id} className="admin-round-card">
+                      <button
+                        className="admin-round-card-header"
+                        onClick={() => toggleRoundExpand(round.id)}
+                      >
+                        <span className="admin-round-card-title">
+                          {round.is_final_team ? "Final Team" : `Round ${round.round_number}`}
+                        </span>
+                        <span className="admin-round-card-count">
+                          {round.jersey_numbers.length} players
+                        </span>
+                        {round.session_info && (
+                          <span className="admin-round-card-session">{round.session_info}</span>
+                        )}
+                        <ChevronDown
+                          size={14}
+                          className="admin-round-card-chevron"
+                          style={{
+                            transform: isExpanded ? "rotate(0deg)" : "rotate(-90deg)",
+                            transition: "transform 200ms",
+                          }}
+                        />
+                      </button>
+
+                      {isExpanded && (
+                        <div className="admin-round-card-body">
+                          {/* Metadata */}
+                          {round.source_url && (
+                            <div className="admin-round-meta">
+                              <a href={round.source_url} target="_blank" rel="noopener noreferrer" className="scrape-source-link">
+                                Source URL <ExternalLink size={12} />
+                              </a>
+                              {round.scraped_at && (
+                                <span className="admin-round-meta-date">
+                                  Scraped {new Date(round.scraped_at).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Estimated players */}
+                          <div className="admin-round-field">
+                            <label className="admin-round-field-label">Estimated Players</label>
+                            <input
+                              type="number"
+                              min={0}
+                              className="admin-estimated-input"
+                              placeholder="not set"
+                              value={state.estimated_players}
+                              onChange={(e) => updateEdit(round.id, "estimated_players", e.target.value)}
+                            />
+                          </div>
+
+                          {/* Session info */}
+                          <div className="admin-round-field">
+                            <label className="admin-round-field-label">Session Info</label>
+                            <input
+                              type="text"
+                              className="scrape-session-info-input"
+                              placeholder="e.g. Game vs Kanata"
+                              value={state.session_info}
+                              onChange={(e) => updateEdit(round.id, "session_info", e.target.value)}
+                            />
+                          </div>
+
+                          {/* Final team checkbox */}
+                          <div className="admin-round-field">
+                            <label className="scrape-final-team-label scrape-value-light">
+                              <input
+                                type="checkbox"
+                                checked={state.is_final_team}
+                                onChange={(e) => updateEdit(round.id, "is_final_team", e.target.checked)}
+                              />
+                              Final Team
+                            </label>
+                          </div>
+
+                          {/* Jersey numbers */}
+                          <div className="admin-round-field">
+                            <div className="admin-jersey-field-header">
+                              <label className="admin-round-field-label">
+                                Jersey Numbers ({state.jersey_numbers.length})
+                              </label>
+                              <button
+                                className="scrape-manual-entry-link"
+                                onClick={() => handleEditJerseys(round)}
+                              >
+                                Edit Jerseys
+                              </button>
+                            </div>
+                            <div className="admin-jersey-scroll">
+                              {state.jersey_numbers.map((num) => (
+                                <div key={num} className="scrape-jersey-row">
+                                  <span className="scrape-jersey-num">{num}</span>
+                                  {(round.ip_players ?? []).includes(num) && (
+                                    <span className="scrape-ip-tag">IP</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Action buttons */}
+                          <div className="admin-round-actions">
+                            <button
+                              className="scrape-confirm-btn"
+                              onClick={() => handleSaveChanges(round)}
+                              disabled={!changed || saving === round.id}
+                            >
+                              {saving === round.id ? <Loader2 size={14} className="scrape-spinner" /> : null}
+                              Save Changes
+                            </button>
+                            <button
+                              className="admin-delete-btn"
+                              onClick={() => handleDeleteClick(round)}
+                            >
+                              <Trash2 size={14} />
+                              Delete Round
+                            </button>
+                          </div>
+
+                          {/* Mark Level Complete — only on Final Team round cards */}
+                          {state.is_final_team && (
+                            <button
+                              className="admin-complete-btn"
+                              onClick={() => setCompleteTarget({ level: round.team_level })}
+                            >
+                              <CheckCircle size={14} />
+                              Mark Level Complete
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            ))
+          )}
+        </>
       )}
 
-      {/* Create empty round form */}
-      {showCreateEmpty && (
-        <div className="scrape-summary-card">
-          <h2 className="settings-section-title">Create Empty Round</h2>
-          <div className="scrape-summary-row">
-            <span className="scrape-summary-label">Team Level</span>
-            <span className="scrape-summary-value">
-              <select
-                className="scrape-team-select"
-                value={emptyTeamLevel}
-                onChange={async (e) => {
-                  const level = e.target.value
-                  setEmptyTeamLevel(level)
-                  const nextRound = await getNextRoundNumber(associationId, division, level)
-                  setEmptyRoundNumber(nextRound)
-                }}
-              >
-                {TEAM_LEVELS.map((level) => (
-                  <option key={level} value={level}>
-                    {division} {level}
-                  </option>
-                ))}
-              </select>
-            </span>
-          </div>
-          <div className="scrape-summary-row">
-            <span className="scrape-summary-label">Round</span>
-            <span className="scrape-summary-value">
-              <input
-                type="number"
-                min={1}
-                className="scrape-round-input"
-                value={emptyRoundNumber ?? ""}
-                onChange={(e) => setEmptyRoundNumber(parseInt(e.target.value, 10) || 1)}
-              />
-            </span>
-          </div>
-          <div className="scrape-summary-row">
-            <span className="scrape-summary-label">Session Info</span>
-            <span className="scrape-summary-value">
-              <input
-                type="text"
-                className="scrape-session-info-input"
-                placeholder="e.g. A-M / N-Z"
-                value={emptySessionInfo}
-                onChange={(e) => setEmptySessionInfo(e.target.value)}
-              />
-            </span>
-          </div>
-          <div className="scrape-actions">
-            <button
-              className="scrape-confirm-btn"
-              onClick={handleCreateEmpty}
-              disabled={creating}
-            >
-              {creating ? <Loader2 size={14} className="scrape-spinner" /> : null}
-              Create
-            </button>
-            <button
-              className="scrape-discard-btn"
-              onClick={() => setShowCreateEmpty(false)}
-              disabled={creating}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Published rounds list */}
-      {publishedRounds.length === 0 && !result && drafts.length === 0 && !showCreateEmpty ? (
-        <p className="scrape-no-url">No continuations yet. Scrape or create a round to&nbsp;get&nbsp;started.</p>
-      ) : (
-        teamLevelKeys.map((level) => (
-          <div key={level} className="admin-team-group">
-            <h2 className="settings-section-title">{division} {level}</h2>
-            {roundsByTeam[level].map((round) => {
-              const isExpanded = expandedRoundId === round.id
-              const state = getEditState(round)
-              const changed = hasChanges(round)
+      {/* ============ COMPLETED TEAMS VIEW ============ */}
+      {activeView === "completed" && (
+        <>
+          {completedTeamLevelKeys.length === 0 ? (
+            <p className="admin-completed-empty">
+              No completed teams yet. Mark a level as complete from its Final Team round card in&nbsp;Current&nbsp;Rounds.
+            </p>
+          ) : (
+            completedTeamLevelKeys.map((level) => {
+              const levelRounds = roundsByTeam[level] ?? []
+              const finalRound = levelRounds.find((r) => r.is_final_team)
+              const madeTeamCount = finalRound?.jersey_numbers.length ?? 0
+              const finalizedDate = finalRound
+                ? new Date(finalRound.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                : null
+              const isExpanded = expandedCompletedLevel === level
 
               return (
-                <div key={round.id} className="admin-round-card">
+                <div key={level} className="admin-completed-card">
                   <button
-                    className="admin-round-card-header"
-                    onClick={() => toggleRoundExpand(round.id)}
+                    className="admin-completed-card-header"
+                    onClick={() => setExpandedCompletedLevel(isExpanded ? null : level)}
                   >
-                    <span className="admin-round-card-title">
-                      {round.is_final_team ? "Final Team" : `Round ${round.round_number}`}
-                    </span>
-                    <span className="admin-round-card-count">
-                      {round.jersey_numbers.length} players
-                    </span>
-                    {round.session_info && (
-                      <span className="admin-round-card-session">{round.session_info}</span>
+                    <span className="admin-completed-card-title">{division} {level}</span>
+                    <span className="admin-completed-card-stat">{levelRounds.length} rounds</span>
+                    <span className="admin-completed-card-stat">{madeTeamCount} players</span>
+                    {finalizedDate && (
+                      <span className="admin-completed-card-date">{finalizedDate}</span>
                     )}
                     <ChevronDown
                       size={14}
@@ -836,108 +1077,35 @@ export function AdminContinuationsClient({
                   </button>
 
                   {isExpanded && (
-                    <div className="admin-round-card-body">
-                      {/* Metadata */}
-                      {round.source_url && (
-                        <div className="admin-round-meta">
-                          <a href={round.source_url} target="_blank" rel="noopener noreferrer" className="scrape-source-link">
-                            Source URL <ExternalLink size={12} />
-                          </a>
-                          {round.scraped_at && (
-                            <span className="admin-round-meta-date">
-                              Scraped {new Date(round.scraped_at).toLocaleDateString()}
-                            </span>
+                    <div className="admin-completed-card-body">
+                      {levelRounds.map((round) => (
+                        <div key={round.id} className="admin-completed-round-row">
+                          <span className="admin-completed-round-label">
+                            {round.is_final_team ? "Final Team" : `Round ${round.round_number}`}
+                          </span>
+                          <span className="admin-completed-round-count">
+                            {round.jersey_numbers.length} players
+                          </span>
+                          {round.session_info && (
+                            <span className="admin-completed-round-session">{round.session_info}</span>
                           )}
                         </div>
-                      )}
+                      ))}
 
-                      {/* Estimated players */}
-                      <div className="admin-round-field">
-                        <label className="admin-round-field-label">Estimated Players</label>
-                        <input
-                          type="number"
-                          min={0}
-                          className="admin-estimated-input"
-                          placeholder="not set"
-                          value={state.estimated_players}
-                          onChange={(e) => updateEdit(round.id, "estimated_players", e.target.value)}
-                        />
-                      </div>
-
-                      {/* Session info */}
-                      <div className="admin-round-field">
-                        <label className="admin-round-field-label">Session Info</label>
-                        <input
-                          type="text"
-                          className="scrape-session-info-input"
-                          placeholder="e.g. Game vs Kanata"
-                          value={state.session_info}
-                          onChange={(e) => updateEdit(round.id, "session_info", e.target.value)}
-                        />
-                      </div>
-
-                      {/* Final team checkbox */}
-                      <div className="admin-round-field">
-                        <label className="scrape-final-team-label scrape-value-light">
-                          <input
-                            type="checkbox"
-                            checked={state.is_final_team}
-                            onChange={(e) => updateEdit(round.id, "is_final_team", e.target.checked)}
-                          />
-                          Final Team
-                        </label>
-                      </div>
-
-                      {/* Jersey numbers */}
-                      <div className="admin-round-field">
-                        <div className="admin-jersey-field-header">
-                          <label className="admin-round-field-label">
-                            Jersey Numbers ({state.jersey_numbers.length})
-                          </label>
-                          <button
-                            className="scrape-manual-entry-link"
-                            onClick={() => handleEditJerseys(round)}
-                          >
-                            Edit Jerseys
-                          </button>
-                        </div>
-                        <div className="admin-jersey-scroll">
-                          {state.jersey_numbers.map((num) => (
-                            <div key={num} className="scrape-jersey-row">
-                              <span className="scrape-jersey-num">{num}</span>
-                              {(round.ip_players ?? []).includes(num) && (
-                                <span className="scrape-ip-tag">IP</span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Action buttons */}
-                      <div className="admin-round-actions">
-                        <button
-                          className="scrape-confirm-btn"
-                          onClick={() => handleSaveChanges(round)}
-                          disabled={!changed || saving === round.id}
-                        >
-                          {saving === round.id ? <Loader2 size={14} className="scrape-spinner" /> : null}
-                          Save Changes
-                        </button>
-                        <button
-                          className="admin-delete-btn"
-                          onClick={() => handleDeleteClick(round)}
-                        >
-                          <Trash2 size={14} />
-                          Delete Round
-                        </button>
-                      </div>
+                      <button
+                        className="admin-uncomplete-btn"
+                        onClick={() => setUncompleteTarget({ level })}
+                      >
+                        <Undo2 size={14} />
+                        Uncomplete
+                      </button>
                     </div>
                   )}
                 </div>
               )
-            })}
-          </div>
-        ))
+            })
+          )}
+        </>
       )}
 
       {/* Edit jerseys modal */}
@@ -987,6 +1155,54 @@ export function AdminContinuationsClient({
                 Confirm Delete
               </button>
               <button className="scrape-discard-btn" onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Complete level confirmation dialog */}
+      {completeTarget && (
+        <div className="scrape-modal-overlay" onClick={() => setCompleteTarget(null)}>
+          <div className="scrape-modal-card" onClick={(e) => e.stopPropagation()}>
+            <p className="scrape-size-confirm-text">
+              Complete {division} {completeTarget.level}? The hero card will be removed from the dashboard and this level will move to&nbsp;Completed&nbsp;Teams.
+            </p>
+            <div className="scrape-modal-actions">
+              <button
+                className="scrape-confirm-btn"
+                onClick={() => handleCompleteLevel(completeTarget.level)}
+                disabled={completing}
+              >
+                {completing ? <Loader2 size={14} className="scrape-spinner" /> : null}
+                Complete
+              </button>
+              <button className="scrape-discard-btn" onClick={() => setCompleteTarget(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Uncomplete level confirmation dialog */}
+      {uncompleteTarget && (
+        <div className="scrape-modal-overlay" onClick={() => setUncompleteTarget(null)}>
+          <div className="scrape-modal-card" onClick={(e) => e.stopPropagation()}>
+            <p className="scrape-size-confirm-text">
+              Reopen {division} {uncompleteTarget.level}? The hero card will reappear on the dashboard and the level will move back to&nbsp;Current&nbsp;Rounds.
+            </p>
+            <div className="scrape-modal-actions">
+              <button
+                className="scrape-confirm-btn"
+                onClick={() => handleUncompleteLevel(uncompleteTarget.level)}
+                disabled={uncompleting}
+              >
+                {uncompleting ? <Loader2 size={14} className="scrape-spinner" /> : null}
+                Reopen
+              </button>
+              <button className="scrape-discard-btn" onClick={() => setUncompleteTarget(null)}>
                 Cancel
               </button>
             </div>

@@ -63,7 +63,11 @@ function getStatusLabel(statusType: string, players: FavoriteStatus[]): string {
     const level = getMissingLevel(players)
     return level ? `Missing at ${level}` : "Missing"
   }
-  if (statusType === "made_team") return "Made Team"
+  if (statusType === "made_team") {
+    // Use first player's statusText if it includes a level (e.g., "Made Team (AA)")
+    const text = players[0]?.statusText
+    return text && text !== "Made Team" ? text : "Made Team"
+  }
   if (statusType === "registered") return "Registered"
   return statusType
 }

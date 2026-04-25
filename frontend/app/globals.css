@@ -3089,6 +3089,140 @@ body:has(.admin-shell) {
   opacity: 0.8;
 }
 
+/* Admin View Toggle (Current Rounds / Completed Teams) */
+.admin-view-toggle {
+  @apply flex rounded-2xl p-0.5 mb-4;
+  background: oklch(0.76 0.14 85 / 15%);
+  border: 1px solid oklch(0.76 0.14 85 / 10%);
+}
+
+.admin-view-toggle-btn {
+  @apply flex-1 rounded-xl py-1.5 text-center text-xs font-semibold flex items-center justify-center gap-1.5;
+  color: var(--dm-dust);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 200ms ease-out, background 200ms ease-out;
+}
+
+.admin-view-toggle-btn.active {
+  background: var(--dm-cinnabar);
+  color: oklch(0.12 0 0);
+  box-shadow: var(--dm-shadow-sm);
+}
+
+.admin-view-toggle-badge {
+  @apply inline-flex items-center justify-center rounded-full text-xs font-bold;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: oklch(0.25 0 0);
+  color: var(--dm-dust);
+  font-size: 10px;
+}
+
+.admin-view-toggle-btn.active .admin-view-toggle-badge {
+  background: oklch(0.12 0 0 / 20%);
+  color: oklch(0.12 0 0);
+}
+
+/* Mark Level Complete button */
+.admin-complete-btn {
+  @apply flex items-center gap-1.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium mt-3;
+  background: oklch(0.20 0.04 144);
+  color: oklch(0.70 0.15 144);
+  border: 1px solid oklch(0.30 0.06 144);
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.admin-complete-btn:hover {
+  background: oklch(0.25 0.06 144);
+}
+
+/* Completed Team Cards */
+.admin-completed-card {
+  @apply rounded-lg mb-3 overflow-hidden;
+  background: var(--dm-dune);
+  border: 1px solid var(--dm-border);
+}
+
+.admin-completed-card-header {
+  @apply flex items-center gap-2 w-full px-4 py-3 text-left text-sm font-medium;
+  color: var(--dm-umber);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.admin-completed-card-title {
+  @apply font-semibold;
+}
+
+.admin-completed-card-stat {
+  @apply text-xs px-2 py-0.5 rounded-full;
+  background: oklch(0.25 0 0);
+  color: var(--dm-dust);
+}
+
+.admin-completed-card-date {
+  @apply text-xs ml-auto mr-2;
+  color: var(--dm-dust);
+  opacity: 0.7;
+}
+
+.admin-completed-card-body {
+  @apply px-4 pb-4 pt-1;
+  border-top: 1px solid var(--dm-border);
+}
+
+.admin-completed-round-row {
+  @apply flex items-center gap-2 py-2 text-sm;
+  color: var(--dm-umber);
+  border-bottom: 1px solid var(--dm-border-subtle);
+}
+
+.admin-completed-round-row:last-of-type {
+  border-bottom: none;
+}
+
+.admin-completed-round-label {
+  @apply font-medium text-sm;
+  min-width: 90px;
+}
+
+.admin-completed-round-count {
+  @apply text-xs;
+  color: var(--dm-dust);
+}
+
+.admin-completed-round-session {
+  @apply text-xs truncate;
+  color: var(--dm-dust);
+}
+
+/* Uncomplete button */
+.admin-uncomplete-btn {
+  @apply flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium mt-3;
+  background: oklch(0.22 0 0);
+  color: var(--dm-dust);
+  border: 1px solid oklch(0.3 0 0);
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.admin-uncomplete-btn:hover {
+  background: oklch(0.28 0 0);
+  color: var(--dm-umber);
+}
+
+/* Completed Teams empty state */
+.admin-completed-empty {
+  @apply text-sm text-center py-8;
+  color: var(--dm-dust);
+  opacity: 0.8;
+}
+
 /* ============================================================
    Player Detail Sheet (replaces old long-press menu)
    ============================================================ */

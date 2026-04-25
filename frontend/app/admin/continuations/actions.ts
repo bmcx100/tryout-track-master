@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import type { ContinuationRound } from "@/types"
+import type { ContinuationRound, ContinuationLevelStatus } from "@/types"
 
 export async function getAllRounds(
   associationId: string,
@@ -181,4 +181,107 @@ export async function getRevertablePlayerCount(
     .is("deleted_at", null)
 
   return players?.length ?? 0
+}
+
+export async function getCompletedLevels(
+  associationId: string,
+  division: string
+): Promise<Pick<ContinuationLevelStatus, "team_level" | "completed_at" | "completed_by">[]> {
+  const supabase = await createClient()
+
+  const { data } = await supabase
+    .from("continuation_level_status")
+    .select("team_level, completed_at, completed_by")
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .eq("is_completed", true)
+
+  return data ?? []
+}
+
+export async function completeLevel(
+  associationId: string,
+  division: string,
+  teamLevel: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  // Safety check: verify a Final Team round exists for this level
+  const { data: finalRound } = await supabase
+    .from("continuation_rounds")
+    .select("id")
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .eq("team_level", teamLevel)
+    .eq("is_final_team", true)
+    .eq("status", "published")
+    .limit(1)
+    .single()
+
+  if (!finalRound) {
+    return { error: "No Final Team round exists for this level" }
+  }
+
+  // Upsert level status
+  const { error } = await supabase
+    .from("continuation_level_status")
+    .upsert({
+      association_id: associationId,
+      division,
+      team_level: teamLevel,
+      is_completed: true,
+      completed_at: new Date().toISOString(),
+      completed_by: user.id,
+    }, { onConflict: "association_id,division,team_level" })
+
+  if (error) return { error: error.message }
+
+  // Audit log
+  await supabase.from("audit_log").insert({
+    action: "complete_level",
+    association_id: associationId,
+    target_table: "continuation_level_status",
+    target_id: associationId,
+    user_id: user.id,
+    new_values: { division, team_level: teamLevel },
+  })
+
+  return {}
+}
+
+export async function uncompleteLevel(
+  associationId: string,
+  division: string,
+  teamLevel: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const { error } = await supabase
+    .from("continuation_level_status")
+    .update({
+      is_completed: false,
+      completed_at: null,
+      completed_by: null,
+    })
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .eq("team_level", teamLevel)
+
+  if (error) return { error: error.message }
+
+  // Audit log
+  await supabase.from("audit_log").insert({
+    action: "uncomplete_level",
+    association_id: associationId,
+    target_table: "continuation_level_status",
+    target_id: associationId,
+    user_id: user.id,
+    new_values: { division, team_level: teamLevel },
+  })
+
+  return {}
 }

@@ -84,6 +84,16 @@ export async function getDashboardData(
 
   const teamsMap = new Map((teamsData ?? []).map((t) => [t.id, t]))
 
+  // 4. Fetch completed levels
+  const { data: completedData } = await supabase
+    .from("continuation_level_status")
+    .select("team_level")
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .eq("is_completed", true)
+
+  const completedLevels = new Set((completedData ?? []).map((cl) => cl.team_level))
+
   // --- Group rounds by team level ---
   const roundsByLevel = new Map<string, typeof allRounds>()
   for (const r of allRounds) {
@@ -103,6 +113,9 @@ export async function getDashboardData(
 
   const heroCards: HeroCard[] = []
   for (const level of LEVEL_ORDER) {
+    // Skip completed levels — no hero card
+    if (completedLevels.has(level)) continue
+
     const levelRounds = roundsByLevel.get(level)
     if (!levelRounds || levelRounds.length === 0) continue
 
@@ -294,7 +307,7 @@ export async function getDashboardData(
   }
 
   const favoriteStatuses = deriveFavouriteStatuses(
-    allRounds, favJerseyNumbers, favByJersey, teamsMap
+    allRounds, favJerseyNumbers, favByJersey, teamsMap, completedLevels
   )
 
   return { heroCards, favoriteStatuses }
@@ -316,7 +329,8 @@ function deriveFavouriteStatuses(
   allRounds: { team_level: string; round_number: number; jersey_numbers: string[]; is_final_team: boolean; created_at: string }[],
   favouriteJerseyNumbers: Set<string>,
   favouritesByJersey: Map<string, FavPlayerInput>,
-  teamsMap: Map<string, { id: string; name: string }>
+  teamsMap: Map<string, { id: string; name: string }>,
+  completedLevels: Set<string>
 ): FavoriteStatus[] {
   const result: FavoriteStatus[] = []
   const handledJerseys = new Set<string>()
@@ -325,12 +339,17 @@ function deriveFavouriteStatuses(
   for (const [jersey, player] of favouritesByJersey) {
     if (player.dbStatus === "made_team") {
       const team = player.teamId ? teamsMap.get(player.teamId) : null
+      const teamName = team?.name ?? null
+      // If team's level is completed, use "Made Team ({level})" format
+      const statusText = teamName && completedLevels.has(teamName)
+        ? `Made Team (${teamName})`
+        : team ? `Made ${team.name}` : "Made Team"
       result.push({
         playerId: player.id,
         playerName: player.displayName,
         jerseyNumber: player.jerseyNumber,
         position: player.position,
-        statusText: team ? `Made ${team.name}` : "Made Team",
+        statusText,
         statusType: "made_team",
         division: player.division,
         originalName: player.originalName,
@@ -369,9 +388,10 @@ function deriveFavouriteStatuses(
     return sortByJersey(result)
   }
 
-  // 3. Find active level(s)
+  // 3. Find active level(s) — exclude completed levels
   const latestDateByLevel = new Map<string, string>()
   for (const [level, rounds] of roundsByLevel) {
+    if (completedLevels.has(level)) continue
     latestDateByLevel.set(level, rounds[0].created_at)
   }
 
@@ -384,17 +404,19 @@ function deriveFavouriteStatuses(
     }
   }
 
-  const activeLevels = [primaryLevel]
+  const activeLevels = primaryLevel ? [primaryLevel] : []
 
-  // B/C combo: both active if latest rounds are on the same day
+  // B/C combo: both active if latest rounds are on the same day (only if both non-completed)
   if (primaryLevel === "B" || primaryLevel === "C") {
     const otherLevel = primaryLevel === "B" ? "C" : "B"
-    const otherDate = latestDateByLevel.get(otherLevel)
-    if (otherDate) {
-      const primaryDay = primaryDate.slice(0, 10)
-      const otherDay = otherDate.slice(0, 10)
-      if (primaryDay === otherDay) {
-        activeLevels.push(otherLevel)
+    if (!completedLevels.has(otherLevel)) {
+      const otherDate = latestDateByLevel.get(otherLevel)
+      if (otherDate) {
+        const primaryDay = primaryDate.slice(0, 10)
+        const otherDay = otherDate.slice(0, 10)
+        if (primaryDay === otherDay) {
+          activeLevels.push(otherLevel)
+        }
       }
     }
   }
@@ -497,6 +519,35 @@ function deriveFavouriteStatuses(
     }
   }
 
+  // 5. Made Team persistence from completed levels
+  for (const completedLevel of completedLevels) {
+    const levelRounds = roundsByLevel.get(completedLevel)
+    if (!levelRounds || levelRounds.length === 0) continue
+
+    const finalRound = levelRounds.find((r) => r.is_final_team)
+    if (!finalRound) continue
+
+    for (const jn of finalRound.jersey_numbers) {
+      if (!favouriteJerseyNumbers.has(jn) || handledJerseys.has(jn)) continue
+      const player = favouritesByJersey.get(jn)
+      if (!player) continue
+
+      result.push({
+        playerId: player.id,
+        playerName: player.displayName,
+        jerseyNumber: player.jerseyNumber,
+        position: player.position,
+        statusText: `Made Team (${completedLevel})`,
+        statusType: "made_team",
+        division: player.division,
+        originalName: player.originalName,
+        previousTeam: player.previousTeam,
+        roundType: "final",
+      })
+      handledJerseys.add(jn)
+    }
+  }
+
   return sortByJersey(result)
 }
 
@@ -552,6 +603,16 @@ export async function getMyFavouritesPageData(
 
   const teamsMap = new Map((teamsData ?? []).map((t) => [t.id, t]))
 
+  // 4. Fetch completed levels
+  const { data: completedData } = await supabase
+    .from("continuation_level_status")
+    .select("team_level")
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .eq("is_completed", true)
+
+  const completedLevels = new Set((completedData ?? []).map((cl) => cl.team_level))
+
   // Build favourite lookup maps
   const favJerseyNumbers = new Set<string>()
   const favByJersey = new Map<string, FavPlayerInput>()
@@ -592,10 +653,10 @@ export async function getMyFavouritesPageData(
   }
 
   const statuses = deriveFavouriteStatuses(
-    allRounds, favJerseyNumbers, favByJersey, teamsMap
+    allRounds, favJerseyNumbers, favByJersey, teamsMap, completedLevels
   )
 
-  const result: FavouritePagePlayer[] = statuses.map((s) => {
+  const resultArr: FavouritePagePlayer[] = statuses.map((s) => {
     const ann = annotationsByJersey.get(s.jerseyNumber)
     return {
       ...s,
@@ -605,5 +666,5 @@ export async function getMyFavouritesPageData(
     }
   })
 
-  return result
+  return resultArr
 }
