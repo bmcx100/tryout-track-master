@@ -12,8 +12,10 @@ import { AddPlayerSheet } from "./add-player-sheet"
 import {
   savePredictionOrder,
   savePreviousTeamOrder,
+  saveTeamGroupOrder,
   resetPredictionOrders,
   resetPreviousTeamOrders,
+  resetTeamGroupOrders,
 } from "@/app/(app)/teams/actions"
 import { toggleFavorite, bulkToggleFavorite, savePlayerAnnotations, savePlayerNote } from "@/app/(app)/annotations/actions"
 import { submitCorrection, suggestPlayer } from "@/app/(app)/corrections/actions"
@@ -24,6 +26,7 @@ type TeamsPageClientProps = {
   teams: Team[]
   savedOrders: Record<string, string[]>
   savedPreviousOrders: Record<string, string[]>
+  savedTeamGroupOrder: string[]
   associationId: string
   division: string
   annotations: Annotations
@@ -37,6 +40,7 @@ export function TeamsPageClient({
   teams,
   savedOrders,
   savedPreviousOrders,
+  savedTeamGroupOrder,
   associationId,
   division,
   annotations: initialAnnotations,
@@ -51,14 +55,16 @@ export function TeamsPageClient({
   const [selectedPlayer, setSelectedPlayer] = useState<TryoutPlayer | null>(null)
   const [currentPredictionOrders, setCurrentPredictionOrders] = useState(savedOrders)
   const [currentPreviousOrders, setCurrentPreviousOrders] = useState(savedPreviousOrders)
+  const [currentTeamGroupOrder, setCurrentTeamGroupOrder] = useState<string[]>(savedTeamGroupOrder)
   const [isResetting, setIsResetting] = useState(false)
   const [annotations, setAnnotations] = useState<Annotations>(initialAnnotations)
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   const savePreviousTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const teamGroupTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const hasCustomOrder = activeView === "predictions"
     ? Object.keys(currentPredictionOrders).length > 0
-    : Object.keys(currentPreviousOrders).length > 0
+    : Object.keys(currentPreviousOrders).length > 0 || currentTeamGroupOrder.length > 0
 
   const handleOrderChange = useCallback((division: string, playerIds: string[]) => {
     setCurrentPredictionOrders((prev) => ({ ...prev, [division]: playerIds }))
@@ -76,6 +82,14 @@ export function TeamsPageClient({
     }, 1000)
   }, [associationId])
 
+  const handleTeamGroupOrderChange = useCallback((teamOrder: string[]) => {
+    setCurrentTeamGroupOrder(teamOrder)
+    if (teamGroupTimer.current) clearTimeout(teamGroupTimer.current)
+    teamGroupTimer.current = setTimeout(() => {
+      saveTeamGroupOrder(associationId, division, teamOrder)
+    }, 1000)
+  }, [associationId, division])
+
   const handleReset = useCallback(() => {
     setIsResetting(true)
     setTimeout(() => setIsResetting(false), 500)
@@ -86,7 +100,9 @@ export function TeamsPageClient({
         setCurrentPredictionOrders({})
       } else {
         resetPreviousTeamOrders(associationId)
+        resetTeamGroupOrders(associationId)
         setCurrentPreviousOrders({})
+        setCurrentTeamGroupOrder([])
       }
     }
     setResetKey((k) => k + 1)
@@ -220,6 +236,7 @@ export function TeamsPageClient({
           teams={teams}
           savedOrders={currentPredictionOrders}
           savedPreviousOrders={currentPreviousOrders}
+          savedTeamGroupOrder={currentTeamGroupOrder}
           positionFilter={activePosition}
           annotations={annotations}
           onOrderChange={handleOrderChange}
@@ -231,9 +248,11 @@ export function TeamsPageClient({
           key={`previous-${resetKey}`}
           players={players}
           savedOrders={currentPreviousOrders}
+          savedTeamGroupOrder={currentTeamGroupOrder}
           positionFilter={activePosition}
           annotations={annotations}
           onOrderChange={handlePreviousOrderChange}
+          onTeamGroupOrderChange={handleTeamGroupOrderChange}
           onPlayerEdit={setSelectedPlayer}
           onToggleFavorite={handleToggleFavorite}
           onBulkToggleFavorite={handleBulkToggleFavorite}

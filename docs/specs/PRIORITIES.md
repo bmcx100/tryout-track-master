@@ -21,6 +21,7 @@ Last updated: 2026-04-25
 | 26 | Sessions column sort header — table-style header row, click to sort by any column, coexists with drag | FR-039 | Done |
 | 27 | Team group drag reorder — drag team headers in Previous Teams to reorder, collapses to card, persists, affects Predictions default | FR-039 | Specced ([027](027-team-group-drag-reorder.md)) |
 | 28 | Onboarding — division selector darker font + sessions yellow | — | Not started |
+| 28b | Teams position filter — adjust team heading player count when filter active | FR-039 | Not started |
 | 29 | UI/UX drag additions — separate branch, review [DRAG-UX-RESEARCH.md](../prd/DRAG-UX-RESEARCH.md) | FR-039 | Not started |
 | 100 | Light mode (gold scale theme) | — | Specced ([021](021-light-mode.md)) |
 | 101 | Rework Help Page — expand content, mockups, deeper feature guidance | — | Not started |

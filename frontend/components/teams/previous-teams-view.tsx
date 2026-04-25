@@ -1,30 +1,37 @@
 "use client"
 
 import { useState, useCallback, useMemo } from "react"
-import { ChevronDown, Heart } from "lucide-react"
+import { ChevronDown, Heart, GripVertical } from "lucide-react"
 import {
   DndContext,
+  DragOverlay,
   closestCenter,
   PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
+  type CollisionDetection,
 } from "@dnd-kit/core"
 import {
   SortableContext,
   verticalListSortingStrategy,
   arrayMove,
+  useSortable,
 } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import type { TryoutPlayer, Annotations } from "@/types"
 import { PlayerRow } from "./player-row"
 
-/* ── Sorting helpers ─────────────────────────────────── */
+/* ── Constants ──────────────────────────────────────── */
 
+const TEAM_PREFIX = "team::"
 const TIER_RANK: Record<string, number> = { AA: 0, A: 1, BB: 2, B: 3, C: 4 }
 const POSITION_RANK: Record<string, number> = { F: 0, D: 1, G: 2 }
 
-/** Parse a previous_team label like "U15AA" or "U15A-NGHA" */
+/* ── Sorting helpers ─────────────────────────────────── */
+
 function parsePreviousTeam(label: string): { rank: number, suffix: string } {
   const match = label.match(/^U(\d+)(AA|BB|A|B|C)(?:-(.+))?$/i)
   if (!match) return { rank: 999, suffix: label }
@@ -36,16 +43,13 @@ function parsePreviousTeam(label: string): { rank: number, suffix: string } {
   return { rank, suffix }
 }
 
-/** Compare two previous_team labels: same rank grouped together, current assoc first, then external alphabetically */
-function comparePreviousTeams(a: string, b: string): number {
+export function comparePreviousTeams(a: string, b: string): number {
   const pa = parsePreviousTeam(a)
   const pb = parsePreviousTeam(b)
   if (pa.rank !== pb.rank) return pa.rank - pb.rank
-  // Current association (no suffix) comes before external (has suffix)
   const aExternal = pa.suffix ? 1 : 0
   const bExternal = pb.suffix ? 1 : 0
   if (aExternal !== bExternal) return aExternal - bExternal
-  // Both external: sort suffix alphabetically
   return pa.suffix.localeCompare(pb.suffix)
 }
 
@@ -53,7 +57,6 @@ function positionRank(p: TryoutPlayer): number {
   return POSITION_RANK[p.position ?? "?"] ?? 3
 }
 
-/** Default sort: position (F → D → G → ?), then jersey number within position */
 function sortByPositionThenJersey(players: TryoutPlayer[]): TryoutPlayer[] {
   return [...players].sort((a, b) => {
     const posA = positionRank(a)
@@ -65,7 +68,6 @@ function sortByPositionThenJersey(players: TryoutPlayer[]): TryoutPlayer[] {
   })
 }
 
-/** After a drag, re-enforce position grouping while preserving intra-position order */
 function enforcePositionGroups(players: TryoutPlayer[]): TryoutPlayer[] {
   const groups: Record<number, TryoutPlayer[]> = {}
   for (const p of players) {
@@ -80,7 +82,6 @@ function enforcePositionGroups(players: TryoutPlayer[]): TryoutPlayer[] {
   return result
 }
 
-/** Apply saved order, or default to position+jersey sort */
 function applyOrder(pool: TryoutPlayer[], order: string[] | null): TryoutPlayer[] {
   if (!order || order.length === 0) return sortByPositionThenJersey(pool)
   const byId = new Map(pool.map((p) => [p.id, p]))
@@ -98,8 +99,6 @@ function applyOrder(pool: TryoutPlayer[], order: string[] | null): TryoutPlayer[
   return ordered
 }
 
-/* ── Group players by previous_team ──────────────────── */
-
 function groupByPreviousTeam(players: TryoutPlayer[]): Map<string, TryoutPlayer[]> {
   const groups = new Map<string, TryoutPlayer[]>()
   for (const player of players) {
@@ -111,9 +110,9 @@ function groupByPreviousTeam(players: TryoutPlayer[]): Map<string, TryoutPlayer[
   return groups
 }
 
-/* ── Sub-component ───────────────────────────────────── */
+/* ── Sortable Team Section wrapper ───────────────────── */
 
-function PreviousTeamSection({
+function SortableTeamSection({
   label,
   players,
   allPlayers,
@@ -136,6 +135,20 @@ function PreviousTeamSection({
   const tones = ["team-header-tone-1", "team-header-tone-2", "team-header-tone-3"]
   const toneClass = tones[index % 3]
 
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: TEAM_PREFIX + label })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
   const allHearted = allPlayers.length > 0 && allPlayers.every(
     (p) => annotations?.[p.id]?.isFavorite === true
   )
@@ -148,12 +161,28 @@ function PreviousTeamSection({
   }
 
   return (
-    <div>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={isDragging ? "team-section-dragging" : ""}
+    >
       <button
         className={`team-header ${toneClass}`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="team-header-left">
+          <span
+            className="team-drag-handle"
+            {...attributes}
+            {...listeners}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => {
+              e.stopPropagation()
+              listeners?.onPointerDown?.(e)
+            }}
+          >
+            <GripVertical size={20} />
+          </span>
           <span className="team-name">Previously {label}</span>
           <span
             role="button"
@@ -201,14 +230,38 @@ function PreviousTeamSection({
   )
 }
 
+/* ── Custom collision detection ──────────────────────── */
+
+/** When dragging a team, only collide with other team items.
+ *  When dragging a player, only collide with other player items. */
+const teamAwareCollision: CollisionDetection = (args) => {
+  const activeId = String(args.active.id)
+  if (activeId.startsWith(TEAM_PREFIX)) {
+    return closestCenter({
+      ...args,
+      droppableContainers: args.droppableContainers.filter(
+        (c) => String(c.id).startsWith(TEAM_PREFIX)
+      ),
+    })
+  }
+  return closestCenter({
+    ...args,
+    droppableContainers: args.droppableContainers.filter(
+      (c) => !String(c.id).startsWith(TEAM_PREFIX)
+    ),
+  })
+}
+
 /* ── Main component ──────────────────────────────────── */
 
 type PreviousTeamsViewProps = {
   players: TryoutPlayer[]
   savedOrders: Record<string, string[]>
+  savedTeamGroupOrder?: string[]
   positionFilter?: string | null
   annotations?: Annotations
   onOrderChange?: (previousTeam: string, playerIds: string[]) => void
+  onTeamGroupOrderChange?: (teamOrder: string[]) => void
   onPlayerEdit?: (player: TryoutPlayer) => void
   onToggleFavorite?: (playerId: string) => void
   onBulkToggleFavorite?: (playerIds: string[], setFavorite: boolean) => void
@@ -217,9 +270,11 @@ type PreviousTeamsViewProps = {
 export function PreviousTeamsView({
   players,
   savedOrders,
+  savedTeamGroupOrder,
   positionFilter,
   annotations,
   onOrderChange,
+  onTeamGroupOrderChange,
   onPlayerEdit,
   onToggleFavorite,
   onBulkToggleFavorite,
@@ -235,6 +290,20 @@ export function PreviousTeamsView({
     return map
   }, [players])
 
+  // Compute initial team order from saved order or default sort
+  const initialTeamOrder = useMemo(() => {
+    const allKeys = Array.from(groups.keys())
+    if (savedTeamGroupOrder && savedTeamGroupOrder.length > 0) {
+      const savedSet = new Set(savedTeamGroupOrder)
+      const unsaved = allKeys.filter((k) => !savedSet.has(k)).sort(comparePreviousTeams)
+      return [...savedTeamGroupOrder.filter((k) => allKeys.includes(k)), ...unsaved]
+    }
+    return allKeys.sort(comparePreviousTeams)
+  }, [groups, savedTeamGroupOrder])
+
+  const [teamOrder, setTeamOrder] = useState<string[]>(initialTeamOrder)
+  const [activeDragTeam, setActiveDragTeam] = useState<string | null>(null)
+
   // Initialize ordered state from saved orders or default sort
   const [orderedGroups, setOrderedGroups] = useState<Record<string, TryoutPlayer[]>>(() => {
     const result: Record<string, TryoutPlayer[]> = {}
@@ -249,12 +318,42 @@ export function PreviousTeamsView({
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
   )
 
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const id = String(event.active.id)
+    if (id.startsWith(TEAM_PREFIX)) {
+      setActiveDragTeam(id.slice(TEAM_PREFIX.length))
+    }
+  }, [])
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setActiveDragTeam(null)
+
     const { active, over } = event
     if (!over || active.id === over.id) return
 
-    const activeGroup = playerGroupMap.get(active.id as string)
-    const overGroup = playerGroupMap.get(over.id as string)
+    const activeId = String(active.id)
+    const overId = String(over.id)
+
+    // Team-level drag
+    if (activeId.startsWith(TEAM_PREFIX)) {
+      if (!overId.startsWith(TEAM_PREFIX)) return
+      const activeLabel = activeId.slice(TEAM_PREFIX.length)
+      const overLabel = overId.slice(TEAM_PREFIX.length)
+
+      setTeamOrder((prev) => {
+        const oldIndex = prev.indexOf(activeLabel)
+        const newIndex = prev.indexOf(overLabel)
+        if (oldIndex === -1 || newIndex === -1) return prev
+        const newOrder = arrayMove(prev, oldIndex, newIndex)
+        onTeamGroupOrderChange?.(newOrder)
+        return newOrder
+      })
+      return
+    }
+
+    // Player-level drag (unchanged logic)
+    const activeGroup = playerGroupMap.get(activeId)
+    const overGroup = playerGroupMap.get(overId)
     if (!activeGroup || !overGroup || activeGroup !== overGroup) return
 
     setOrderedGroups((prev) => {
@@ -270,47 +369,48 @@ export function PreviousTeamsView({
 
       let result: TryoutPlayer[]
       if (activePos === overPos) {
-        // Same position: normal reorder
         const oldIndex = groupPlayers.findIndex((p) => p.id === active.id)
         const newIndex = groupPlayers.findIndex((p) => p.id === over.id)
         result = enforcePositionGroups(arrayMove(groupPlayers, oldIndex, newIndex))
       } else {
-        // Cross-position: move to top or bottom of position group
-        const groups: Record<number, TryoutPlayer[]> = {}
+        const posGroups: Record<number, TryoutPlayer[]> = {}
         for (const p of groupPlayers) {
           const rank = POSITION_RANK[p.position ?? "?"] ?? 3
-          if (!groups[rank]) groups[rank] = []
-          groups[rank].push(p)
+          if (!posGroups[rank]) posGroups[rank] = []
+          posGroups[rank].push(p)
         }
-        const posGroup = [...(groups[activePos] ?? [])]
+        const posGroup = [...(posGroups[activePos] ?? [])]
         const idx = posGroup.findIndex((p) => p.id === activePlayer.id)
         if (idx === -1) return prev
         posGroup.splice(idx, 1)
 
         if (overPos < activePos) {
-          // Dropped on higher position — overshot up → TOP
           posGroup.unshift(activePlayer)
         } else {
-          // Dropped on lower position — overshot down → BOTTOM
           posGroup.push(activePlayer)
         }
-        groups[activePos] = posGroup
+        posGroups[activePos] = posGroup
         result = []
         for (const rank of [0, 1, 2, 3]) {
-          if (groups[rank]) result.push(...groups[rank])
+          if (posGroups[rank]) result.push(...posGroups[rank])
         }
       }
 
       onOrderChange?.(activeGroup, result.map((p) => p.id))
       return { ...prev, [activeGroup]: result }
     })
-  }, [onOrderChange, playerGroupMap])
+  }, [onOrderChange, onTeamGroupOrderChange, playerGroupMap])
 
+  const handleDragCancel = useCallback(() => {
+    setActiveDragTeam(null)
+  }, [])
+
+  // Build group entries in team order
   const groupEntries = useMemo(
-    () => Array.from(groups.keys())
-      .sort(comparePreviousTeams)
+    () => teamOrder
+      .filter((key) => groups.has(key))
       .map((key) => [key, orderedGroups[key] ?? []] as const),
-    [groups, orderedGroups],
+    [teamOrder, groups, orderedGroups],
   )
 
   // Unfiltered lookup for bulk heart (includes all positions)
@@ -329,25 +429,63 @@ export function PreviousTeamsView({
         .filter(([, gp]) => gp.length > 0)
     : groupEntries
 
+  // Team sortable IDs
+  const teamSortableIds = useMemo(
+    () => displayEntries.map(([label]) => TEAM_PREFIX + label),
+    [displayEntries],
+  )
+
+  // DragOverlay data
+  const dragOverlayData = useMemo(() => {
+    if (!activeDragTeam) return null
+    const allPlayers = allPlayersByGroup[activeDragTeam]
+    const index = teamOrder.indexOf(activeDragTeam)
+    const tones = ["team-header-tone-1", "team-header-tone-2", "team-header-tone-3"]
+    const toneClass = tones[(index >= 0 ? index : 0) % 3]
+    return {
+      label: activeDragTeam,
+      playerCount: allPlayers?.length ?? 0,
+      toneClass,
+    }
+  }, [activeDragTeam, allPlayersByGroup, teamOrder])
+
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={teamAwareCollision}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
-      {displayEntries.map(([label, groupPlayers], i) => (
-        <PreviousTeamSection
-          key={label}
-          label={label}
-          players={groupPlayers}
-          allPlayers={allPlayersByGroup[label] ?? groupPlayers}
-          index={i}
-          annotations={annotations}
-          onPlayerEdit={onPlayerEdit}
-          onToggleFavorite={onToggleFavorite}
-          onBulkToggleFavorite={onBulkToggleFavorite}
-        />
-      ))}
+      <SortableContext
+        items={teamSortableIds}
+        strategy={verticalListSortingStrategy}
+      >
+        {displayEntries.map(([label, groupPlayers], i) => (
+          <SortableTeamSection
+            key={label}
+            label={label}
+            players={groupPlayers}
+            allPlayers={allPlayersByGroup[label] ?? groupPlayers}
+            index={i}
+            annotations={annotations}
+            onPlayerEdit={onPlayerEdit}
+            onToggleFavorite={onToggleFavorite}
+            onBulkToggleFavorite={onBulkToggleFavorite}
+          />
+        ))}
+      </SortableContext>
+      <DragOverlay>
+        {dragOverlayData && (
+          <div className={`team-drag-overlay ${dragOverlayData.toneClass}`}>
+            <div className="team-drag-overlay-left">
+              <GripVertical size={20} />
+              <span className="team-drag-overlay-name">Previously {dragOverlayData.label}</span>
+            </div>
+            <span className="team-drag-overlay-count">{dragOverlayData.playerCount} Players</span>
+          </div>
+        )}
+      </DragOverlay>
     </DndContext>
   )
 }

@@ -93,6 +93,7 @@ function enforcePositionGroups(players: TryoutPlayer[]): TryoutPlayer[] {
 function sortByPreviousTeamOrders(
   players: TryoutPlayer[],
   previousOrders: Record<string, string[]>,
+  teamGroupOrder: string[] = [],
 ): TryoutPlayer[] {
   // Group players by previous team
   const groups = new Map<string, TryoutPlayer[]>()
@@ -103,8 +104,16 @@ function sortByPreviousTeamOrders(
     groups.set(key, existing)
   }
 
-  // Sort group keys: same rank grouped, current assoc first, then external
-  const sortedKeys = Array.from(groups.keys()).sort(comparePreviousTeams)
+  // Sort group keys: use custom team group order if available, then fall back
+  let sortedKeys: string[]
+  if (teamGroupOrder.length > 0) {
+    const allKeys = Array.from(groups.keys())
+    const savedSet = new Set(teamGroupOrder)
+    const unsaved = allKeys.filter((k) => !savedSet.has(k)).sort(comparePreviousTeams)
+    sortedKeys = [...teamGroupOrder.filter((k) => allKeys.includes(k)), ...unsaved]
+  } else {
+    sortedKeys = Array.from(groups.keys()).sort(comparePreviousTeams)
+  }
 
   // Within each group, apply saved previous team order or fall back to jersey
   const result: TryoutPlayer[] = []
@@ -161,6 +170,7 @@ type PredictionBoardProps = {
   teams: Team[]
   savedOrders: Record<string, string[]>
   savedPreviousOrders: Record<string, string[]>
+  savedTeamGroupOrder?: string[]
   positionFilter?: string | null
   annotations?: Annotations
   onOrderChange?: (division: string, playerIds: string[]) => void
@@ -173,6 +183,7 @@ export function PredictionBoard({
   teams,
   savedOrders,
   savedPreviousOrders,
+  savedTeamGroupOrder,
   positionFilter,
   annotations,
   onOrderChange,
@@ -202,7 +213,7 @@ export function PredictionBoard({
 
   // Apply saved prediction order, or inherit from Previous Teams orders
   function applyOrder(pool: TryoutPlayer[], order: string[] | null): TryoutPlayer[] {
-    if (!order || order.length === 0) return sortByPreviousTeamOrders(pool, savedPreviousOrders)
+    if (!order || order.length === 0) return sortByPreviousTeamOrders(pool, savedPreviousOrders, savedTeamGroupOrder ?? [])
     const byId = new Map(pool.map((p) => [p.id, p]))
     const ordered: TryoutPlayer[] = []
     for (const id of order) {

@@ -74,6 +74,17 @@ export default async function TeamsPage() {
     savedPreviousOrders[order.previous_team] = order.player_order
   }
 
+  // Fetch user's saved team group order for active division
+  const { data: teamGroupOrderData } = await supabase
+    .from("team_group_orders")
+    .select("team_order")
+    .eq("user_id", user.id)
+    .eq("association_id", associationId)
+    .eq("division", activeDivision)
+    .maybeSingle()
+
+  const savedTeamGroupOrder: string[] = teamGroupOrderData?.team_order ?? []
+
   // Fetch user's player annotations (hearts, names)
   const annotations = await getPlayerAnnotations(associationId)
 
@@ -85,6 +96,7 @@ export default async function TeamsPage() {
         teams={allTeams}
         savedOrders={savedOrders}
         savedPreviousOrders={savedPreviousOrders}
+        savedTeamGroupOrder={savedTeamGroupOrder}
         associationId={associationId}
         division={activeDivision}
         annotations={annotations}

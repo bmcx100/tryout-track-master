@@ -283,6 +283,29 @@ Tests run against the real database with real user data. Follow the safety rules
 7. `frontend/components/teams/prediction-board.tsx` — **MODIFY** accept `savedTeamGroupOrder` prop, update `sortByPreviousTeamOrders()` to use it
 8. `frontend/app/globals.css` — **MODIFY** add `.team-drag-handle`, `.team-section-dragging`, `.team-drag-overlay`, `.team-drag-overlay-name`, `.team-drag-overlay-count`
 
+## Implementation Notes (post-implementation changes)
+
+The following adjustments were made during implementation and review:
+
+### Styling adjustments
+- **Team header padding**: reduced from `px-5 py-1.5` to `0 5px` for tighter vertical spacing
+- **Team drag handle icon**: increased from `size={16}` to `size={20}` to match player row grip handles
+- **Team drag handle padding**: set to `0` (removed `0.5rem` vertical padding)
+
+### DragOverlay layout changes
+- Removed the em dash (`&mdash;`) separator between team name and player count
+- Changed overlay layout to `justify-between` with two groups: a left div (`.team-drag-overlay-left`) containing the grip icon + team name, and the player count on the right
+- Added `.team-drag-overlay-left` CSS class (`flex items-center gap-2`)
+
+### Known issues to address
+- **DragOverlay opacity**: currently `0.5` — should be removed for readability
+- **Player rows not hidden during drag**: `team-section-dragging` class reduces opacity but does not collapse player rows; add `!isDragging` guard to the player rows render condition
+- **`database.ts` not regenerated**: `team_group_orders` table types missing from generated types
+- **`comparePreviousTeams` duplication**: exported from `previous-teams-view.tsx` but `prediction-board.tsx` has its own copy; should be deduplicated to a shared util
+
+### Additional files modified
+- `docs/specs/PRIORITIES.md` — added item 28b: "Teams position filter — adjust team heading player count when filter active"
+
 ## Implementation Checklist
 
 After implementing the changes above, you MUST complete these steps in order before claiming the work is done:
