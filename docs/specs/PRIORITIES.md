@@ -17,9 +17,10 @@ Last updated: 2026-04-24
 | 21 | Player row swipe to edit/add note + row readability improvements — swipe-left reveals Edit button, 44x44pt drag handle flush to left edge, all row text to text-base | FR-039 | Done |
 | 23 | Fix Favourite Logic — round-driven derivation | — | Done |
 | 24 | Player detail form redesign — read-only/edit modes, extended annotations & corrections for all fields | FR-021 | Done |
-| 25 | UI/UX drag additions — separate branch, review [DRAG-UX-RESEARCH.md](../prd/DRAG-UX-RESEARCH.md) | FR-039 | Not started |
+| 25 | Nav loading skeletons — page-specific skeleton screens on bottom nav transitions | NFR-024 | Specced ([025](025-nav-loading-skeletons.md)) |
 | 26 | Sessions column sort header — table-style header row, click to sort by any column, coexists with drag | FR-039 | Specced ([026](026-sessions-column-sort.md)) |
 | 27 | Onboarding — division selector darker font + sessions yellow | — | Not started |
+| 28 | UI/UX drag additions — separate branch, review [DRAG-UX-RESEARCH.md](../prd/DRAG-UX-RESEARCH.md) | FR-039 | Not started |
 | 100 | Light mode (gold scale theme) | — | Specced ([021](021-light-mode.md)) |
 | 101 | Rework Help Page — expand content, mockups, deeper feature guidance | — | Not started |
 | 102 | Bulk status updates | FR-022 | Not started |

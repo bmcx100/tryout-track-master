@@ -18,6 +18,7 @@ import {
 } from "@dnd-kit/sortable"
 import type { ContinuationRound, TryoutPlayer, Annotations } from "@/types"
 import { ContinuationPlayerRow } from "./continuation-player-row"
+import { SortHeader, type SortConfig, type SortColumn } from "./sort-header"
 
 type SessionData = {
   session_number: number
@@ -179,6 +180,43 @@ function matchesPositionFilter(entry: PlayerEntry, filter: string | null): boole
   return entry.player?.position === filter
 }
 
+function sortPlayerList(
+  list: PlayerEntry[],
+  config: { column: SortColumn; direction: "asc" | "desc" }
+): PlayerEntry[] {
+  const sorted = [...list]
+  const dir = config.direction === "asc" ? 1 : -1
+  sorted.sort((a, b) => {
+    let cmp = 0
+    switch (config.column) {
+      case "jersey":
+        cmp = parseInt(a.jerseyNumber) - parseInt(b.jerseyNumber)
+        break
+      case "position":
+        cmp = getPositionRank(a.player) - getPositionRank(b.player)
+        break
+      case "name": {
+        const nameA = (a.customName || a.player?.name || "ZZZ").toLowerCase()
+        const nameB = (b.customName || b.player?.name || "ZZZ").toLowerCase()
+        cmp = nameA.localeCompare(nameB)
+        break
+      }
+      case "notes":
+        cmp = (b.noteText ? 1 : 0) - (a.noteText ? 1 : 0)
+        break
+      case "favorite":
+        cmp = (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0)
+        break
+      case "prevTeam":
+        cmp = getBlendedTeamRank(a.player) - getBlendedTeamRank(b.player)
+        break
+    }
+    if (cmp !== 0) return dir * cmp
+    return parseInt(a.jerseyNumber) - parseInt(b.jerseyNumber)
+  })
+  return sorted
+}
+
 export function RoundSection({
   activeRound,
   previousRound,
@@ -222,6 +260,33 @@ export function RoundSection({
   // Mutable ordered state for drag updates
   const [orderedList, setOrderedList] = useState<PlayerEntry[]>(fullOrderedList)
 
+  // Column sort state (ephemeral — not saved to DB)
+  const [sortConfig, setSortConfig] = useState<SortConfig>(null)
+
+  const handleSort = useCallback((column: SortColumn) => {
+    setSortConfig(prev => {
+      let next: SortConfig
+      if (!prev || prev.column !== column) {
+        next = { column, direction: "asc" }
+      } else if (prev.direction === "asc") {
+        next = { column, direction: "desc" }
+      } else {
+        next = null
+      }
+
+      if (next) {
+        const freshList = buildPlayerList(
+          activeRound.jersey_numbers, playerMap, annotations, ipPlayers
+        )
+        setOrderedList(sortPlayerList(freshList, next))
+      } else {
+        setOrderedList(fullOrderedList)
+      }
+
+      return next
+    })
+  }, [activeRound.jersey_numbers, playerMap, annotations, ipPlayers, fullOrderedList])
+
   // Build per-session player lists from the ordered list
   const sessionLists = useMemo(() => {
     return sessions
@@ -260,6 +325,9 @@ export function RoundSection({
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
+
+    // Clear column sort when user drags
+    setSortConfig(null)
 
     setOrderedList((prev) => {
       const activeEntry = prev.find((p) => p.jerseyNumber === active.id)
@@ -448,6 +516,7 @@ export function RoundSection({
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
+      <SortHeader sortConfig={sortConfig} onSort={handleSort} />
       {sessionLists.length > 0 ? (
         sessionLists.map(({ session, players }) => (
           <div key={session.session_number}>
