@@ -230,8 +230,11 @@ export function ContinuationsPageClient({
     (r, idx) => idx > selectedIndex && r.team_level === activeRound.team_level
   ) ?? null
 
-  // Compute summary stats
-  const totalContinuing = activeRound.jersey_numbers.length
+  // Compute summary stats — use estimated_players when no jersey list exists
+  const totalContinuing = activeRound.jersey_numbers.length > 0
+    ? activeRound.jersey_numbers.length
+    : (activeRound.estimated_players ?? 0)
+  const isEstimatedContinuing = activeRound.jersey_numbers.length === 0 && activeRound.estimated_players != null && activeRound.estimated_players > 0
   const cuts = previousRound
     ? previousRound.jersey_numbers.filter((jn) => !activeRound.jersey_numbers.includes(jn))
     : []
@@ -321,6 +324,7 @@ export function ContinuationsPageClient({
         continuingCount={totalContinuing}
         cutCount={cutCount}
         isFinalTeam={activeRound.is_final_team}
+        isEstimatedContinuing={isEstimatedContinuing}
         isEstimatedCuts={isEstimatedCuts}
       />
 

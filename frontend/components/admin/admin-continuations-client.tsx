@@ -19,7 +19,7 @@ import {
   getRevertablePlayerCount,
   completeLevel,
   uncompleteLevel,
-} from "@/app/admin/continuations/actions"
+} from "@/app/(app)/admin/continuations/actions"
 import type { ContinuationRound } from "@/types"
 
 type AdminContinuationsClientProps = {

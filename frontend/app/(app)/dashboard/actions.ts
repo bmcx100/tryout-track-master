@@ -21,7 +21,6 @@ export type HeroCard = {
   publishedAt: string
   continuingCount: number
   cutCount: number
-  missingCount: number
   totalPlayers: number
   isRoundOne: boolean
   favouritesOnTeam: number
@@ -41,7 +40,7 @@ export type FavoriteStatus = {
   jerseyNumber: string
   position: string
   statusText: string
-  statusType: "continuing" | "cut" | "made_team" | "missing" | "registered"
+  statusType: "continuing" | "cut" | "made_team" | "registered"
   division: string
   originalName: string | null
   previousTeam: string | null
@@ -147,38 +146,6 @@ export async function getDashboardData(
       ? previous.jersey_numbers.filter((jn: string) => !latest.jersey_numbers.includes(jn)).length
       : 0
 
-    // Missing count: players cut from the level above who don't appear at ANY round at this level
-    // Only compute if this level has rounds WITH posted jersey numbers
-    let missingCount = 0
-    const levelIdx = LEVEL_ORDER.indexOf(level)
-    const thisLevelHasNumbers = levelRounds.some((r) => r.jersey_numbers.length > 0)
-    if (levelIdx > 0 && thisLevelHasNumbers) {
-      const levelAbove = LEVEL_ORDER[levelIdx - 1]
-      const aboveRounds = roundsByLevel.get(levelAbove)
-      if (aboveRounds && aboveRounds.length > 0) {
-        const latestAbove = aboveRounds[0]
-        // Players who were on a previous above-round but NOT on the latest above-round = cut from above
-        const allAboveJerseys = new Set<string>()
-        for (const r of aboveRounds) {
-          for (const jn of r.jersey_numbers) {
-            allAboveJerseys.add(jn)
-          }
-        }
-        const stillAtAbove = new Set<string>(latestAbove.jersey_numbers)
-        const cutFromAbove = [...allAboveJerseys].filter((jn) => !stillAtAbove.has(jn))
-
-        // Check which of those cut players appear at ANY round at this level
-        const allThisLevelJerseys = new Set<string>()
-        for (const r of levelRounds) {
-          for (const jn of r.jersey_numbers) {
-            allThisLevelJerseys.add(jn)
-          }
-        }
-
-        missingCount = cutFromAbove.filter((jn) => !allThisLevelJerseys.has(jn)).length
-      }
-    }
-
     // Finalized team: count favourites on roster vs cut
     let favouritesOnTeam = 0
     let favouritesCutFinal = 0
@@ -247,7 +214,6 @@ export async function getDashboardData(
       publishedAt: latest.created_at,
       continuingCount,
       cutCount,
-      missingCount,
       totalPlayers: effectiveTotalPlayers,
       isRoundOne,
       favouritesOnTeam,
@@ -530,26 +496,6 @@ function deriveFavouriteStatuses(
         pushIfFav(jn, "Registered", "registered", "round1")
       }
 
-      // Missing: cut from the level above and not on Round 1 list
-      const round1Set = new Set<string>(latest.jersey_numbers)
-      const levelIdx = LEVEL_ORDER.indexOf(level)
-      if (levelIdx > 0) {
-        const levelAbove = LEVEL_ORDER[levelIdx - 1]
-        const aboveRounds = roundsByLevel.get(levelAbove)
-        if (aboveRounds && aboveRounds.length > 0) {
-          const latestAbove = aboveRounds[0]
-          const allAboveJerseys = new Set<string>()
-          for (const r of aboveRounds) {
-            for (const jn of r.jersey_numbers) allAboveJerseys.add(jn)
-          }
-          const stillAtAbove = new Set<string>(latestAbove.jersey_numbers)
-          for (const jn of allAboveJerseys) {
-            if (stillAtAbove.has(jn)) continue // still at above level
-            if (round1Set.has(jn)) continue // appeared at this level
-            pushIfFav(jn, `Not at ${level}`, "missing", "round1")
-          }
-        }
-      }
     } else if (roundType === "regular") {
       // Continuing: on latest round
       const latestSet = new Set<string>(latest.jersey_numbers)

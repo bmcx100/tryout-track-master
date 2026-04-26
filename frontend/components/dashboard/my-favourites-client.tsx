@@ -14,12 +14,11 @@ type MyFavouritesClientProps = {
   favourites: FavouritePagePlayer[]
 }
 
-const STATUS_ORDER = ["continuing", "made_team", "cut", "missing", "registered"]
+const STATUS_ORDER = ["continuing", "made_team", "cut", "registered"]
 
 const STATUS_LABELS: Record<string, string> = {
   continuing: "Continuing",
   cut: "Cut",
-  missing: "Missing",
   made_team: "Made Team",
   registered: "Registered",
 }
@@ -44,11 +43,6 @@ function buildStatusGroups(favs: FavouritePagePlayer[]): StatusGroup[] {
     }
   }
   return groups
-}
-
-function getMissingLevel(statusText: string): string {
-  const match = statusText.match(/(?:Missing|Not) at (\w+)/)
-  return match ? match[1] : ""
 }
 
 function getStatusLabel(statusType: string, players: FavouritePagePlayer[]): string {
@@ -88,23 +82,18 @@ function FavRow({
   fav,
   isUnhearted,
   isCut,
-  isMissing,
-  missingLevel,
   onToggleHeart,
   onEdit,
 }: {
   fav: FavouritePagePlayer
   isUnhearted: boolean
   isCut: boolean
-  isMissing: boolean
-  missingLevel: string
   onToggleHeart: (id: string) => void
   onEdit: (fav: FavouritePagePlayer) => void
 }) {
   const rowClass = [
     "continuation-player-row",
     isCut ? "continuation-player-row-cut" : "",
-    isMissing ? "my-favourites-row-missing" : "",
     isUnhearted ? "my-favourites-row-unhearted" : "",
   ].filter(Boolean).join(" ")
 
@@ -137,9 +126,6 @@ function FavRow({
           <span className="custom-name-indicator">{fav.originalName}</span>
         )}
       </span>
-      {missingLevel && (
-        <span className="my-favourites-missing-level">Not at {missingLevel}</span>
-      )}
       <span className="continuation-row-right">
         <span
           className={fav.notes ? "note-btn note-btn-active" : "note-btn"}
@@ -263,14 +249,11 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
             {groupIdx > 0 && <div className="my-favourites-group-divider" />}
             <div className="my-favourites-group">
               <div className={`my-favourites-group-header my-favourites-group-header-${group.statusType}`}>
-                {group.statusType === "missing" && "\u26A0 "}
                 {getStatusLabel(group.statusType, group.players)} ({group.players.length})
               </div>
               {group.players.map((fav, rowIdx) => {
                 const isUnhearted = unhearted.has(fav.playerId)
                 const isCut = fav.statusType === "cut"
-                const isMissing = fav.statusType === "missing"
-                const missingLevel = isMissing ? getMissingLevel(fav.statusText) : ""
 
                 return (
                   <FavRow
@@ -278,8 +261,6 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
                     fav={fav}
                     isUnhearted={isUnhearted}
                     isCut={isCut}
-                    isMissing={isMissing}
-                    missingLevel={missingLevel}
                     onToggleHeart={handleToggleHeart}
                     onEdit={handleEdit}
                   />

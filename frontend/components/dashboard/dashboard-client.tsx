@@ -14,7 +14,7 @@ type StatusGroup = {
   players: FavoriteStatus[]
 }
 
-const STATUS_ORDER = ["continuing", "made_team", "cut", "missing", "registered"]
+const STATUS_ORDER = ["continuing", "made_team", "cut", "registered"]
 
 function buildStatusGroups(favs: FavoriteStatus[]): StatusGroup[] {
   const grouped = new Map<string, FavoriteStatus[]>()
@@ -45,23 +45,11 @@ function formatSampleNames(players: FavoriteStatus[]): string {
   return samples.join(", ")
 }
 
-function getMissingLevel(players: FavoriteStatus[]): string {
-  for (const p of players) {
-    const match = p.statusText.match(/(?:Missing|Not) at (\w+)/)
-    if (match) return match[1]
-  }
-  return ""
-}
-
 function getStatusLabel(statusType: string, players: FavoriteStatus[]): string {
   if (statusType === "continuing") return "Continuing"
   if (statusType === "cut") {
     const isFinal = players.some((p) => p.roundType === "final")
     return isFinal ? "Final Cut" : "Cut"
-  }
-  if (statusType === "missing") {
-    const level = getMissingLevel(players)
-    return level ? `Missing at ${level}` : "Missing"
   }
   if (statusType === "made_team") {
     // Use first player's statusText if it includes a level (e.g., "Made Team (AA)")
@@ -131,12 +119,6 @@ function renderHeroCard(card: HeroCard) {
                 {card.totalPlayers}
               </div>
               <div className="dashboard-hero-stat-label">Total Players</div>
-            </div>
-            <div className="dashboard-hero-stat">
-              <div className="dashboard-hero-stat-value dashboard-hero-stat-value-gold">
-                {card.missingCount}
-              </div>
-              <div className="dashboard-hero-stat-label">Missing</div>
             </div>
           </>
         ) : (

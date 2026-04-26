@@ -1650,11 +1650,6 @@ body:has(.admin-shell) {
   border-left-color: var(--dm-red);
 }
 
-.dashboard-fav-card-missing {
-  border-left-color: var(--dm-orange);
-  background: oklch(0.72 0.15 55 / 6%);
-}
-
 .dashboard-fav-card-made_team {
   border-left-color: var(--dm-official-green);
 }
@@ -1678,10 +1673,6 @@ body:has(.admin-shell) {
 
 .dashboard-fav-count-cut {
   color: var(--dm-red);
-}
-
-.dashboard-fav-count-missing {
-  color: var(--dm-orange);
 }
 
 .dashboard-fav-count-made_team {
@@ -2324,10 +2315,6 @@ body:has(.admin-shell) {
   padding-top: 24px;
 }
 
-.my-favourites-group-header-missing {
-  color: var(--dm-orange);
-}
-
 .my-favourites-group-header-made_team {
   color: var(--dm-official-green);
   padding-top: 24px;
@@ -2349,10 +2336,6 @@ body:has(.admin-shell) {
 
 .my-favourites-group-dot-cut {
   background: var(--dm-red);
-}
-
-.my-favourites-group-dot-missing {
-  background: var(--dm-orange);
 }
 
 .my-favourites-group-dot-made_team {
@@ -2387,10 +2370,6 @@ body:has(.admin-shell) {
   opacity: 0.5;
 }
 
-.my-favourites-row-missing {
-  background: oklch(0.72 0.15 55 / 4%) !important;
-}
-
 .my-favourites-row-unhearted {
   opacity: 0.5;
 }
@@ -2401,14 +2380,6 @@ body:has(.admin-shell) {
 
 .my-favourites-jersey-cut {
   text-decoration: line-through;
-}
-
-.my-favourites-missing-level {
-  @apply flex-shrink-0;
-  font-size: 11px;
-  font-family: var(--font-ibm-plex-mono);
-  color: var(--dm-orange);
-  font-weight: 500;
 }
 
 .my-favourites-group-divider {
@@ -3095,7 +3066,7 @@ body:has(.admin-shell) {
 }
 
 .dashboard-hero-position-breakdown {
-  @apply text-xs mt-1;
+  @apply text-base mt-1;
   color: var(--dm-dust);
   opacity: 0.8;
   text-align: center;
