@@ -300,11 +300,12 @@
    ============================================================ */
 
 .team-header {
-  @apply flex cursor-pointer items-center justify-between;
+  @apply flex cursor-pointer items-center justify-between min-h-10;
   padding: 0 5px;
   width: 100%;
   border-top: 1px solid oklch(1 0 0 / 5%);
 }
+
 
 .team-header-tone-1 {
   background: oklch(0.22 0 0);
@@ -392,7 +393,7 @@
 .team-drag-handle {
   @apply flex-shrink-0 flex items-center justify-center;
   width: 1.5rem;
-  min-height: 2.75rem;
+  min-height: 2.5rem;
   color: var(--dm-dust);
   opacity: 0.5;
   cursor: grab;
@@ -3553,7 +3554,7 @@ body:has(.admin-shell) {
 }
 
 /* ============================================================
-   Admin Corrections List
+   Admin Corrections List (Redesigned — collapsible cards)
    ============================================================ */
 
 .corrections-page {
@@ -3575,6 +3576,25 @@ body:has(.admin-shell) {
   color: var(--dm-umber);
 }
 
+.corrections-toggle {
+  @apply flex gap-1 mb-4 rounded-xl p-1;
+  background: oklch(1 0 0 / 5%);
+}
+
+.corrections-toggle-btn {
+  @apply flex-1 rounded-lg py-2 text-sm font-semibold text-center;
+  color: var(--dm-dust);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+}
+
+.corrections-toggle-btn--active {
+  background: var(--dm-dune);
+  color: var(--dm-umber);
+}
+
 .corrections-list {
   @apply flex flex-col gap-3;
 }
@@ -3590,51 +3610,142 @@ body:has(.admin-shell) {
   color: oklch(0.65 0.20 25);
 }
 
-.corrections-row {
-  @apply flex flex-col gap-2 rounded-xl p-4;
+.corrections-card {
+  @apply rounded-xl overflow-hidden;
   background: var(--dm-dune);
 }
 
-.corrections-row-info {
-  @apply flex items-center gap-2;
+.corrections-card-header {
+  @apply flex items-center gap-3 px-4 py-3;
+  cursor: pointer;
+  user-select: none;
 }
 
-.corrections-player {
+.corrections-card-header-left {
+  @apply flex-1 min-w-0;
+}
+
+.corrections-card-player {
   @apply text-sm font-semibold;
   color: var(--dm-umber);
 }
 
-.corrections-division {
+.corrections-card-meta {
+  @apply flex items-center gap-2 text-xs mt-0.5;
+  color: var(--dm-dust);
+}
+
+.corrections-card-submitter {
+  @apply truncate;
+  font-family: var(--font-mono);
+  max-width: 120px;
+}
+
+.corrections-card-date {
+  @apply shrink-0;
+  opacity: 0.7;
+}
+
+.corrections-card-header-right {
+  @apply flex items-center gap-2 shrink-0;
+}
+
+.corrections-change-count {
+  @apply inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold;
+  background: oklch(0.76 0.14 85 / 20%);
+  color: var(--dm-gold);
+}
+
+.corrections-card-chevron {
+  color: var(--dm-dust);
+  transition: transform 150ms ease-out;
+}
+
+.corrections-card--expanded .corrections-card-chevron {
+  transform: rotate(180deg);
+}
+
+.corrections-card-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease-out;
+}
+
+.corrections-card--expanded .corrections-card-body {
+  grid-template-rows: 1fr;
+}
+
+.corrections-card-body-inner {
+  @apply overflow-hidden;
+}
+
+.corrections-card-content {
+  @apply px-4 pb-4 flex flex-col gap-3;
+  border-top: 1px solid var(--dm-border);
+  padding-top: 0.75rem;
+}
+
+.corrections-diff-row {
+  @apply flex flex-col gap-0.5;
+}
+
+.corrections-diff-label {
+  @apply text-xs font-semibold uppercase tracking-wider;
+  color: var(--dm-gold);
+}
+
+.corrections-diff-values {
+  @apply flex items-center gap-2 text-sm;
+}
+
+.corrections-diff-old {
+  color: var(--dm-dust);
+}
+
+.corrections-diff-arrow {
+  color: var(--dm-dust);
+  opacity: 0.5;
+}
+
+.corrections-diff-new {
+  color: oklch(0.65 0.15 145);
+  font-weight: 600;
+}
+
+.corrections-stale-warning {
+  @apply flex items-center gap-1.5 text-xs mt-0.5 px-2 py-1 rounded-md;
+  background: oklch(0.76 0.14 85 / 10%);
+  color: oklch(0.76 0.14 85);
+}
+
+.corrections-card-submitter-full {
   @apply text-xs;
   color: var(--dm-dust);
   font-family: var(--font-mono);
 }
 
-.corrections-field-change {
-  @apply flex items-center gap-2;
-}
-
-.corrections-field-label {
-  @apply text-xs font-semibold uppercase;
-  color: var(--dm-gold);
-}
-
-.corrections-change {
-  @apply text-sm;
-  color: var(--dm-umber);
-}
-
-.corrections-row-meta {
-  @apply flex items-center gap-2 text-xs;
+.corrections-reviewer {
+  @apply text-xs;
   color: var(--dm-dust);
 }
 
-.corrections-submitter {
-  font-family: var(--font-mono);
+.corrections-status-badge {
+  @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold;
 }
 
-.corrections-date {
-  opacity: 0.7;
+.corrections-status-badge--approved {
+  background: oklch(0.55 0.15 145 / 15%);
+  color: oklch(0.65 0.15 145);
+}
+
+.corrections-status-badge--rejected {
+  background: oklch(0.65 0.20 25 / 15%);
+  color: oklch(0.65 0.20 25);
+}
+
+.corrections-status-badge--pending {
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
 }
 
 .corrections-actions {
@@ -3665,6 +3776,53 @@ body:has(.admin-shell) {
 .corrections-reject:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.corrections-edit-btn {
+  @apply flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-semibold;
+  background: oklch(0.76 0.14 85 / 15%);
+  color: var(--dm-gold);
+  border: none;
+  cursor: pointer;
+}
+
+.corrections-edit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Parent My Corrections page */
+.my-corrections-card {
+  @apply rounded-xl overflow-hidden;
+  background: var(--dm-dune);
+}
+
+.my-corrections-card-header {
+  @apply flex items-center gap-3 px-4 py-3;
+  cursor: pointer;
+  user-select: none;
+}
+
+.my-corrections-card-header-left {
+  @apply flex-1 min-w-0;
+}
+
+.my-corrections-card-header-right {
+  @apply flex items-center gap-2 shrink-0;
+}
+
+.my-corrections-card-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease-out;
+}
+
+.my-corrections-card--expanded .my-corrections-card-body {
+  grid-template-rows: 1fr;
+}
+
+.my-corrections-card--expanded .corrections-card-chevron {
+  transform: rotate(180deg);
 }
 
 /* (my-players-team-gap removed — replaced by my-favourites) */
@@ -4101,21 +4259,8 @@ body:has(.admin-shell) {
    Corrections: Add Player Review
    ============================================================ */
 
-.corrections-add-player .corrections-field-label {
+.corrections-add-player .corrections-diff-label {
   color: oklch(0.70 0.15 145);
-}
-
-.corrections-review-btn {
-  @apply flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-semibold;
-  background: oklch(0.76 0.14 85 / 15%);
-  color: var(--dm-gold);
-  border: none;
-  cursor: pointer;
-}
-
-.corrections-review-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .corrections-edit-fields {

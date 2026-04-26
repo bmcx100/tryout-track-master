@@ -38,7 +38,7 @@ export function TeamSection({
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="team-header-left">
-          <span className="team-name">
+          <span className="team-name" style={{ marginLeft: 35 }}>
             {isOfficial ? "Official" : "Predicted"} {teamName}
           </span>
         </div>
