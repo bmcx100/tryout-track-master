@@ -251,7 +251,7 @@ export function ContinuationsPageClient({
     cutCount = previousRound.estimated_players - activeRound.jersey_numbers.length
     isEstimatedCuts = true
   }
-  const newPlayers = previousRound
+  const newPlayers = previousRound && previousRound.jersey_numbers.length > 0
     ? activeRound.jersey_numbers.filter((jn) => !previousRound.jersey_numbers.includes(jn))
     : []
   const newCount = newPlayers.length
