@@ -1,12 +1,15 @@
 import { requireAdmin } from "@/lib/auth"
-import { getPendingCorrections } from "@/app/(app)/corrections/actions"
+import { getCorrections } from "@/app/(app)/corrections/actions"
 import { CorrectionsList } from "@/components/settings/corrections-list"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 
 export default async function CorrectionsPage() {
   const { associationId } = await requireAdmin()
-  const corrections = await getPendingCorrections(associationId)
+  const [pending, resolved] = await Promise.all([
+    getCorrections(associationId, "pending"),
+    getCorrections(associationId, "resolved"),
+  ])
 
   return (
     <div className="corrections-page">
@@ -14,9 +17,12 @@ export default async function CorrectionsPage() {
         <Link href="/settings" className="corrections-back">
           <ChevronLeft size={20} />
         </Link>
-        <h1 className="corrections-page-title">Pending Corrections</h1>
+        <h1 className="corrections-page-title">Corrections</h1>
       </div>
-      <CorrectionsList initialCorrections={corrections} />
+      <CorrectionsList
+        pendingCorrections={pending}
+        resolvedCorrections={resolved}
+      />
     </div>
   )
 }

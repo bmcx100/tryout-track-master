@@ -32,6 +32,7 @@ type SettingsPageClientProps = {
   associationName: string
   associationId: string
   pendingCorrectionsCount: number
+  myCorrectionsCount: number
 }
 
 export function SettingsPageClient({
@@ -40,6 +41,7 @@ export function SettingsPageClient({
   role,
   associationName,
   pendingCorrectionsCount,
+  myCorrectionsCount,
 }: SettingsPageClientProps) {
   const isAdmin = role === "group_admin" || role === "admin"
   const tipsDisabled = useSyncExternalStore(subscribeDisabled, getDisabledSnapshot, getDisabledServerSnapshot)
@@ -83,6 +85,23 @@ export function SettingsPageClient({
               <Scan size={18} />
             </span>
             <span className="settings-row-label">Continuations</span>
+            <ChevronRight size={16} className="settings-row-chevron" />
+          </Link>
+        </section>
+      )}
+
+      {/* My Corrections — parent only */}
+      {!isAdmin && (
+        <section className="settings-section">
+          <h2 className="settings-section-title">Corrections</h2>
+          <Link href="/settings/my-corrections" className="settings-row">
+            <span className="settings-row-icon settings-row-icon-blue">
+              <FileCheck size={18} />
+            </span>
+            <span className="settings-row-label">My Corrections</span>
+            {myCorrectionsCount > 0 && (
+              <span className="corrections-card-badge">{myCorrectionsCount}</span>
+            )}
             <ChevronRight size={16} className="settings-row-chevron" />
           </Link>
         </section>

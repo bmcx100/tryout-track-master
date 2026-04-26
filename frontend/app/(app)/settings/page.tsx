@@ -1,6 +1,6 @@
 import { requireAssociation } from "@/lib/auth"
 import { SettingsPageClient } from "@/components/settings/settings-page-client"
-import { getPendingCorrectionsCount } from "@/app/(app)/corrections/actions"
+import { getPendingCorrectionsCount, getMyCorrectionsCount } from "@/app/(app)/corrections/actions"
 
 export default async function SettingsPage() {
   const { user, associationId, role, association } = await requireAssociation()
@@ -12,6 +12,9 @@ export default async function SettingsPage() {
   const pendingCorrectionsCount = isAdmin
     ? await getPendingCorrectionsCount(associationId)
     : 0
+  const myCorrectionsCount = !isAdmin
+    ? await getMyCorrectionsCount(associationId)
+    : 0
 
   return (
     <SettingsPageClient
@@ -21,6 +24,7 @@ export default async function SettingsPage() {
       associationName={association.name}
       associationId={associationId}
       pendingCorrectionsCount={pendingCorrectionsCount}
+      myCorrectionsCount={myCorrectionsCount}
     />
   )
 }

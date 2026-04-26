@@ -119,6 +119,7 @@ function SortableTeamSection({
   index,
   positionFilter,
   annotations,
+  withdrawnIds,
   onPlayerEdit,
   onToggleFavorite,
   onBulkToggleFavorite,
@@ -129,6 +130,7 @@ function SortableTeamSection({
   index: number
   positionFilter?: string | null
   annotations?: Annotations
+  withdrawnIds?: Set<string>
   onPlayerEdit?: (player: TryoutPlayer) => void
   onToggleFavorite?: (playerId: string) => void
   onBulkToggleFavorite?: (playerIds: string[], setFavorite: boolean) => void
@@ -196,9 +198,14 @@ function SortableTeamSection({
         </div>
         <div className="team-header-right">
           <span className="team-count">
-            {positionFilter
-              ? `${players.length}/${allPlayers.length}`
-              : allPlayers.length} Players
+            {(() => {
+              const activeCount = withdrawnIds
+                ? allPlayers.filter((p) => !withdrawnIds.has(p.id)).length
+                : allPlayers.length
+              return positionFilter
+                ? `${players.filter((p) => !withdrawnIds?.has(p.id)).length}/${activeCount}`
+                : activeCount
+            })()} Players
           </span>
           <ChevronDown
             size={16}
@@ -221,6 +228,7 @@ function SortableTeamSection({
                 isLocked={false}
                 isFavorite={ann?.isFavorite}
                 isSuggested={!!player.suggested_by}
+                isWithdrawn={withdrawnIds?.has(player.id)}
                 customName={ann?.customName}
                 customJersey={ann?.customJersey}
                 customPosition={ann?.customPosition}
@@ -266,6 +274,7 @@ type PreviousTeamsViewProps = {
   savedTeamGroupOrder?: string[]
   positionFilter?: string | null
   annotations?: Annotations
+  withdrawnIds?: Set<string>
   onOrderChange?: (previousTeam: string, playerIds: string[]) => void
   onTeamGroupOrderChange?: (teamOrder: string[]) => void
   onPlayerEdit?: (player: TryoutPlayer) => void
@@ -279,6 +288,7 @@ export function PreviousTeamsView({
   savedTeamGroupOrder,
   positionFilter,
   annotations,
+  withdrawnIds,
   onOrderChange,
   onTeamGroupOrderChange,
   onPlayerEdit,
@@ -475,6 +485,7 @@ export function PreviousTeamsView({
             index={i}
             positionFilter={positionFilter}
             annotations={annotations}
+            withdrawnIds={withdrawnIds}
             onPlayerEdit={onPlayerEdit}
             onToggleFavorite={onToggleFavorite}
             onBulkToggleFavorite={onBulkToggleFavorite}

@@ -514,6 +514,15 @@
   border-left: 2px solid var(--dm-gold);
 }
 
+/* Withdrawn player row — faded appearance */
+.player-row-withdrawn {
+  opacity: 0.4;
+}
+
+.player-row-withdrawn .player-drag-handle {
+  pointer-events: none;
+}
+
 .player-pending-badge {
   @apply ml-auto flex flex-shrink-0 items-center gap-1 text-xs;
   color: var(--dm-gold);
@@ -1610,9 +1619,8 @@ body:has(.admin-shell) {
 
 .dashboard-fav-header {
   @apply inline-flex items-center gap-0.5 px-1 mb-3;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  font-family: var(--font-ibm-plex-mono);
   color: var(--dm-umber);
   text-decoration: none;
 }
@@ -1695,9 +1703,13 @@ body:has(.admin-shell) {
 }
 
 .dashboard-fav-names {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--dm-dust);
-  font-family: var(--font-ibm-plex-mono);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* -- Dashboard Empty State ---------------------------------- */
@@ -3067,9 +3079,8 @@ body:has(.admin-shell) {
 }
 
 .dashboard-hero-position-breakdown {
-  @apply text-base mt-1;
-  color: var(--dm-dust);
-  opacity: 0.8;
+  @apply text-lg mt-1 font-medium;
+  color: var(--dm-umber);
   text-align: center;
 }
 

@@ -34,11 +34,11 @@ function buildStatusGroups(favs: FavoriteStatus[]): StatusGroup[] {
 }
 
 function formatSampleNames(players: FavoriteStatus[]): string {
-  const samples = players.slice(0, 2).map((p) => {
+  const samples = players.slice(0, 4).map((p) => {
     const lastName = p.playerName.split(",")[0]?.trim() ?? p.playerName
     return `#${p.jerseyNumber} ${lastName}`
   })
-  const remaining = players.length - 2
+  const remaining = players.length - 4
   if (remaining > 0) {
     return `${samples.join(", ")} +${remaining}`
   }

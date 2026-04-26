@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useMemo } from "react"
 import { Plus } from "lucide-react"
 import type { TryoutPlayer, Team, Annotations } from "@/types"
 import { ViewToggle } from "./view-toggle"
@@ -58,6 +58,27 @@ export function TeamsPageClient({
   const [currentTeamGroupOrder, setCurrentTeamGroupOrder] = useState<string[]>(savedTeamGroupOrder)
   const [isResetting, setIsResetting] = useState(false)
   const [annotations, setAnnotations] = useState<Annotations>(initialAnnotations)
+
+  // Compute withdrawn player IDs from DB status + personal annotations
+  const withdrawnIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const p of players) {
+      if (p.status === "withdrew") ids.add(p.id)
+    }
+    for (const [id, ann] of Object.entries(annotations)) {
+      if (ann?.customTeam === "withdrew") ids.add(id)
+      // If annotation overrides to non-withdrew, remove from set
+      if (ann?.customTeam && ann.customTeam !== "withdrew") ids.delete(id)
+    }
+    return ids
+  }, [players, annotations])
+
+  // Active players for predictions (exclude withdrawn)
+  const activePlayers = useMemo(
+    () => players.filter((p) => !withdrawnIds.has(p.id)),
+    [players, withdrawnIds],
+  )
+
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   const savePreviousTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   const teamGroupTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -177,12 +198,12 @@ export function TeamsPageClient({
     submitCorrection(playerId, fieldName, oldValue, newValue)
   }, [])
 
-  const handleAdminUpdate = useCallback(async (playerId: string, updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string }) => {
+  const handleAdminUpdate = useCallback(async (playerId: string, updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, status?: string }) => {
     const result = await adminUpdatePlayer(playerId, updates)
     if (!result.error) {
       // Optimistic update of local player data
       setPlayers((prev) =>
-        prev.map((p) => p.id === playerId ? { ...p, ...updates } : p)
+        prev.map((p) => p.id === playerId ? { ...p, ...updates } as typeof p : p)
       )
     }
     return result
@@ -234,7 +255,7 @@ export function TeamsPageClient({
       {activeView === "predictions" ? (
         <PredictionBoard
           key={`predictions-${resetKey}`}
-          players={players}
+          players={activePlayers}
           teams={teams}
           savedOrders={currentPredictionOrders}
           savedPreviousOrders={currentPreviousOrders}
@@ -253,6 +274,7 @@ export function TeamsPageClient({
           savedTeamGroupOrder={currentTeamGroupOrder}
           positionFilter={activePosition}
           annotations={annotations}
+          withdrawnIds={withdrawnIds}
           onOrderChange={handlePreviousOrderChange}
           onTeamGroupOrderChange={handleTeamGroupOrderChange}
           onPlayerEdit={setSelectedPlayer}

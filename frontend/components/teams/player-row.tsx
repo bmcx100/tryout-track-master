@@ -11,6 +11,7 @@ type PlayerRowProps = {
   isLocked: boolean
   isFavorite?: boolean
   isSuggested?: boolean
+  isWithdrawn?: boolean
   customName?: string | null
   customJersey?: string | null
   customPosition?: string | null
@@ -24,6 +25,7 @@ export function PlayerRow({
   isLocked,
   isFavorite,
   isSuggested,
+  isWithdrawn,
   customName,
   customJersey,
   customPosition,
@@ -46,7 +48,7 @@ export function PlayerRow({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.5 : undefined,
   }
 
   const handleClick = useCallback(() => {
@@ -63,7 +65,7 @@ export function PlayerRow({
     <div
       ref={setNodeRef}
       style={style}
-      className={isSuggested ? "player-row player-row-suggested" : "player-row"}
+      className={`player-row${isSuggested ? " player-row-suggested" : ""}${isWithdrawn ? " player-row-withdrawn" : ""}`}
       onClick={handleClick}
       role="button"
       tabIndex={0}

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 
 export async function adminUpdatePlayer(
   playerId: string,
-  updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string }
+  updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, status?: string }
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

@@ -25,7 +25,7 @@ type LongPressMenuProps = {
   onSaveNote: (note: string) => void
   onSubmitCorrection: (fieldName: string, oldValue: string, newValue: string) => void
   isAdmin?: boolean
-  onAdminUpdate?: (updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string }) => Promise<{ error?: string }>
+  onAdminUpdate?: (updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, status?: string }) => Promise<{ error?: string }>
   onDelete?: () => void
   context?: "teams" | "continuations"
   teams?: { id: string, name: string }[]
@@ -53,15 +53,20 @@ function normalizePreviousTeam(value: string): string {
 }
 
 const STATUS_OPTIONS = [
-  { value: "", label: "—" },
   { value: "trying_out", label: "Trying Out" },
-  { value: "cut", label: "Cut" },
   { value: "made_team", label: "Made Team" },
-  { value: "moved_up", label: "Moved Up" },
-  { value: "moved_down", label: "Moved Down" },
   { value: "withdrew", label: "Withdrew" },
-  { value: "registered", label: "Registered" },
 ]
+
+const STATUS_LABELS: Record<string, string> = {
+  trying_out: "Trying Out",
+  made_team: "Made Team",
+  withdrew: "Withdrew",
+  cut: "Cut",
+  moved_up: "Moved Up",
+  moved_down: "Moved Down",
+  registered: "Registered",
+}
 
 function fieldLabel(fieldName: string): string {
   switch (fieldName) {
@@ -106,7 +111,9 @@ export function LongPressMenu({
   const [previousTeamValue, setPreviousTeamValue] = useState(
     normalizePreviousTeam(isAdmin ? (player.previous_team ?? "") : (customPreviousTeam ?? player.previous_team ?? ""))
   )
-  const [teamValue, setTeamValue] = useState(customTeam ?? "")
+  const [statusValue, setStatusValue] = useState(
+    isAdmin ? (player.status ?? "trying_out") : (customTeam || player.status || "trying_out")
+  )
   const [noteValue, setNoteValue] = useState(note ?? "")
   const previousTeamGroups = getPreviousTeamGroups(player.division ?? null)
   const previousTeamOptions = previousTeamGroups.flatMap((g) => g.options)
@@ -151,7 +158,7 @@ export function LongPressMenu({
     const resetPrevTeam = normalizePreviousTeam(isAdmin ? (player.previous_team ?? "") : (customPreviousTeam ?? player.previous_team ?? ""))
     setPreviousTeamValue(resetPrevTeam)
     setPreviousTeamCustom(resetPrevTeam !== "" && !previousTeamOptions.includes(resetPrevTeam))
-    setTeamValue(customTeam ?? "")
+    setStatusValue(isAdmin ? (player.status ?? "trying_out") : (customTeam || player.status || "trying_out"))
     setAdminError(null)
     setEditing(false)
   }
@@ -159,7 +166,7 @@ export function LongPressMenu({
   const handleSave = async () => {
     if (isAdmin && onAdminUpdate) {
       // Admin mode: save directly to tryout_players
-      const updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string } = {}
+      const updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, status?: string } = {}
       const trimmedName = nameValue.trim()
       const trimmedJersey = jerseyValue.trim()
       const trimmedPreviousTeam = previousTeamValue.trim()
@@ -175,6 +182,9 @@ export function LongPressMenu({
       }
       if (trimmedPreviousTeam !== officialPreviousTeam) {
         updates.previous_team = trimmedPreviousTeam || undefined
+      }
+      if (statusValue !== (player.status ?? "trying_out")) {
+        updates.status = statusValue
       }
 
       if (Object.keys(updates).length > 0) {
@@ -198,19 +208,19 @@ export function LongPressMenu({
       const trimmedName = nameValue.trim()
       const trimmedJersey = jerseyValue.trim()
       const trimmedPreviousTeam = previousTeamValue.trim()
-      const trimmedTeam = teamValue.trim()
-
       const annots: Record<string, string | null> = {}
       // Save custom values (null if same as official)
       annots.customName = trimmedName && trimmedName !== officialName ? trimmedName : null
       annots.customJersey = trimmedJersey && trimmedJersey !== officialJersey ? trimmedJersey : null
       annots.customPosition = positionValue !== officialPosition ? positionValue : null
       annots.customPreviousTeam = trimmedPreviousTeam && trimmedPreviousTeam !== officialPreviousTeam ? trimmedPreviousTeam : null
-      annots.customTeam = trimmedTeam || null
+      // Save status to customTeam annotation (null if same as official status)
+      annots.customTeam = statusValue !== (player.status ?? "trying_out") ? statusValue : null
 
       onSaveAnnotations(annots)
 
       // Detect corrections: compare current values to official DB values
+      // Status changes do NOT trigger corrections — status is a personal annotation
       const corrections: { fieldName: string, oldValue: string, newValue: string }[] = []
       if (trimmedName && trimmedName !== officialName) {
         corrections.push({ fieldName: "name", oldValue: officialName, newValue: trimmedName })
@@ -223,9 +233,6 @@ export function LongPressMenu({
       }
       if (trimmedPreviousTeam && trimmedPreviousTeam !== officialPreviousTeam) {
         corrections.push({ fieldName: "previous_team", oldValue: officialPreviousTeam, newValue: trimmedPreviousTeam })
-      }
-      if (trimmedTeam) {
-        corrections.push({ fieldName: "team", oldValue: "", newValue: trimmedTeam })
       }
 
       if (corrections.length > 0) {
@@ -291,10 +298,8 @@ export function LongPressMenu({
   const displayName = isAdmin ? (player.name ?? "") : (customName ?? player.name ?? "")
   const displayPosition = isAdmin ? (player.position ?? "?") : (customPosition ?? player.position ?? "?")
   const displayPreviousTeam = isAdmin ? (player.previous_team ?? "") : (customPreviousTeam ?? player.previous_team ?? "")
-  const displayTeam = customTeam ?? ""
-
-  // Made team status text
-  const madeTeamText = player.status === "made_team" ? "Made Team" : null
+  // Effective status: annotation overrides DB status
+  const effectiveStatus = customTeam || player.status || "trying_out"
 
   // Jersey warning popup (admin in continuations context)
   if (showJerseyWarning) {
@@ -477,20 +482,18 @@ export function LongPressMenu({
                   )}
                 </div>
 
-                {!isAdmin && (
-                  <div className="detail-sheet-field detail-sheet-field-half">
-                    <label className="detail-sheet-field-label">Status</label>
-                    <select
-                      className="detail-sheet-select"
-                      value={teamValue}
-                      onChange={(e) => setTeamValue(e.target.value)}
-                    >
-                      {STATUS_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                <div className="detail-sheet-field detail-sheet-field-half">
+                  <label className="detail-sheet-field-label">Status</label>
+                  <select
+                    className="detail-sheet-select"
+                    value={statusValue}
+                    onChange={(e) => setStatusValue(e.target.value)}
+                  >
+                    {STATUS_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -538,22 +541,8 @@ export function LongPressMenu({
                 <span className="detail-sheet-info-value">{displayPreviousTeam || "None"}</span>
               </div>
               <div className="detail-sheet-info-col">
-                {displayTeam ? (
-                  <>
-                    <label className="detail-sheet-field-label">Team</label>
-                    <span className="detail-sheet-info-value">{displayTeam}</span>
-                  </>
-                ) : madeTeamText ? (
-                  <>
-                    <label className="detail-sheet-field-label">Team</label>
-                    <span className="detail-sheet-info-value">{madeTeamText}</span>
-                  </>
-                ) : (
-                  <>
-                    <label className="detail-sheet-field-label">Status</label>
-                    <span className="detail-sheet-info-value">{player.status === "trying_out" ? "Trying Out" : player.status ?? "Unknown"}</span>
-                  </>
-                )}
+                <label className="detail-sheet-field-label">Status</label>
+                <span className="detail-sheet-info-value">{STATUS_LABELS[effectiveStatus] || effectiveStatus || "Unknown"}</span>
               </div>
             </div>
 
