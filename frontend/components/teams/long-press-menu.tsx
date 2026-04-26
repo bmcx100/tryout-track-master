@@ -32,6 +32,25 @@ type LongPressMenuProps = {
 }
 
 const POSITIONS = ["F", "D", "G"]
+const DIVISION_ORDER = ["U18", "U15", "U13", "U11", "U9"]
+const LEVEL_ORDER = ["AA", "A", "BB", "B", "C"]
+
+function getPreviousTeamGroups(division: string | null): { division: string, options: string[] }[] {
+  const divIndex = DIVISION_ORDER.indexOf(division ?? "")
+  if (divIndex === -1) return []
+  const divisions = [DIVISION_ORDER[divIndex]]
+  if (divIndex + 1 < DIVISION_ORDER.length) {
+    divisions.push(DIVISION_ORDER[divIndex + 1])
+  }
+  return divisions.map((div) => ({
+    division: div,
+    options: LEVEL_ORDER.map((lvl) => `${div}${lvl}`),
+  }))
+}
+
+function normalizePreviousTeam(value: string): string {
+  return value.replace(/^(U\d+)\s+/i, "$1")
+}
 
 const STATUS_OPTIONS = [
   { value: "", label: "—" },
@@ -85,10 +104,15 @@ export function LongPressMenu({
     isAdmin ? (player.position ?? "?") : (customPosition ?? player.position ?? "?")
   )
   const [previousTeamValue, setPreviousTeamValue] = useState(
-    isAdmin ? (player.previous_team ?? "") : (customPreviousTeam ?? player.previous_team ?? "")
+    normalizePreviousTeam(isAdmin ? (player.previous_team ?? "") : (customPreviousTeam ?? player.previous_team ?? ""))
   )
   const [teamValue, setTeamValue] = useState(customTeam ?? "")
   const [noteValue, setNoteValue] = useState(note ?? "")
+  const previousTeamGroups = getPreviousTeamGroups(player.division ?? null)
+  const previousTeamOptions = previousTeamGroups.flatMap((g) => g.options)
+  const [previousTeamCustom, setPreviousTeamCustom] = useState(
+    previousTeamValue !== "" && !previousTeamOptions.includes(previousTeamValue)
+  )
   const [showCorrectionPopup, setShowCorrectionPopup] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showJerseyWarning, setShowJerseyWarning] = useState(false)
@@ -124,7 +148,9 @@ export function LongPressMenu({
     setNameValue(isAdmin ? (player.name ?? "") : (customName ?? player.name ?? ""))
     setJerseyValue(isAdmin ? (player.jersey_number ?? "") : (customJersey ?? player.jersey_number ?? ""))
     setPositionValue(isAdmin ? (player.position ?? "?") : (customPosition ?? player.position ?? "?"))
-    setPreviousTeamValue(isAdmin ? (player.previous_team ?? "") : (customPreviousTeam ?? player.previous_team ?? ""))
+    const resetPrevTeam = normalizePreviousTeam(isAdmin ? (player.previous_team ?? "") : (customPreviousTeam ?? player.previous_team ?? ""))
+    setPreviousTeamValue(resetPrevTeam)
+    setPreviousTeamCustom(resetPrevTeam !== "" && !previousTeamOptions.includes(resetPrevTeam))
     setTeamValue(customTeam ?? "")
     setAdminError(null)
     setEditing(false)
@@ -416,13 +442,39 @@ export function LongPressMenu({
               <div className="detail-sheet-edit-row">
                 <div className="detail-sheet-field detail-sheet-field-half">
                   <label className="detail-sheet-field-label">Previous Team</label>
-                  <input
-                    className="detail-sheet-input"
-                    type="text"
-                    value={previousTeamValue}
-                    onChange={(e) => setPreviousTeamValue(e.target.value)}
-                    placeholder="e.g. U13 AA"
-                  />
+                  {previousTeamOptions.length > 0 && !previousTeamCustom ? (
+                    <select
+                      className="detail-sheet-select"
+                      value={previousTeamOptions.includes(previousTeamValue) ? previousTeamValue : ""}
+                      onChange={(e) => {
+                        if (e.target.value === "__custom__") {
+                          setPreviousTeamCustom(true)
+                          setPreviousTeamValue("")
+                        } else {
+                          setPreviousTeamValue(e.target.value)
+                        }
+                      }}
+                    >
+                      <option value="" disabled>Select team</option>
+                      {previousTeamGroups.map((group) => (
+                        <optgroup key={group.division} label={group.division}>
+                          {group.options.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                      <option value="__custom__">Custom...</option>
+                    </select>
+                  ) : (
+                    <input
+                      className="detail-sheet-input"
+                      type="text"
+                      value={previousTeamValue}
+                      onChange={(e) => setPreviousTeamValue(e.target.value)}
+                      placeholder="e.g. U13AA"
+                      autoFocus
+                    />
+                  )}
                 </div>
 
                 {!isAdmin && (
