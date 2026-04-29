@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 import type { TryoutPlayer } from "@/types"
 
 export async function submitCorrection(
@@ -309,7 +310,7 @@ export async function reviewCorrection(
     } else if (correction.field_name === "previous_team") {
       const { error: updateError } = await supabase
         .from("tryout_players")
-        .update({ previous_team: correction.new_value })
+        .update({ previous_team: normalizePreviousTeam(correction.new_value) })
         .eq("id", correction.player_id)
 
       if (updateError) return { error: updateError.message }
@@ -378,7 +379,7 @@ export async function suggestPlayer(
       name,
       jersey_number: jerseyNumber,
       position,
-      previous_team: previousTeam || null,
+      previous_team: previousTeam ? normalizePreviousTeam(previousTeam) : null,
       suggested_by: user.id,
       status: "trying_out",
     })

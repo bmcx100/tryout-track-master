@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 import type { TryoutPlayer } from "@/types"
 
 export async function toggleFavorite(playerId: string): Promise<{ isFavorite: boolean, error?: string }> {
@@ -103,7 +104,7 @@ export async function savePlayerAnnotations(
   if (annotations.customName !== undefined) row.custom_name = annotations.customName || null
   if (annotations.customJersey !== undefined) row.custom_jersey = annotations.customJersey || null
   if (annotations.customPosition !== undefined) row.custom_position = annotations.customPosition || null
-  if (annotations.customPreviousTeam !== undefined) row.custom_previous_team = annotations.customPreviousTeam || null
+  if (annotations.customPreviousTeam !== undefined) row.custom_previous_team = annotations.customPreviousTeam ? normalizePreviousTeam(annotations.customPreviousTeam) : null
   if (annotations.customTeam !== undefined) row.custom_team = annotations.customTeam || null
 
   const { error } = await supabase

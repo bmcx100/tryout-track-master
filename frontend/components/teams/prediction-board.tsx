@@ -12,6 +12,7 @@ import {
 } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
 import type { TryoutPlayer, Team, Annotations } from "@/types"
+import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 import { TeamSection } from "./team-section"
 
 /* ── Constants ───────────────────────────────────────── */
@@ -95,10 +96,10 @@ function sortByPreviousTeamOrders(
   previousOrders: Record<string, string[]>,
   teamGroupOrder: string[] = [],
 ): TryoutPlayer[] {
-  // Group players by previous team
+  // Group players by previous team (normalized)
   const groups = new Map<string, TryoutPlayer[]>()
   for (const p of players) {
-    const key = p.previous_team ?? "Unknown"
+    const key = normalizePreviousTeam(p.previous_team ?? "Unknown")
     const existing = groups.get(key) ?? []
     existing.push(p)
     groups.set(key, existing)

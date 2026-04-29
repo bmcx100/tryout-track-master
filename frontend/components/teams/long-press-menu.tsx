@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Heart, X, Trash2, Pencil } from "lucide-react"
 import type { TryoutPlayer } from "@/types"
+import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 
 type LongPressMenuProps = {
   player: TryoutPlayer
@@ -46,10 +47,6 @@ function getPreviousTeamGroups(division: string | null): { division: string, opt
     division: div,
     options: LEVEL_ORDER.map((lvl) => `${div}${lvl}`),
   }))
-}
-
-function normalizePreviousTeam(value: string): string {
-  return value.replace(/^(U\d+)\s+/i, "$1")
 }
 
 const STATUS_OPTIONS = [

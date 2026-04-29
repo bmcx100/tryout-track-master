@@ -17,6 +17,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable"
 import type { ContinuationRound, TryoutPlayer, Annotations } from "@/types"
+import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 import { ContinuationPlayerRow } from "./continuation-player-row"
 import { SortHeader, type SortConfig, type SortColumn } from "./sort-header"
 
@@ -56,7 +57,8 @@ function getPositionRank(player: TryoutPlayer | null): number {
 // Blended rank: tier first (AA > A > BB > B > C), then age desc within tier (U15 > U13 > U11)
 function getBlendedTeamRank(player: TryoutPlayer | null): number {
   if (!player?.previous_team) return 9999
-  const match = player.previous_team.match(/U(\d+)(.+)/)
+  const normalized = normalizePreviousTeam(player.previous_team)
+  const match = normalized.match(/U(\d+)(.+)/)
   if (!match) return 9999
   const age = parseInt(match[1])
   const tier = TIER_ORDER[match[2]] ?? 99

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import { X, UserPlus, Search } from "lucide-react"
 import type { TryoutPlayer } from "@/types"
+import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 
 type PlayerPickerProps = {
   jerseyNumber: string
@@ -37,8 +38,8 @@ export function PlayerPicker({
 
     // Sort by previous team (alpha), then position, then jersey number
     filtered.sort((a, b) => {
-      const teamA = a.previous_team ?? "zzz"
-      const teamB = b.previous_team ?? "zzz"
+      const teamA = normalizePreviousTeam(a.previous_team ?? "zzz")
+      const teamB = normalizePreviousTeam(b.previous_team ?? "zzz")
       if (teamA !== teamB) return teamA.localeCompare(teamB)
       const posA = POSITION_ORDER[a.position] ?? 99
       const posB = POSITION_ORDER[b.position] ?? 99
@@ -46,11 +47,11 @@ export function PlayerPicker({
       return Number(a.jersey_number) - Number(b.jersey_number)
     })
 
-    // Group by previous_team
+    // Group by previous_team (normalized)
     const groups: { team: string, players: TryoutPlayer[] }[] = []
     let currentTeam = ""
     for (const p of filtered) {
-      const team = p.previous_team ?? "Unknown"
+      const team = normalizePreviousTeam(p.previous_team ?? "Unknown")
       if (team !== currentTeam) {
         groups.push({ team, players: [] })
         currentTeam = team

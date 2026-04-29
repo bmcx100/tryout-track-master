@@ -1,6 +1,7 @@
 import { requireAssociation } from "@/lib/auth"
 import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
 import { getPlayerAnnotations } from "@/app/(app)/annotations/actions"
+import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 import { TeamsPageClient } from "@/components/teams/teams-page-client"
 import type { TryoutPlayer, Team } from "@/types"
 
@@ -71,7 +72,7 @@ export default async function TeamsPage() {
 
   const savedPreviousOrders: Record<string, string[]> = {}
   for (const order of previousOrders ?? []) {
-    savedPreviousOrders[order.previous_team] = order.player_order
+    savedPreviousOrders[normalizePreviousTeam(order.previous_team)] = order.player_order
   }
 
   // Fetch user's saved team group order for active division
@@ -83,7 +84,7 @@ export default async function TeamsPage() {
     .eq("division", activeDivision)
     .maybeSingle()
 
-  const savedTeamGroupOrder: string[] = teamGroupOrderData?.team_order ?? []
+  const savedTeamGroupOrder: string[] = (teamGroupOrderData?.team_order ?? []).map(normalizePreviousTeam)
 
   // Fetch user's player annotations (hearts, names)
   const annotations = await getPlayerAnnotations(associationId)

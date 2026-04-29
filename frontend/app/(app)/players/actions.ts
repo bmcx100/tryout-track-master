@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 
 export async function adminUpdatePlayer(
   playerId: string,
@@ -46,6 +47,11 @@ export async function adminUpdatePlayer(
     if (duplicate) {
       return { error: `Jersey #${updates.jersey_number} already exists in this division` }
     }
+  }
+
+  // Normalize previous_team format
+  if (updates.previous_team) {
+    updates.previous_team = normalizePreviousTeam(updates.previous_team)
   }
 
   const { error } = await supabase
@@ -142,7 +148,7 @@ export async function adminCreatePlayer(
       jersey_number: data.jersey_number,
       name: data.name,
       position: data.position,
-      previous_team: data.previous_team || null,
+      previous_team: data.previous_team ? normalizePreviousTeam(data.previous_team) : null,
       status: "registered",
     })
     .select("id")

@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 import type { ParsedPlayer } from "@/components/import/csv-upload"
 
 export async function importPlayers(
@@ -32,7 +33,7 @@ export async function importPlayers(
       jersey_number: r.jersey_number,
       division: r.division,
       status: r.status as "registered" | "trying_out" | "cut" | "made_team" | "moved_up" | "moved_down" | "withdrew",
-      previous_team: r.previous_team || null,
+      previous_team: r.previous_team ? normalizePreviousTeam(r.previous_team) : null,
     }))
 
   if (insertRows.length === 0) {

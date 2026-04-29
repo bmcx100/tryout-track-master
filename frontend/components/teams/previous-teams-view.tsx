@@ -22,6 +22,7 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import type { TryoutPlayer, Annotations } from "@/types"
+import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 import { PlayerRow } from "./player-row"
 
 /* ── Constants ──────────────────────────────────────── */
@@ -102,7 +103,7 @@ function applyOrder(pool: TryoutPlayer[], order: string[] | null): TryoutPlayer[
 function groupByPreviousTeam(players: TryoutPlayer[]): Map<string, TryoutPlayer[]> {
   const groups = new Map<string, TryoutPlayer[]>()
   for (const player of players) {
-    const key = player.previous_team ?? "Unknown"
+    const key = normalizePreviousTeam(player.previous_team ?? "Unknown")
     const existing = groups.get(key) ?? []
     existing.push(player)
     groups.set(key, existing)
@@ -297,11 +298,11 @@ export function PreviousTeamsView({
 }: PreviousTeamsViewProps) {
   const groups = useMemo(() => groupByPreviousTeam(players), [players])
 
-  // Player ID → previous_team group lookup
+  // Player ID → previous_team group lookup (normalized)
   const playerGroupMap = useMemo(() => {
     const map = new Map<string, string>()
     for (const p of players) {
-      map.set(p.id, p.previous_team ?? "Unknown")
+      map.set(p.id, normalizePreviousTeam(p.previous_team ?? "Unknown"))
     }
     return map
   }, [players])

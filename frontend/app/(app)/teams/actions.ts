@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 
 export async function savePredictionOrder(
   associationId: string,
@@ -76,7 +77,7 @@ export async function savePreviousTeamOrder(
       {
         user_id: user.id,
         association_id: associationId,
-        previous_team: previousTeam,
+        previous_team: normalizePreviousTeam(previousTeam),
         player_order: playerOrder,
       },
       { onConflict: "user_id,association_id,previous_team" }
@@ -102,7 +103,7 @@ export async function saveTeamGroupOrder(
         user_id: user.id,
         association_id: associationId,
         division,
-        team_order: teamOrder,
+        team_order: teamOrder.map(normalizePreviousTeam),
       },
       { onConflict: "user_id,association_id,division" }
     )
