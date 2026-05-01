@@ -27,6 +27,7 @@ type SessionData = {
   start_time: string
   end_time: string
   jersey_numbers: string[]
+  label?: string
 }
 
 type RoundSectionProps = {
@@ -552,7 +553,7 @@ export function RoundSection({
                 }}
               />
               <span>
-                Session {session.session_number} · {formatTime(session.start_time)}–{formatTime(session.end_time)}
+                {session.label || `Session ${session.session_number}`}{session.start_time ? ` · ${formatTime(session.start_time)}–${formatTime(session.end_time)}` : ""}
               </span>
               <span className="continuations-session-count">({players.length})</span>
             </button>

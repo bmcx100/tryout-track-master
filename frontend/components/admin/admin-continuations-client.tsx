@@ -96,6 +96,7 @@ export function AdminContinuationsClient({
   const [scrapeJerseyExpanded, setScrapeJerseyExpanded] = useState(false)
   const [multiSession, setMultiSession] = useState(false)
   const [sessionTexts, setSessionTexts] = useState<string[]>(["", ""])
+  const [sessionLabels, setSessionLabels] = useState<string[]>(["", ""])
   const hasScrapeStarted = useRef(false)
 
   // Published rounds state — sync when server props change (after router.refresh)
@@ -129,6 +130,7 @@ export function AdminContinuationsClient({
     jersey_numbers?: string[]
     is_multi_session?: boolean
     session_texts?: string[]
+    session_labels?: string[]
   }>>({})
   const [saving, setSaving] = useState<string | null>(null)
 
@@ -185,8 +187,10 @@ export function AdminContinuationsClient({
         )
         if (significantBlocks.length >= 2) {
           setSessionTexts(significantBlocks.map((b) => b.jerseyNumbers.join("\n")))
+          setSessionLabels(significantBlocks.map((b) => b.label || ""))
         } else {
           setSessionTexts([scrapeResult.jerseyNumbers.join("\n"), ""])
+          setSessionLabels(["", ""])
         }
       }
 
@@ -231,7 +235,7 @@ export function AdminContinuationsClient({
           .map((text, i) => ({
             session_number: i + 1,
             jersey_numbers: parseJerseyNumbers(text),
-            label: `Session ${i + 1}`,
+            label: sessionLabels[i] || `Session ${i + 1}`,
           }))
           .filter((s) => s.jersey_numbers.length > 0)
 
@@ -392,6 +396,17 @@ export function AdminContinuationsClient({
     return [round.jersey_numbers.join("\n"), ""]
   }
 
+  // Get session labels from a round's existing session data
+  const getSessionLabelsFromRound = (round: ContinuationRound): string[] => {
+    if (!Array.isArray(round.sessions)) return ["", ""]
+    const sessions = round.sessions as { jersey_numbers?: string[], label?: string }[]
+    const withData = sessions.filter((s) => s.jersey_numbers && s.jersey_numbers.length > 0)
+    if (withData.length >= 2) {
+      return withData.map((s) => s.label || "")
+    }
+    return ["", ""]
+  }
+
   const getEditState = (round: ContinuationRound) => {
     const edits = roundEdits[round.id]
     const isMulti = edits?.is_multi_session ?? roundHasMultiSession(round)
@@ -406,6 +421,7 @@ export function AdminContinuationsClient({
       jersey_numbers: edits?.jersey_numbers ?? round.jersey_numbers,
       is_multi_session: isMulti,
       session_texts: edits?.session_texts ?? (isMulti ? getSessionTextsFromRound(round) : undefined),
+      session_labels: edits?.session_labels ?? (isMulti ? getSessionLabelsFromRound(round) : undefined),
     }
   }
 
@@ -428,6 +444,7 @@ export function AdminContinuationsClient({
     }
     if (edits.is_multi_session !== undefined && edits.is_multi_session !== roundHasMultiSession(round)) return true
     if (edits.session_texts !== undefined) return true
+    if (edits.session_labels !== undefined) return true
     return false
   }
 
@@ -451,6 +468,7 @@ export function AdminContinuationsClient({
     let sessionsData: unknown = undefined
     let jerseyNumbers = state.jersey_numbers
     if (state.is_multi_session && state.session_texts) {
+      const labels = state.session_labels || []
       const sessionEntries = state.session_texts
         .map((text, i) => ({
           session_number: i + 1,
@@ -458,6 +476,7 @@ export function AdminContinuationsClient({
           start_time: "",
           end_time: "",
           jersey_numbers: parseJerseyNumbers(text),
+          label: labels[i] || `Session ${i + 1}`,
         }))
         .filter((s) => s.jersey_numbers.length > 0)
       sessionsData = sessionEntries
@@ -934,7 +953,16 @@ export function AdminContinuationsClient({
                       const count = parseJerseyNumbers(text).length
                       return (
                         <div key={i} className="scrape-session-panel">
-                          <div className="scrape-session-panel-header">Session {i + 1}</div>
+                          <input
+                            className="scrape-session-label-input"
+                            placeholder={`Session ${i + 1}`}
+                            value={sessionLabels[i] || ""}
+                            onChange={(e) => {
+                              const next = [...sessionLabels]
+                              next[i] = e.target.value
+                              setSessionLabels(next)
+                            }}
+                          />
                           <textarea
                             className="scrape-session-textarea"
                             rows={6}
@@ -954,7 +982,10 @@ export function AdminContinuationsClient({
                   {sessionTexts.length < 3 && (
                     <button
                       className="scrape-add-session-btn"
-                      onClick={() => setSessionTexts([...sessionTexts, ""])}
+                      onClick={() => {
+                        setSessionTexts([...sessionTexts, ""])
+                        setSessionLabels([...sessionLabels, ""])
+                      }}
                     >
                       + Add Session
                     </button>
@@ -1327,13 +1358,19 @@ export function AdminContinuationsClient({
                                   const checked = e.target.checked
                                   updateEdit(round.id, "is_multi_session", checked)
                                   if (checked) {
-                                    // Initialize session texts from existing sessions or jersey numbers
-                                    const texts = roundHasMultiSession(round)
+                                    // Initialize session texts and labels from existing sessions or jersey numbers
+                                    const hasMulti = roundHasMultiSession(round)
+                                    const texts = hasMulti
                                       ? getSessionTextsFromRound(round)
                                       : [state.jersey_numbers.join("\n"), ""]
+                                    const labels = hasMulti
+                                      ? getSessionLabelsFromRound(round)
+                                      : ["", ""]
                                     updateEdit(round.id, "session_texts", texts)
+                                    updateEdit(round.id, "session_labels", labels)
                                   } else {
                                     updateEdit(round.id, "session_texts", undefined)
+                                    updateEdit(round.id, "session_labels", undefined)
                                   }
                                 }}
                               />
@@ -1347,9 +1384,20 @@ export function AdminContinuationsClient({
                               <div className="scrape-session-panels">
                                 {state.session_texts.map((text, i) => {
                                   const count = parseJerseyNumbers(text).length
+                                  const labels = state.session_labels || []
                                   return (
                                     <div key={i} className="scrape-session-panel">
-                                      <div className="scrape-session-panel-header">Session {i + 1}</div>
+                                      <input
+                                        className="scrape-session-label-input"
+                                        placeholder={`Session ${i + 1}`}
+                                        value={labels[i] || ""}
+                                        onChange={(e) => {
+                                          const next = [...labels]
+                                          while (next.length <= i) next.push("")
+                                          next[i] = e.target.value
+                                          updateEdit(round.id, "session_labels", next)
+                                        }}
+                                      />
                                       <textarea
                                         className="scrape-session-textarea"
                                         rows={6}
@@ -1369,7 +1417,11 @@ export function AdminContinuationsClient({
                               {state.session_texts.length < 3 && (
                                 <button
                                   className="scrape-add-session-btn"
-                                  onClick={() => updateEdit(round.id, "session_texts", [...state.session_texts!, ""])}
+                                  onClick={() => {
+                                    updateEdit(round.id, "session_texts", [...state.session_texts!, ""])
+                                    const labels = state.session_labels || []
+                                    updateEdit(round.id, "session_labels", [...labels, ""])
+                                  }}
                                 >
                                   + Add Session
                                 </button>

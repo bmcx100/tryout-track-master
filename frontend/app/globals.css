@@ -2921,6 +2921,16 @@ body:has(.admin-shell) {
   color: var(--dm-gold);
 }
 
+.scrape-session-label-input {
+  @apply w-full text-xs font-semibold mb-2 bg-transparent border-none outline-none;
+  color: var(--dm-gold);
+}
+
+.scrape-session-label-input::placeholder {
+  color: var(--dm-gold);
+  opacity: 0.5;
+}
+
 .scrape-session-textarea {
   @apply w-full rounded-lg px-3 py-2 text-sm;
   background: oklch(0.12 0 0);

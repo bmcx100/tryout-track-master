@@ -361,6 +361,7 @@ export async function saveDraftRound(
       start_time: "",
       end_time: "",
       jersey_numbers: s.jersey_numbers,
+      label: s.label || `Session ${s.session_number}`,
     }))
   } else {
     // Single-session mode: build from reporting date (existing behavior)
