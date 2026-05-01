@@ -33,6 +33,7 @@ export async function updateRound(
     estimated_players_f?: number | null
     estimated_players_d?: number | null
     estimated_players_g?: number | null
+    sessions?: unknown
   }
 ): Promise<{ error?: string }> {
   const supabase = await createClient()

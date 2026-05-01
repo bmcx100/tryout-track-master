@@ -3,11 +3,18 @@
 import { createClient } from "@/lib/supabase/server"
 import { lockFinalTeam } from "@/app/(app)/continuations/actions"
 
+export type ScrapeBlock = {
+  jerseyNumbers: string[]
+  ipPlayers: string[]
+  label: string
+}
+
 export type ScrapeResult = {
   pageType: "continuation" | "final_team" | "everyone_continues" | "no_data"
   teamLevel: string | null
   jerseyNumbers: string[]
   ipPlayers: string[]
+  blocks: ScrapeBlock[]
   reportingDate: string | null
   sourceUrl: string
   rawText: string
@@ -73,58 +80,92 @@ function extractTeamLevel(text: string): string | null {
 }
 
 // Extract jersey numbers from HTML content, targeting structured number lists
-function extractJerseyNumbers(html: string): { jerseyNumbers: string[], ipPlayers: string[] } {
-  const jerseyNumbers: string[] = []
-  const ipPlayers: string[] = []
-
+function extractJerseyNumbers(html: string): { blocks: ScrapeBlock[] } {
   // Method 1: Table cells — sites like U13 use <td> for each number
   const tdRegex = /<td[^>]*>\s*(\d{1,4})\s*(IP)?\s*<\/td>/gi
   let match
-  let foundInTable = false
+  const tableNumbers: string[] = []
+  const tableIp: string[] = []
 
   while ((match = tdRegex.exec(html)) !== null) {
     const num = match[1]
     const isIp = !!match[2]
-    if (!jerseyNumbers.includes(num)) {
-      jerseyNumbers.push(num)
-      if (isIp) ipPlayers.push(num)
-      foundInTable = true
+    if (!tableNumbers.includes(num)) {
+      tableNumbers.push(num)
+      if (isIp) tableIp.push(num)
     }
   }
 
-  if (foundInTable) return { jerseyNumbers, ipPlayers }
+  if (tableNumbers.length > 0) {
+    return { blocks: [{ jerseyNumbers: tableNumbers, ipPlayers: tableIp, label: "" }] }
+  }
 
   // Method 2: BR-separated numbers — sites like U15 use <br> between numbers
-  // Find a block (<div> or <p>) that has many number<br> sequences
-  const brBlockMatch = html.match(/<(?:div|p)[^>]*>((?:\s*\d{1,4}\s*(?:IP)?\s*(?:&nbsp;)?\s*<br\s*\/?>?\s*)+\d{1,4}\s*(?:IP)?(?:\s*(?:&nbsp;)?)*)\s*<\/(?:div|p)>/i)
-  if (brBlockMatch) {
-    const block = brBlockMatch[1]
-    const numRegex = /(\d{1,4})\s*(IP)?/g
+  // Two-step: find all <div>/<p> blocks, then check each for BR-separated numbers
+  // Also match blocks that extend to end of content (extractUserContent may strip closing tags)
+  const blockTagRegex = /<(?:div|p)[^>]*>([\s\S]*?)(?:<\/(?:div|p)>|$)/gi
+  const blocks: ScrapeBlock[] = []
 
-    while ((match = numRegex.exec(block)) !== null) {
-      const num = match[1]
-      const isIp = !!match[2]
-      if (!jerseyNumbers.includes(num)) {
-        jerseyNumbers.push(num)
-        if (isIp) ipPlayers.push(num)
+  while ((match = blockTagRegex.exec(html)) !== null) {
+    const blockContent = match[1]
+
+    // Check if this block has BR-separated numbers (at least 2 numbers with <br> between)
+    const brNumbers = blockContent.match(/\d{1,4}\s*(?:IP)?\s*(?:&nbsp;)?\s*<br/gi)
+    if (!brNumbers || brNumbers.length < 2) continue
+
+    const blockNumbers: string[] = []
+    const blockIp: string[] = []
+
+    // Extract label from <strong> or <b> tag in the block
+    let label = ""
+    const labelMatch = blockContent.match(/<(?:strong|b|h[23])[^>]*>([\s\S]*?)<\/(?:strong|b|h[23])>/i)
+    if (labelMatch) {
+      label = labelMatch[1].replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim()
+    }
+
+    // Extract all numbers from the block (skip numbers inside tags like labels)
+    // Split by <br> and process each segment
+    const segments = blockContent.split(/<br\s*\/?>/i)
+    for (const seg of segments) {
+      // Strip HTML tags from this segment
+      const clean = seg.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim()
+      // Match a standalone jersey number (1-4 digits optionally followed by IP)
+      const numMatch = clean.match(/^(\d{1,4})\s*(IP)?$/i)
+      if (numMatch) {
+        const num = numMatch[1]
+        const isIp = !!numMatch[2]
+        if (!blockNumbers.includes(num)) {
+          blockNumbers.push(num)
+          if (isIp) blockIp.push(num)
+        }
       }
     }
 
-    if (jerseyNumbers.length > 0) return { jerseyNumbers, ipPlayers }
+    if (blockNumbers.length > 0) {
+      blocks.push({ jerseyNumbers: blockNumbers, ipPlayers: blockIp, label })
+    }
   }
 
+  if (blocks.length > 0) return { blocks }
+
   // Method 3: P-tag separated numbers — sites like U18 use <p>168</p> per number
+  const pNumbers: string[] = []
+  const pIp: string[] = []
   const pRegex = /<p[^>]*>\s*(\d{1,4})\s*(?:&nbsp;)?\s*(IP)?\s*<\/p>/gi
   while ((match = pRegex.exec(html)) !== null) {
     const num = match[1]
     const isIp = !!match[2]
-    if (!jerseyNumbers.includes(num)) {
-      jerseyNumbers.push(num)
-      if (isIp) ipPlayers.push(num)
+    if (!pNumbers.includes(num)) {
+      pNumbers.push(num)
+      if (isIp) pIp.push(num)
     }
   }
 
-  return { jerseyNumbers, ipPlayers }
+  if (pNumbers.length > 0) {
+    return { blocks: [{ jerseyNumbers: pNumbers, ipPlayers: pIp, label: "" }] }
+  }
+
+  return { blocks: [] }
 }
 
 // Extract reporting date from text
@@ -154,6 +195,7 @@ export async function scrapeContinuationsPage(
       teamLevel: null,
       jerseyNumbers: [],
       ipPlayers: [],
+      blocks: [],
       reportingDate: null,
       sourceUrl: "",
       rawText: "",
@@ -172,6 +214,7 @@ export async function scrapeContinuationsPage(
         teamLevel: null,
         jerseyNumbers: [],
         ipPlayers: [],
+        blocks: [],
         reportingDate: null,
         sourceUrl: urlConfig.url,
         rawText: "",
@@ -199,14 +242,27 @@ export async function scrapeContinuationsPage(
     const pageType = classifyPage(plainText)
     const teamLevel = extractTeamLevel(plainText)
     // Extract numbers from HTML structure (tables or br-separated divs)
-    const { jerseyNumbers, ipPlayers } = extractJerseyNumbers(contentHtml)
+    const { blocks } = extractJerseyNumbers(contentHtml)
     const reportingDate = extractReportingDate(plainText)
+
+    // Union all block jersey numbers and IP players for backwards compatibility
+    const allJerseys: string[] = []
+    const allIp: string[] = []
+    for (const block of blocks) {
+      for (const num of block.jerseyNumbers) {
+        if (!allJerseys.includes(num)) allJerseys.push(num)
+      }
+      for (const ip of block.ipPlayers) {
+        if (!allIp.includes(ip)) allIp.push(ip)
+      }
+    }
 
     return {
       pageType,
       teamLevel,
-      jerseyNumbers,
-      ipPlayers,
+      jerseyNumbers: allJerseys,
+      ipPlayers: allIp,
+      blocks,
       reportingDate,
       sourceUrl: urlConfig.url,
       rawText: plainText.substring(0, 2000),
@@ -217,6 +273,7 @@ export async function scrapeContinuationsPage(
       teamLevel: null,
       jerseyNumbers: [],
       ipPlayers: [],
+      blocks: [],
       reportingDate: null,
       sourceUrl: urlConfig.url,
       rawText: "",
@@ -244,13 +301,20 @@ export async function getNextRoundNumber(
   return (existing?.[0]?.round_number ?? 0) + 1
 }
 
+export type SessionInput = {
+  session_number: number
+  jersey_numbers: string[]
+  label: string
+}
+
 export async function saveDraftRound(
   associationId: string,
   division: string,
   scrapeResult: ScrapeResult,
   roundNumberOverride?: number,
   sessionInfo?: string,
-  isFinalTeamOverride?: boolean
+  isFinalTeamOverride?: boolean,
+  sessionInputs?: SessionInput[]
 ): Promise<{ draftId: string, error?: string }> {
   const supabase = await createClient()
 
@@ -280,10 +344,30 @@ export async function saveDraftRound(
     }
   }
 
-  // Build sessions from reporting date
-  const sessions = scrapeResult.reportingDate
-    ? [{ date: scrapeResult.reportingDate }]
-    : []
+  // Build sessions JSONB
+  let sessions: Record<string, unknown>[]
+  if (sessionInputs && sessionInputs.length > 0) {
+    // Multi-session mode: build structured sessions from admin input
+    // Override jersey_numbers with union of all session jersey numbers
+    const allNums = new Set<string>()
+    for (const s of sessionInputs) {
+      for (const n of s.jersey_numbers) allNums.add(n)
+    }
+    jerseyNumbers = Array.from(allNums)
+
+    sessions = sessionInputs.map((s) => ({
+      session_number: s.session_number,
+      date: scrapeResult.reportingDate ?? "",
+      start_time: "",
+      end_time: "",
+      jersey_numbers: s.jersey_numbers,
+    }))
+  } else {
+    // Single-session mode: build from reporting date (existing behavior)
+    sessions = scrapeResult.reportingDate
+      ? [{ date: scrapeResult.reportingDate }]
+      : []
+  }
 
   const { data, error } = await supabase
     .from("continuation_rounds")

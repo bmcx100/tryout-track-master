@@ -11,6 +11,7 @@ import {
   discardDraft,
   getNextRoundNumber,
   type ScrapeResult,
+  type SessionInput,
 } from "@/app/(app)/continuations/scraper-actions"
 import {
   updateRound,
@@ -93,6 +94,8 @@ export function AdminContinuationsClient({
   const [manualText, setManualText] = useState("")
   const [showSizeWarning, setShowSizeWarning] = useState(false)
   const [scrapeJerseyExpanded, setScrapeJerseyExpanded] = useState(false)
+  const [multiSession, setMultiSession] = useState(false)
+  const [sessionTexts, setSessionTexts] = useState<string[]>(["", ""])
   const hasScrapeStarted = useRef(false)
 
   // Published rounds state — sync when server props change (after router.refresh)
@@ -124,6 +127,8 @@ export function AdminContinuationsClient({
     estimated_players_g?: string
     total_manually_edited?: boolean
     jersey_numbers?: string[]
+    is_multi_session?: boolean
+    session_texts?: string[]
   }>>({})
   const [saving, setSaving] = useState<string | null>(null)
 
@@ -139,7 +144,12 @@ export function AdminContinuationsClient({
   const [emptySessionInfo, setEmptySessionInfo] = useState("")
   const [creating, setCreating] = useState(false)
 
-  const playerCount = result?.jerseyNumbers.length ?? 0
+  const sessionParsed = sessionTexts.map((t) => parseJerseyNumbers(t))
+  const multiSessionTotal = new Set(sessionParsed.flatMap((s) => s)).size
+
+  const playerCount = multiSession && result
+    ? multiSessionTotal
+    : (result?.jerseyNumbers.length ?? 0)
   const isUnusualSize = playerCount < TEAM_SIZE_MIN || playerCount > TEAM_SIZE_MAX
 
   // Auto-scrape on mount (same as current behavior)
@@ -166,6 +176,20 @@ export function AdminContinuationsClient({
       setEstimatedPlayersD("")
       setEstimatedPlayersG("")
       setScrapeEstTotalManual(false)
+
+      // Populate session textareas from blocks when multi-session is on
+      if (multiSession) {
+        const MIN_BLOCK_SIZE = 12
+        const significantBlocks = scrapeResult.blocks.filter(
+          (b) => b.jerseyNumbers.length >= MIN_BLOCK_SIZE
+        )
+        if (significantBlocks.length >= 2) {
+          setSessionTexts(significantBlocks.map((b) => b.jerseyNumbers.join("\n")))
+        } else {
+          setSessionTexts([scrapeResult.jerseyNumbers.join("\n"), ""])
+        }
+      }
+
       const nextRound = await getNextRoundNumber(associationId, division, defaultTeamLevel)
       setRoundNumber(nextRound)
       setScraping(false)
@@ -199,13 +223,34 @@ export function AdminContinuationsClient({
 
     try {
       const resultToSave = { ...result, teamLevel: teamLevelOverride ?? result.teamLevel }
+
+      // Build session inputs for multi-session mode
+      let sessionInputsToSave: SessionInput[] | undefined
+      if (multiSession) {
+        sessionInputsToSave = sessionTexts
+          .map((text, i) => ({
+            session_number: i + 1,
+            jersey_numbers: parseJerseyNumbers(text),
+            label: `Session ${i + 1}`,
+          }))
+          .filter((s) => s.jersey_numbers.length > 0)
+
+        // Override the result's jersey numbers with the union of all sessions
+        const allNums = new Set<string>()
+        for (const s of sessionInputsToSave) {
+          for (const n of s.jersey_numbers) allNums.add(n)
+        }
+        resultToSave.jerseyNumbers = Array.from(allNums)
+      }
+
       const { draftId: newDraftId, error: saveErr } = await saveDraftRound(
         associationId,
         division,
         resultToSave,
         roundNumber ?? undefined,
         sessionInfo || undefined,
-        isFinalTeam
+        isFinalTeam,
+        sessionInputsToSave
       )
 
       if (saveErr || !newDraftId) {
@@ -248,6 +293,23 @@ export function AdminContinuationsClient({
   const handleApplyManual = () => {
     if (!result) return
     const parsed = parseJerseyNumbers(manualText)
+    const parsedSet = new Set(parsed)
+
+    if (multiSession) {
+      const claimed = new Set<string>()
+      const newTexts = sessionTexts.map((text) => {
+        const existing = parseJerseyNumbers(text).filter((n) => parsedSet.has(n))
+        for (const n of existing) claimed.add(n)
+        return existing.join("\n")
+      })
+      const unclaimed = parsed.filter((n) => !claimed.has(n))
+      if (unclaimed.length > 0) {
+        const session1 = parseJerseyNumbers(newTexts[0])
+        newTexts[0] = [...session1, ...unclaimed].join("\n")
+      }
+      setSessionTexts(newTexts)
+    }
+
     setResult({
       ...result,
       jerseyNumbers: parsed,
@@ -285,6 +347,7 @@ export function AdminContinuationsClient({
     setShowSizeWarning(false)
     setManualText("")
     setScrapeJerseyExpanded(false)
+    setSessionTexts(["", ""])
   }
 
   const handleDiscardExisting = async (id: string) => {
@@ -311,8 +374,27 @@ export function AdminContinuationsClient({
   }
 
   // Get edit state for a round
+  // Determine if a round currently has multi-session data
+  const roundHasMultiSession = (round: ContinuationRound): boolean => {
+    if (!Array.isArray(round.sessions)) return false
+    const sessions = round.sessions as { jersey_numbers?: string[] }[]
+    return sessions.filter((s) => s.jersey_numbers && s.jersey_numbers.length > 0).length >= 2
+  }
+
+  // Get session texts from a round's existing session data
+  const getSessionTextsFromRound = (round: ContinuationRound): string[] => {
+    if (!Array.isArray(round.sessions)) return [round.jersey_numbers.join("\n"), ""]
+    const sessions = round.sessions as { jersey_numbers?: string[] }[]
+    const withData = sessions.filter((s) => s.jersey_numbers && s.jersey_numbers.length > 0)
+    if (withData.length >= 2) {
+      return withData.map((s) => (s.jersey_numbers ?? []).join("\n"))
+    }
+    return [round.jersey_numbers.join("\n"), ""]
+  }
+
   const getEditState = (round: ContinuationRound) => {
     const edits = roundEdits[round.id]
+    const isMulti = edits?.is_multi_session ?? roundHasMultiSession(round)
     return {
       session_info: edits?.session_info ?? round.session_info ?? "",
       is_final_team: edits?.is_final_team ?? round.is_final_team,
@@ -322,6 +404,8 @@ export function AdminContinuationsClient({
       estimated_players_g: edits?.estimated_players_g ?? (round.estimated_players_g?.toString() ?? ""),
       total_manually_edited: edits?.total_manually_edited ?? false,
       jersey_numbers: edits?.jersey_numbers ?? round.jersey_numbers,
+      is_multi_session: isMulti,
+      session_texts: edits?.session_texts ?? (isMulti ? getSessionTextsFromRound(round) : undefined),
     }
   }
 
@@ -342,6 +426,8 @@ export function AdminContinuationsClient({
         if (orig[i] !== edited[i]) return true
       }
     }
+    if (edits.is_multi_session !== undefined && edits.is_multi_session !== roundHasMultiSession(round)) return true
+    if (edits.session_texts !== undefined) return true
     return false
   }
 
@@ -360,6 +446,32 @@ export function AdminContinuationsClient({
     const epF = parseInt(state.estimated_players_f, 10)
     const epD = parseInt(state.estimated_players_d, 10)
     const epG = parseInt(state.estimated_players_g, 10)
+
+    // Build sessions data if multi-session is on
+    let sessionsData: unknown = undefined
+    let jerseyNumbers = state.jersey_numbers
+    if (state.is_multi_session && state.session_texts) {
+      const sessionEntries = state.session_texts
+        .map((text, i) => ({
+          session_number: i + 1,
+          date: "",
+          start_time: "",
+          end_time: "",
+          jersey_numbers: parseJerseyNumbers(text),
+        }))
+        .filter((s) => s.jersey_numbers.length > 0)
+      sessionsData = sessionEntries
+      // Update jersey_numbers to union of all sessions
+      const allNums = new Set<string>()
+      for (const s of sessionEntries) {
+        for (const n of s.jersey_numbers) allNums.add(n)
+      }
+      jerseyNumbers = Array.from(allNums)
+    } else if (state.is_multi_session === false) {
+      // Explicitly turned off — clear sessions
+      sessionsData = []
+    }
+
     const { error: saveErr } = await updateRound(round.id, {
       session_info: state.session_info || null,
       is_final_team: state.is_final_team,
@@ -367,7 +479,8 @@ export function AdminContinuationsClient({
       estimated_players_f: !isNaN(epF) && epF > 0 ? epF : null,
       estimated_players_d: !isNaN(epD) && epD > 0 ? epD : null,
       estimated_players_g: !isNaN(epG) && epG > 0 ? epG : null,
-      jersey_numbers: state.jersey_numbers,
+      jersey_numbers: jerseyNumbers,
+      ...(sessionsData !== undefined ? { sessions: sessionsData } : {}),
     })
 
     setSaving(null)
@@ -389,7 +502,8 @@ export function AdminContinuationsClient({
               estimated_players_f: !isNaN(epF) && epF > 0 ? epF : null,
               estimated_players_d: !isNaN(epD) && epD > 0 ? epD : null,
               estimated_players_g: !isNaN(epG) && epG > 0 ? epG : null,
-              jersey_numbers: state.jersey_numbers,
+              jersey_numbers: jerseyNumbers,
+              ...(sessionsData !== undefined ? { sessions: sessionsData as ContinuationRound["sessions"] } : {}),
             }
           : r
       )
@@ -685,7 +799,7 @@ export function AdminContinuationsClient({
                 <div className="scrape-summary-row">
                   <span className="scrape-summary-label">Players</span>
                   <span className="scrape-summary-value scrape-value-light">
-                    {result.jerseyNumbers.length} players
+                    {multiSession ? multiSessionTotal : result.jerseyNumbers.length} players
                   </span>
                 </div>
                 {result.ipPlayers.length > 0 && (
@@ -726,6 +840,33 @@ export function AdminContinuationsClient({
                         onChange={(e) => setIsFinalTeam(e.target.checked)}
                       />
                       Final Team
+                    </label>
+                  </span>
+                </div>
+                <div className="scrape-summary-row">
+                  <span className="scrape-summary-label">Multi-Session</span>
+                  <span className="scrape-summary-value">
+                    <label className="scrape-final-team-label scrape-value-light">
+                      <input
+                        type="checkbox"
+                        checked={multiSession}
+                        onChange={(e) => {
+                          const checked = e.target.checked
+                          setMultiSession(checked)
+                          if (checked && result) {
+                            const MIN_BLOCK_SIZE = 12
+                            const significantBlocks = result.blocks.filter(
+                              (b) => b.jerseyNumbers.length >= MIN_BLOCK_SIZE
+                            )
+                            if (significantBlocks.length >= 2) {
+                              setSessionTexts(significantBlocks.map((b) => b.jerseyNumbers.join("\n")))
+                            } else {
+                              setSessionTexts([result.jerseyNumbers.join("\n"), ""])
+                            }
+                          }
+                        }}
+                      />
+                      Multi-Session
                     </label>
                   </span>
                 </div>
@@ -785,43 +926,83 @@ export function AdminContinuationsClient({
                 </div>
               </div>
 
-              {/* Collapsible jersey list */}
-              {result.jerseyNumbers.length === 0 ? (
-                <div className="scrape-no-players-warning">
-                  <TriangleAlert size={16} />
-                  <p>No players found on this&nbsp;page</p>
-                </div>
-              ) : (
-                <div className="admin-jersey-section">
-                  <button
-                    className="admin-jersey-toggle"
-                    onClick={() => setScrapeJerseyExpanded(!scrapeJerseyExpanded)}
-                  >
-                    <ChevronDown
-                      size={14}
-                      style={{
-                        transform: scrapeJerseyExpanded ? "rotate(0deg)" : "rotate(-90deg)",
-                        transition: "transform 200ms",
-                      }}
-                    />
-                    {result.jerseyNumbers.length} jerseys
-                  </button>
-                  {scrapeJerseyExpanded && (
-                    <div className="admin-jersey-scroll">
-                      {result.jerseyNumbers.map((num) => (
-                        <div
-                          key={num}
-                          className={`scrape-jersey-row ${result.ipPlayers.includes(num) ? "scrape-jersey-row-ip" : ""}`}
-                        >
-                          <span className="scrape-jersey-num">{num}</span>
-                          {result.ipPlayers.includes(num) && (
-                            <span className="scrape-ip-tag">IP</span>
-                          )}
+              {/* Jersey list / Session panels */}
+              {multiSession ? (
+                <>
+                  <div className="scrape-session-panels">
+                    {sessionTexts.map((text, i) => {
+                      const count = parseJerseyNumbers(text).length
+                      return (
+                        <div key={i} className="scrape-session-panel">
+                          <div className="scrape-session-panel-header">Session {i + 1}</div>
+                          <textarea
+                            className="scrape-session-textarea"
+                            rows={6}
+                            placeholder="Jersey numbers, one per line"
+                            value={text}
+                            onChange={(e) => {
+                              const next = [...sessionTexts]
+                              next[i] = e.target.value
+                              setSessionTexts(next)
+                            }}
+                          />
+                          <div className="scrape-session-count">{count} players</div>
                         </div>
-                      ))}
+                      )
+                    })}
+                  </div>
+                  {sessionTexts.length < 3 && (
+                    <button
+                      className="scrape-add-session-btn"
+                      onClick={() => setSessionTexts([...sessionTexts, ""])}
+                    >
+                      + Add Session
+                    </button>
+                  )}
+                  <div className="scrape-session-total">
+                    Total: {multiSessionTotal} unique players
+                  </div>
+                </>
+              ) : (
+                <>
+                  {result.jerseyNumbers.length === 0 ? (
+                    <div className="scrape-no-players-warning">
+                      <TriangleAlert size={16} />
+                      <p>No players found on this&nbsp;page</p>
+                    </div>
+                  ) : (
+                    <div className="admin-jersey-section">
+                      <button
+                        className="admin-jersey-toggle"
+                        onClick={() => setScrapeJerseyExpanded(!scrapeJerseyExpanded)}
+                      >
+                        <ChevronDown
+                          size={14}
+                          style={{
+                            transform: scrapeJerseyExpanded ? "rotate(0deg)" : "rotate(-90deg)",
+                            transition: "transform 200ms",
+                          }}
+                        />
+                        {result.jerseyNumbers.length} jerseys
+                      </button>
+                      {scrapeJerseyExpanded && (
+                        <div className="admin-jersey-scroll">
+                          {result.jerseyNumbers.map((num) => (
+                            <div
+                              key={num}
+                              className={`scrape-jersey-row ${result.ipPlayers.includes(num) ? "scrape-jersey-row-ip" : ""}`}
+                            >
+                              <span className="scrape-jersey-num">{num}</span>
+                              {result.ipPlayers.includes(num) && (
+                                <span className="scrape-ip-tag">IP</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
+                </>
               )}
 
               {result.pageType === "everyone_continues" && (
@@ -1024,6 +1205,11 @@ export function AdminContinuationsClient({
                         <span className="admin-round-card-count">
                           {round.jersey_numbers.length} players
                         </span>
+                        {Array.isArray(round.sessions) && (round.sessions as { jersey_numbers?: string[] }[]).filter((s) => s.jersey_numbers && s.jersey_numbers.length > 0).length >= 2 && (
+                          <span className="admin-round-sessions-badge">
+                            {(round.sessions as { jersey_numbers?: string[] }[]).filter((s) => s.jersey_numbers && s.jersey_numbers.length > 0).length} sessions
+                          </span>
+                        )}
                         {round.session_info && (
                           <span className="admin-round-card-session">{round.session_info}</span>
                         )}
@@ -1130,6 +1316,69 @@ export function AdminContinuationsClient({
                               Final Team
                             </label>
                           </div>
+
+                          {/* Multi-session checkbox */}
+                          <div className="admin-round-field">
+                            <label className="scrape-final-team-label scrape-value-light">
+                              <input
+                                type="checkbox"
+                                checked={state.is_multi_session}
+                                onChange={(e) => {
+                                  const checked = e.target.checked
+                                  updateEdit(round.id, "is_multi_session", checked)
+                                  if (checked) {
+                                    // Initialize session texts from existing sessions or jersey numbers
+                                    const texts = roundHasMultiSession(round)
+                                      ? getSessionTextsFromRound(round)
+                                      : [state.jersey_numbers.join("\n"), ""]
+                                    updateEdit(round.id, "session_texts", texts)
+                                  } else {
+                                    updateEdit(round.id, "session_texts", undefined)
+                                  }
+                                }}
+                              />
+                              Multi-Session
+                            </label>
+                          </div>
+
+                          {/* Session panels (when multi-session is on) */}
+                          {state.is_multi_session && state.session_texts && (
+                            <div className="admin-round-field">
+                              <div className="scrape-session-panels">
+                                {state.session_texts.map((text, i) => {
+                                  const count = parseJerseyNumbers(text).length
+                                  return (
+                                    <div key={i} className="scrape-session-panel">
+                                      <div className="scrape-session-panel-header">Session {i + 1}</div>
+                                      <textarea
+                                        className="scrape-session-textarea"
+                                        rows={6}
+                                        placeholder="Jersey numbers, one per line"
+                                        value={text}
+                                        onChange={(e) => {
+                                          const next = [...state.session_texts!]
+                                          next[i] = e.target.value
+                                          updateEdit(round.id, "session_texts", next)
+                                        }}
+                                      />
+                                      <div className="scrape-session-count">{count} players</div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                              {state.session_texts.length < 3 && (
+                                <button
+                                  className="scrape-add-session-btn"
+                                  onClick={() => updateEdit(round.id, "session_texts", [...state.session_texts!, ""])}
+                                >
+                                  + Add Session
+                                </button>
+                              )}
+                              <div className="scrape-session-total">
+                                Total: {new Set(state.session_texts.flatMap((t) => parseJerseyNumbers(t))).size} unique players
+                              </div>
+                            </div>
+                          )}
 
                           {/* Jersey numbers */}
                           <div className="admin-round-field">

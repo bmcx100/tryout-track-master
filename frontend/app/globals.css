@@ -2868,6 +2868,102 @@ body:has(.admin-shell) {
   display: block;
 }
 
+/* Multi-session toggle */
+.scrape-multi-session-toggle {
+  @apply flex items-center gap-2 w-full justify-center;
+  font-size: 13px;
+  color: var(--dm-umber);
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.scrape-multi-session-toggle input[type="checkbox"] {
+  @apply rounded;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: oklch(0.22 0 0);
+  border: 1px solid oklch(0.4 0 0);
+  cursor: pointer;
+  position: relative;
+}
+
+.scrape-multi-session-toggle input[type="checkbox"]:checked {
+  background: var(--dm-gold);
+  border-color: var(--dm-gold);
+}
+
+.scrape-multi-session-toggle input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid oklch(0.15 0 0);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Session panels */
+.scrape-session-panels {
+  @apply flex flex-col gap-3 mb-3;
+}
+
+.scrape-session-panel {
+  @apply rounded-xl p-3;
+  background: oklch(0.15 0 0);
+  border: 1px solid oklch(0.25 0 0);
+}
+
+.scrape-session-panel-header {
+  @apply text-xs font-semibold mb-2;
+  color: var(--dm-gold);
+}
+
+.scrape-session-textarea {
+  @apply w-full rounded-lg px-3 py-2 text-sm;
+  background: oklch(0.12 0 0);
+  color: var(--dm-umber);
+  border: 1px solid oklch(0.3 0 0);
+  font-family: var(--font-mono);
+  resize: vertical;
+}
+
+.scrape-session-textarea::placeholder {
+  color: var(--dm-dust);
+  opacity: 0.5;
+}
+
+.scrape-session-count {
+  @apply text-xs mt-1;
+  color: var(--dm-dust);
+}
+
+.scrape-session-total {
+  @apply text-xs font-semibold mb-3 text-center;
+  color: var(--dm-umber);
+}
+
+.scrape-add-session-btn {
+  @apply text-xs mb-2 w-full text-center py-1.5 rounded-lg;
+  color: var(--dm-gold);
+  background: transparent;
+  border: 1px dashed oklch(0.35 0 0);
+  cursor: pointer;
+}
+
+.scrape-add-session-btn:hover {
+  background: oklch(0.18 0 0);
+}
+
+/* Sessions badge on published round cards */
+.admin-round-sessions-badge {
+  @apply text-xs px-2 py-0.5 rounded-full;
+  background: oklch(0.25 0.05 250);
+  color: oklch(0.75 0.05 250);
+}
+
 .scrape-modal-overlay {
   @apply fixed inset-0 z-50 flex items-center justify-center;
   background: oklch(0 0 0 / 60%);
