@@ -45,6 +45,7 @@ export type FavoriteStatus = {
   originalName: string | null
   previousTeam: string | null
   roundType: "round1" | "regular" | "final" | null
+  teamLevel: string | null
 }
 
 export async function getDashboardData(
@@ -335,7 +336,7 @@ export async function getDashboardData(
   }
 
   const favoriteStatuses = deriveFavouriteStatuses(
-    allRounds, favJerseyNumbers, favByJersey, teamsMap, completedLevels
+    allRounds, favJerseyNumbers, favByJersey, teamsMap, completedLevels, division
   )
 
   return { heroCards, favoriteStatuses }
@@ -358,20 +359,66 @@ function deriveFavouriteStatuses(
   favouriteJerseyNumbers: Set<string>,
   favouritesByJersey: Map<string, FavPlayerInput>,
   teamsMap: Map<string, { id: string; name: string }>,
-  completedLevels: Set<string>
+  completedLevels: Set<string>,
+  division: string
 ): FavoriteStatus[] {
   const result: FavoriteStatus[] = []
   const handledJerseys = new Set<string>()
+
+  // Build teamNameByLevel lookup: level -> team name (e.g., "AA" -> "U15 AA")
+  // Sort LEVEL_ORDER by descending length to avoid "B" matching inside "BB"
+  const sortedLevels = [...LEVEL_ORDER].sort((a, b) => b.length - a.length)
+  const teamNameByLevel = new Map<string, string>()
+  for (const team of teamsMap.values()) {
+    for (const lvl of sortedLevels) {
+      if (team.name.includes(lvl)) {
+        teamNameByLevel.set(lvl, team.name)
+        break
+      }
+    }
+  }
+
+  // Helper: determine teamLevel from a team name by matching LEVEL_ORDER values
+  function levelFromTeamName(name: string): string | null {
+    for (const lvl of sortedLevels) {
+      if (name.includes(lvl)) return lvl
+    }
+    return null
+  }
+
+  // Helper: format team display name with division prefix if not already included
+  function teamDisplayName(name: string): string {
+    return name.includes(division) ? name : `${division} ${name}`
+  }
 
   // 1. Handle made_team DB overrides first
   for (const [jersey, player] of favouritesByJersey) {
     if (player.dbStatus === "made_team") {
       const team = player.teamId ? teamsMap.get(player.teamId) : null
-      const teamName = team?.name ?? null
-      // If team's level is completed, use "Made Team ({level})" format
-      const statusText = teamName && completedLevels.has(teamName)
-        ? `Made Team (${teamName})`
-        : team ? `Made ${team.name}` : "Made Team"
+      let teamLevel: string | null = null
+      let statusText = "Made Team"
+
+      if (team) {
+        teamLevel = levelFromTeamName(team.name)
+        statusText = `Made ${teamDisplayName(team.name)}`
+      }
+
+      // Fallback: if no team or no level from team name, check final rounds
+      if (!teamLevel) {
+        for (const r of allRounds) {
+          if (r.is_final_team && r.jersey_numbers.includes(jersey)) {
+            teamLevel = r.team_level
+            const fallbackName = teamNameByLevel.get(r.team_level)
+            if (!team) {
+              statusText = fallbackName
+                ? `Made ${teamDisplayName(fallbackName)}`
+                : `Made Team (${division} ${r.team_level})`
+            }
+            break
+          }
+        }
+      }
+
       result.push({
         playerId: player.id,
         playerName: player.displayName,
@@ -383,6 +430,7 @@ function deriveFavouriteStatuses(
         originalName: player.originalName,
         previousTeam: player.previousTeam,
         roundType: "final",
+        teamLevel,
       })
       handledJerseys.add(jersey)
     }
@@ -411,6 +459,7 @@ function deriveFavouriteStatuses(
         originalName: player.originalName,
         previousTeam: player.previousTeam,
         roundType: null,
+        teamLevel: null,
       })
     }
     return sortByJersey(result)
@@ -470,7 +519,8 @@ function deriveFavouriteStatuses(
       jn: string,
       statusText: string,
       statusType: FavoriteStatus["statusType"],
-      rt: typeof roundType
+      rt: typeof roundType,
+      tl: string | null = null
     ) => {
       if (!favouriteJerseyNumbers.has(jn) || handledJerseys.has(jn)) return
       const player = favouritesByJersey.get(jn)
@@ -486,6 +536,7 @@ function deriveFavouriteStatuses(
         originalName: player.originalName,
         previousTeam: player.previousTeam,
         roundType: rt,
+        teamLevel: tl,
       })
       handledJerseys.add(jn)
     }
@@ -513,8 +564,12 @@ function deriveFavouriteStatuses(
     } else {
       // Final team
       const finalSet = new Set<string>(latest.jersey_numbers)
+      const levelTeamName = teamNameByLevel.get(level)
+      const madeStatusText = levelTeamName
+        ? `Made ${teamDisplayName(levelTeamName)}`
+        : `Made Team (${division} ${level})`
       for (const jn of latest.jersey_numbers) {
-        pushIfFav(jn, "Made Team", "made_team", "final")
+        pushIfFav(jn, madeStatusText, "made_team", "final", level)
       }
 
       // Final Cut: on previous but not on final
@@ -535,6 +590,11 @@ function deriveFavouriteStatuses(
     const finalRound = levelRounds.find((r) => r.is_final_team)
     if (!finalRound) continue
 
+    const completedTeamName = teamNameByLevel.get(completedLevel)
+    const completedStatusText = completedTeamName
+      ? `Made ${teamDisplayName(completedTeamName)}`
+      : `Made Team (${division} ${completedLevel})`
+
     for (const jn of finalRound.jersey_numbers) {
       if (!favouriteJerseyNumbers.has(jn) || handledJerseys.has(jn)) continue
       const player = favouritesByJersey.get(jn)
@@ -545,12 +605,13 @@ function deriveFavouriteStatuses(
         playerName: player.displayName,
         jerseyNumber: player.jerseyNumber,
         position: player.position,
-        statusText: `Made Team (${completedLevel})`,
+        statusText: completedStatusText,
         statusType: "made_team",
         division: player.division,
         originalName: player.originalName,
         previousTeam: player.previousTeam,
         roundType: "final",
+        teamLevel: completedLevel,
       })
       handledJerseys.add(jn)
     }
@@ -661,7 +722,7 @@ export async function getMyFavouritesPageData(
   }
 
   const statuses = deriveFavouriteStatuses(
-    allRounds, favJerseyNumbers, favByJersey, teamsMap, completedLevels
+    allRounds, favJerseyNumbers, favByJersey, teamsMap, completedLevels, division
   )
 
   const resultArr: FavouritePagePlayer[] = statuses.map((s) => {

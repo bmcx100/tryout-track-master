@@ -11,25 +11,57 @@ type DashboardClientProps = {
 
 type StatusGroup = {
   statusType: string
+  groupKey: string
   players: FavoriteStatus[]
 }
 
-const STATUS_ORDER = ["continuing", "made_team", "cut", "registered"]
+const LEVEL_ORDER = ["AA", "A", "BB", "B", "C"]
 
 function buildStatusGroups(favs: FavoriteStatus[]): StatusGroup[] {
-  const grouped = new Map<string, FavoriteStatus[]>()
-  for (const f of favs) {
-    const existing = grouped.get(f.statusType) ?? []
-    existing.push(f)
-    grouped.set(f.statusType, existing)
-  }
   const groups: StatusGroup[] = []
-  for (const st of STATUS_ORDER) {
-    const players = grouped.get(st)
-    if (players && players.length > 0) {
-      groups.push({ statusType: st, players })
+
+  // Continuing
+  const continuing = favs.filter((f) => f.statusType === "continuing")
+  if (continuing.length > 0) {
+    groups.push({ statusType: "continuing", groupKey: "continuing", players: continuing })
+  }
+
+  // Cut
+  const cut = favs.filter((f) => f.statusType === "cut")
+  if (cut.length > 0) {
+    groups.push({ statusType: "cut", groupKey: "cut", players: cut })
+  }
+
+  // Made Team — split by teamLevel, reverse LEVEL_ORDER (C, B, BB, A, AA)
+  const madeTeam = favs.filter((f) => f.statusType === "made_team")
+  const madeByLevel = new Map<string, FavoriteStatus[]>()
+  const madeNullLevel: FavoriteStatus[] = []
+  for (const f of madeTeam) {
+    if (f.teamLevel) {
+      const existing = madeByLevel.get(f.teamLevel) ?? []
+      existing.push(f)
+      madeByLevel.set(f.teamLevel, existing)
+    } else {
+      madeNullLevel.push(f)
     }
   }
+  const reverseLevels = [...LEVEL_ORDER].reverse()
+  for (const lvl of reverseLevels) {
+    const players = madeByLevel.get(lvl)
+    if (players && players.length > 0) {
+      groups.push({ statusType: "made_team", groupKey: `made_team:${lvl}`, players })
+    }
+  }
+  if (madeNullLevel.length > 0) {
+    groups.push({ statusType: "made_team", groupKey: "made_team:unknown", players: madeNullLevel })
+  }
+
+  // Registered
+  const registered = favs.filter((f) => f.statusType === "registered")
+  if (registered.length > 0) {
+    groups.push({ statusType: "registered", groupKey: "registered", players: registered })
+  }
+
   return groups
 }
 
@@ -45,14 +77,14 @@ function formatSampleNames(players: FavoriteStatus[]): string {
   return samples.join(", ")
 }
 
-function getStatusLabel(statusType: string, players: FavoriteStatus[]): string {
+function getStatusLabel(group: StatusGroup): string {
+  const { statusType, players } = group
   if (statusType === "continuing") return "Continuing"
   if (statusType === "cut") {
     const isFinal = players.some((p) => p.roundType === "final")
     return isFinal ? "Final Cut" : "Cut"
   }
   if (statusType === "made_team") {
-    // Use first player's statusText if it includes a level (e.g., "Made Team (AA)")
     const text = players[0]?.statusText
     return text && text !== "Made Team" ? text : "Made Team"
   }
@@ -144,13 +176,13 @@ function renderHeroCard(card: HeroCard) {
 }
 
 function renderFavCard(group: StatusGroup) {
-  const { statusType, players } = group
+  const { statusType, groupKey, players } = group
   const count = players.length
-  const label = getStatusLabel(statusType, players)
+  const label = getStatusLabel(group)
 
   return (
     <Link
-      key={statusType}
+      key={groupKey}
       href="/my-favourites"
       className={`dashboard-fav-card dashboard-fav-card-${statusType}`}
     >

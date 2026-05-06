@@ -14,8 +14,6 @@ type MyFavouritesClientProps = {
   favourites: FavouritePagePlayer[]
 }
 
-const STATUS_ORDER = ["continuing", "made_team", "cut", "registered"]
-
 const STATUS_LABELS: Record<string, string> = {
   continuing: "Continuing",
   cut: "Cut",
@@ -23,29 +21,64 @@ const STATUS_LABELS: Record<string, string> = {
   registered: "Registered",
 }
 
+const LEVEL_ORDER = ["AA", "A", "BB", "B", "C"]
+
 type StatusGroup = {
   statusType: string
+  groupKey: string
   players: FavouritePagePlayer[]
 }
 
 function buildStatusGroups(favs: FavouritePagePlayer[]): StatusGroup[] {
-  const grouped = new Map<string, FavouritePagePlayer[]>()
-  for (const f of favs) {
-    const existing = grouped.get(f.statusType) ?? []
-    existing.push(f)
-    grouped.set(f.statusType, existing)
-  }
   const groups: StatusGroup[] = []
-  for (const st of STATUS_ORDER) {
-    const players = grouped.get(st)
-    if (players && players.length > 0) {
-      groups.push({ statusType: st, players })
+
+  // Continuing
+  const continuing = favs.filter((f) => f.statusType === "continuing")
+  if (continuing.length > 0) {
+    groups.push({ statusType: "continuing", groupKey: "continuing", players: continuing })
+  }
+
+  // Cut
+  const cut = favs.filter((f) => f.statusType === "cut")
+  if (cut.length > 0) {
+    groups.push({ statusType: "cut", groupKey: "cut", players: cut })
+  }
+
+  // Made Team — split by teamLevel, reverse LEVEL_ORDER (C, B, BB, A, AA)
+  const madeTeam = favs.filter((f) => f.statusType === "made_team")
+  const madeByLevel = new Map<string, FavouritePagePlayer[]>()
+  const madeNullLevel: FavouritePagePlayer[] = []
+  for (const f of madeTeam) {
+    if (f.teamLevel) {
+      const existing = madeByLevel.get(f.teamLevel) ?? []
+      existing.push(f)
+      madeByLevel.set(f.teamLevel, existing)
+    } else {
+      madeNullLevel.push(f)
     }
   }
+  const reverseLevels = [...LEVEL_ORDER].reverse()
+  for (const lvl of reverseLevels) {
+    const players = madeByLevel.get(lvl)
+    if (players && players.length > 0) {
+      groups.push({ statusType: "made_team", groupKey: `made_team:${lvl}`, players })
+    }
+  }
+  if (madeNullLevel.length > 0) {
+    groups.push({ statusType: "made_team", groupKey: "made_team:unknown", players: madeNullLevel })
+  }
+
+  // Registered
+  const registered = favs.filter((f) => f.statusType === "registered")
+  if (registered.length > 0) {
+    groups.push({ statusType: "registered", groupKey: "registered", players: registered })
+  }
+
   return groups
 }
 
-function getStatusLabel(statusType: string, players: FavouritePagePlayer[]): string {
+function getStatusLabel(group: StatusGroup): string {
+  const { statusType, players } = group
   if (statusType === "cut") {
     const isFinal = players.some((p) => p.roundType === "final")
     return isFinal ? "Final Cut" : "Cut"
@@ -245,11 +278,11 @@ export function MyFavouritesClient({ favourites }: MyFavouritesClientProps) {
         </Link>
 
         {statusGroups.map((group, groupIdx) => (
-          <div key={group.statusType}>
+          <div key={group.groupKey}>
             {groupIdx > 0 && <div className="my-favourites-group-divider" />}
             <div className="my-favourites-group">
               <div className={`my-favourites-group-header my-favourites-group-header-${group.statusType}`}>
-                {getStatusLabel(group.statusType, group.players)} ({group.players.length})
+                {getStatusLabel(group)} ({group.players.length})
               </div>
               {group.players.map((fav, rowIdx) => {
                 const isUnhearted = unhearted.has(fav.playerId)
