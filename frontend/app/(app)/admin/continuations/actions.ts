@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { lockFinalTeam } from "@/app/(app)/continuations/actions"
 import type { ContinuationRound, ContinuationLevelStatus, SplitStatus } from "@/types"
 
 export async function getAllRounds(
@@ -238,6 +239,12 @@ export async function completeLevel(
 
   if (!finalRound) {
     return { error: "No Final Team round exists for this level" }
+  }
+
+  // Lock the final team players (idempotent — safe to re-run)
+  const lockResult = await lockFinalTeam(finalRound.id)
+  if (lockResult.error) {
+    return { error: `Failed to lock final team: ${lockResult.error}` }
   }
 
   // Upsert level status
