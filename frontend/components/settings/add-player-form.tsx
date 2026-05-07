@@ -25,6 +25,7 @@ export function AddPlayerForm({
   const [name, setName] = useState("")
   const [position, setPosition] = useState("")
   const [previousTeam, setPreviousTeam] = useState("")
+  const [birthYear, setBirthYear] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -45,6 +46,7 @@ export function AddPlayerForm({
       name: name.trim(),
       position,
       previous_team: previousTeam.trim() || undefined,
+      birth_year: birthYear.trim() ? parseInt(birthYear.trim(), 10) : undefined,
     })
     setSubmitting(false)
 
@@ -130,6 +132,18 @@ export function AddPlayerForm({
             value={previousTeam}
             onChange={(e) => setPreviousTeam(e.target.value)}
             placeholder="Optional"
+          />
+        </div>
+
+        <div className="add-player-field">
+          <label className="add-player-label">Birth Year</label>
+          <input
+            className="add-player-input add-player-input-narrow"
+            type="text"
+            inputMode="numeric"
+            value={birthYear}
+            onChange={(e) => setBirthYear(e.target.value)}
+            placeholder="e.g. 2012"
           />
         </div>
 

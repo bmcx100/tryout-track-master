@@ -5,7 +5,7 @@ import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 
 export async function adminUpdatePlayer(
   playerId: string,
-  updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, status?: string }
+  updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, status?: string, birth_year?: number | null }
 ): Promise<{ error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -108,6 +108,7 @@ export async function adminCreatePlayer(
     name: string
     position: string
     previous_team?: string
+    birth_year?: number
   }
 ): Promise<{ error?: string, playerId?: string }> {
   const supabase = await createClient()
@@ -149,6 +150,7 @@ export async function adminCreatePlayer(
       name: data.name,
       position: data.position,
       previous_team: data.previous_team ? normalizePreviousTeam(data.previous_team) : null,
+      birth_year: data.birth_year ?? null,
       status: "registered",
     })
     .select("id")

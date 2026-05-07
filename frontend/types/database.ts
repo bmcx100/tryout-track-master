@@ -478,6 +478,7 @@ export type Database = {
       tryout_players: {
         Row: {
           association_id: string
+          birth_year: number | null
           created_at: string
           deleted_at: string | null
           division: string
@@ -494,6 +495,7 @@ export type Database = {
         }
         Insert: {
           association_id: string
+          birth_year?: number | null
           created_at?: string
           deleted_at?: string | null
           division: string
@@ -510,6 +512,7 @@ export type Database = {
         }
         Update: {
           association_id?: string
+          birth_year?: number | null
           created_at?: string
           deleted_at?: string | null
           division?: string

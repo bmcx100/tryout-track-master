@@ -86,6 +86,13 @@ Role enforcement happens at three layers:
 - **Enums:** `player_status` (registered, trying_out, cut, made_team, moved_up, moved_down, withdrew), `app_role` (admin, parent), `correction_status` (pending, approved, rejected).
 - **Soft deletes.** `tryout_players` uses a `deleted_at` column. Partial indexes filter on `WHERE deleted_at IS NULL`.
 - **Audit logging.** All admin actions are recorded in `audit_log` via database triggers.
+- **CRITICAL: Disable audit triggers before running direct SQL updates.** The `trg_audit_players_update` trigger on `tryout_players` (and similar triggers on other tables) calls `auth.uid()` to log who made the change. When running SQL directly in the Supabase SQL editor or via the Management API, `auth.uid()` is NULL, which causes a `NOT NULL` constraint violation on `audit_log.user_id`. **Always wrap direct SQL mutations like this:**
+  ```sql
+  ALTER TABLE tryout_players DISABLE TRIGGER trg_audit_players_update;
+  -- your UPDATE/DELETE statements here
+  ALTER TABLE tryout_players ENABLE TRIGGER trg_audit_players_update;
+  ```
+  Run all three statements together so the trigger is re-enabled immediately. This applies to any table with an audit trigger — check for `trg_audit_*` triggers before running direct SQL.
 - **UUIDs.** All primary keys are `uuid` with `gen_random_uuid()` defaults.
 
 ## Auth Patterns

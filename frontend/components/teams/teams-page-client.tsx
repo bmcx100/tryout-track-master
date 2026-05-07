@@ -198,7 +198,7 @@ export function TeamsPageClient({
     submitCorrection(playerId, fieldName, oldValue, newValue)
   }, [])
 
-  const handleAdminUpdate = useCallback(async (playerId: string, updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, status?: string }) => {
+  const handleAdminUpdate = useCallback(async (playerId: string, updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, status?: string, birth_year?: number | null }) => {
     const result = await adminUpdatePlayer(playerId, updates)
     if (!result.error) {
       // Optimistic update of local player data

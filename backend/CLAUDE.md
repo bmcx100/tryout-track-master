@@ -199,6 +199,21 @@ CREATE TRIGGER trigger_apply_correction
 
 Player mutations and correction reviews are recorded in `audit_log` via triggers. The trigger captures the acting user, action type, target record, and old/new values as JSONB.
 
+**CRITICAL: Disable audit triggers before running direct SQL.** The audit triggers call `auth.uid()` to record who made the change. When running SQL in the Supabase SQL editor or via the Management API, `auth.uid()` is NULL, causing a `NOT NULL` constraint violation on `audit_log.user_id`. **Always do this:**
+
+```sql
+-- Disable the trigger first
+ALTER TABLE tryout_players DISABLE TRIGGER trg_audit_players_update;
+
+-- Run your UPDATE/DELETE/INSERT statements
+UPDATE tryout_players SET ... WHERE ...;
+
+-- Re-enable immediately
+ALTER TABLE tryout_players ENABLE TRIGGER trg_audit_players_update;
+```
+
+This applies to **every table with an audit trigger** (`trg_audit_*`). Run all statements together in one query so the trigger is never left disabled. Never forget this step — it will error every time without it.
+
 ## Edge Function Patterns
 
 Edge Functions use Deno runtime. Located in `supabase/functions/`.

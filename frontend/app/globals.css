@@ -4130,6 +4130,10 @@ body:has(.admin-shell) {
   border-color: var(--dm-gold);
 }
 
+.add-player-input-narrow {
+  width: 7rem;
+}
+
 .add-player-select {
   @apply rounded-lg border px-3 py-2.5 text-sm;
   border-color: var(--dm-border);

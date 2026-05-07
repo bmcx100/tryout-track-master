@@ -145,7 +145,7 @@ export function ContinuationsPageClient({
     submitCorrection(playerId, fieldName, oldValue, newValue)
   }, [])
 
-  const handleAdminUpdate = useCallback(async (playerId: string, updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string }) => {
+  const handleAdminUpdate = useCallback(async (playerId: string, updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, birth_year?: number | null }) => {
     const result = await adminUpdatePlayer(playerId, updates)
     if (!result.error) {
       setLocalPlayers((prev) =>

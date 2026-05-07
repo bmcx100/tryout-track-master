@@ -26,7 +26,7 @@ type LongPressMenuProps = {
   onSaveNote: (note: string) => void
   onSubmitCorrection: (fieldName: string, oldValue: string, newValue: string) => void
   isAdmin?: boolean
-  onAdminUpdate?: (updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, status?: string }) => Promise<{ error?: string }>
+  onAdminUpdate?: (updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, status?: string, birth_year?: number | null }) => Promise<{ error?: string }>
   onDelete?: () => void
   context?: "teams" | "continuations"
   teams?: { id: string, name: string }[]
@@ -111,6 +111,9 @@ export function LongPressMenu({
   const [statusValue, setStatusValue] = useState(
     isAdmin ? (player.status ?? "trying_out") : (customTeam || player.status || "trying_out")
   )
+  const [birthYearValue, setBirthYearValue] = useState(
+    player.birth_year != null ? String(player.birth_year) : ""
+  )
   const [noteValue, setNoteValue] = useState(note ?? "")
   const previousTeamGroups = getPreviousTeamGroups(player.division ?? null)
   const previousTeamOptions = previousTeamGroups.flatMap((g) => g.options)
@@ -156,6 +159,7 @@ export function LongPressMenu({
     setPreviousTeamValue(resetPrevTeam)
     setPreviousTeamCustom(resetPrevTeam !== "" && !previousTeamOptions.includes(resetPrevTeam))
     setStatusValue(isAdmin ? (player.status ?? "trying_out") : (customTeam || player.status || "trying_out"))
+    setBirthYearValue(player.birth_year != null ? String(player.birth_year) : "")
     setAdminError(null)
     setEditing(false)
   }
@@ -163,7 +167,7 @@ export function LongPressMenu({
   const handleSave = async () => {
     if (isAdmin && onAdminUpdate) {
       // Admin mode: save directly to tryout_players
-      const updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, status?: string } = {}
+      const updates: { name?: string, jersey_number?: string, position?: string, previous_team?: string, status?: string, birth_year?: number | null } = {}
       const trimmedName = nameValue.trim()
       const trimmedJersey = jerseyValue.trim()
       const trimmedPreviousTeam = previousTeamValue.trim()
@@ -182,6 +186,11 @@ export function LongPressMenu({
       }
       if (statusValue !== (player.status ?? "trying_out")) {
         updates.status = statusValue
+      }
+      const parsedBirthYear = birthYearValue.trim() ? parseInt(birthYearValue.trim(), 10) : null
+      const currentBirthYear = player.birth_year ?? null
+      if (parsedBirthYear !== currentBirthYear) {
+        updates.birth_year = parsedBirthYear
       }
 
       if (Object.keys(updates).length > 0) {
@@ -439,6 +448,25 @@ export function LongPressMenu({
                     ))}
                   </div>
                 </div>
+
+                {isAdmin ? (
+                  <div className="detail-sheet-field">
+                    <label className="detail-sheet-field-label">Birth Year</label>
+                    <input
+                      className="detail-sheet-input detail-sheet-input-narrow"
+                      type="text"
+                      inputMode="numeric"
+                      value={birthYearValue}
+                      onChange={(e) => setBirthYearValue(e.target.value)}
+                      placeholder="e.g. 2012"
+                    />
+                  </div>
+                ) : (
+                  <div className="detail-sheet-field">
+                    <label className="detail-sheet-field-label">Birth Year</label>
+                    <span className="detail-sheet-info-value">{player.birth_year ?? "\u2014"}</span>
+                  </div>
+                )}
               </div>
 
               <div className="detail-sheet-edit-row">
@@ -531,7 +559,7 @@ export function LongPressMenu({
               </button>
             </div>
 
-            {/* Previous Team + Status on one row */}
+            {/* Previous Team + Status + Birth Year on one row */}
             <div className="detail-sheet-info-row">
               <div className="detail-sheet-info-col">
                 <label className="detail-sheet-field-label">Previous Team</label>
@@ -540,6 +568,10 @@ export function LongPressMenu({
               <div className="detail-sheet-info-col">
                 <label className="detail-sheet-field-label">Status</label>
                 <span className="detail-sheet-info-value">{STATUS_LABELS[effectiveStatus] || effectiveStatus || "Unknown"}</span>
+              </div>
+              <div className="detail-sheet-info-col">
+                <label className="detail-sheet-field-label">Birth Year</label>
+                <span className="detail-sheet-info-value">{player.birth_year ?? "\u2014"}</span>
               </div>
             </div>
 
