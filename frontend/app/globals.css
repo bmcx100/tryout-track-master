@@ -3337,6 +3337,177 @@ body:has(.admin-shell) {
 }
 
 /* ============================================================
+   Multi-Team Split UI (Spec 039)
+   ============================================================ */
+
+/* Split into 2 Teams button */
+.admin-split-btn {
+  @apply flex items-center gap-1.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium mt-2;
+  background: oklch(0.20 0.04 180);
+  color: oklch(0.70 0.12 180);
+  border: 1px solid oklch(0.30 0.06 180);
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.admin-split-btn:hover {
+  background: oklch(0.25 0.06 180);
+}
+
+/* Split setup panel (team name inputs) */
+.admin-split-setup {
+  @apply flex flex-col gap-3 mt-3 p-3 rounded-lg;
+  background: oklch(0.16 0 0);
+  border: 1px solid var(--dm-border);
+}
+
+.admin-split-setup-row {
+  @apply flex items-center gap-2;
+}
+
+.admin-split-setup-label {
+  @apply text-xs font-medium min-w-[60px];
+  color: var(--dm-dust);
+}
+
+.admin-split-name-input {
+  @apply flex-1 px-2.5 py-1.5 rounded text-sm;
+  background: oklch(0.12 0 0);
+  color: var(--dm-umber);
+  border: 1px solid var(--dm-border);
+}
+
+.admin-split-name-input:focus {
+  outline: none;
+  border-color: oklch(0.50 0.12 180);
+}
+
+.admin-split-setup-actions {
+  @apply flex gap-2 mt-1;
+}
+
+/* Sub-team assignment container */
+.admin-split-section {
+  @apply mt-3 rounded-lg overflow-hidden;
+  background: oklch(0.16 0 0);
+  border: 1px solid var(--dm-border);
+}
+
+.admin-split-section-header {
+  @apply flex items-center gap-2 px-3 py-2 text-sm font-medium;
+  background: oklch(0.19 0 0);
+  color: var(--dm-umber);
+  border-bottom: 1px solid var(--dm-border-subtle);
+}
+
+.admin-split-section-header-name {
+  @apply flex-1;
+}
+
+.admin-split-section-count {
+  @apply text-xs px-2 py-0.5 rounded-full;
+  background: oklch(0.25 0 0);
+  color: var(--dm-dust);
+}
+
+/* Player row in assignment UI */
+.admin-split-player-row {
+  @apply flex items-center gap-2 px-3 py-1.5 text-sm;
+  color: var(--dm-umber);
+  border-bottom: 1px solid oklch(0.18 0 0);
+}
+
+.admin-split-player-row:last-child {
+  border-bottom: none;
+}
+
+.admin-split-player-checkbox {
+  @apply w-4 h-4 rounded;
+  accent-color: oklch(0.70 0.12 180);
+  cursor: pointer;
+}
+
+.admin-split-player-jersey {
+  @apply text-xs font-mono font-medium min-w-[36px];
+  color: var(--dm-dust);
+}
+
+.admin-split-player-name {
+  @apply flex-1 truncate;
+}
+
+.admin-split-player-pos {
+  @apply text-xs px-1.5 py-0.5 rounded;
+  background: oklch(0.22 0 0);
+  color: var(--dm-dust);
+}
+
+/* Assign buttons bar */
+.admin-split-assign-bar {
+  @apply flex gap-2 mt-2 mb-1;
+}
+
+.admin-split-assign-btn {
+  @apply flex-1 px-3 py-2 rounded-lg text-sm font-medium;
+  background: oklch(0.20 0.04 180);
+  color: oklch(0.70 0.12 180);
+  border: 1px solid oklch(0.30 0.06 180);
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.admin-split-assign-btn:hover {
+  background: oklch(0.25 0.06 180);
+}
+
+.admin-split-assign-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Remove split button */
+.admin-remove-split-btn {
+  @apply flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium mt-3;
+  background: oklch(0.20 0.04 25);
+  color: oklch(0.70 0.12 25);
+  border: 1px solid oklch(0.30 0.06 25);
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.admin-remove-split-btn:hover {
+  background: oklch(0.25 0.06 25);
+}
+
+/* Sub-team headers in parent continuations page */
+.continuations-subteam-header {
+  @apply flex items-center gap-2 px-3 py-2 text-sm font-semibold mt-3;
+  color: var(--dm-umber);
+  border-bottom: 1px solid var(--dm-border-subtle);
+}
+
+.continuations-subteam-header:first-child {
+  margin-top: 0;
+}
+
+.continuations-subteam-count {
+  @apply text-xs font-normal px-2 py-0.5 rounded-full;
+  background: oklch(0.22 0 0);
+  color: var(--dm-dust);
+}
+
+/* Sub-team headers in dashboard hero card */
+.dashboard-hero-subteam-header {
+  @apply text-xs font-semibold px-3 py-1.5 mt-2;
+  color: var(--dm-dust);
+  border-bottom: 1px solid var(--dm-border-subtle);
+}
+
+.dashboard-hero-subteam-header:first-child {
+  margin-top: 0;
+}
+
+/* ============================================================
    Player Detail Sheet (replaces old long-press menu)
    ============================================================ */
 

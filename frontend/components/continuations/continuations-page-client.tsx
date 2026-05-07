@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import type { ContinuationRound, TryoutPlayer, Annotations } from "@/types"
+import type { ContinuationRound, TryoutPlayer, Annotations, SplitStatus } from "@/types"
 import { RoundSection, getSessionInfo } from "./round-section"
 import { SessionsToggle } from "./sessions-toggle"
 import { PositionFilter } from "@/components/teams/position-filter"
@@ -29,6 +29,7 @@ type ContinuationsPageClientProps = {
   division: string
   isAdmin: boolean
   savedOrders?: Record<string, string[]>
+  splitStatuses?: SplitStatus[]
 }
 
 const EMPTY_ANN = { isFavorite: false, notes: null, customName: null, customJersey: null, customPosition: null, customPreviousTeam: null, customTeam: null } as const
@@ -41,6 +42,7 @@ export function ContinuationsPageClient({
   division,
   isAdmin,
   savedOrders: initialSavedOrders,
+  splitStatuses = [],
 }: ContinuationsPageClientProps) {
   const router = useRouter()
   const [localPlayers, setLocalPlayers] = useState(players)
@@ -339,23 +341,92 @@ export function ContinuationsPageClient({
         positionCounts={positionCounts}
       />
 
-      <RoundSection
-        key={`${activeRound.id}-${activeView}-${hasCustomOrder}`}
-        teamLevel={activeRound.team_level}
-        division={division}
-        activeRound={activeRound}
-        previousRound={previousRound}
-        playerMap={playerMap}
-        annotations={annotations}
-        activeView={activeView}
-        positionFilter={activePosition}
-        savedOrder={currentOrders[activeRound.id]}
-        newPlayers={newPlayers}
-        onToggleFavorite={handleToggleFavorite}
-        onPlayerEdit={setSelectedPlayer}
-        onLinkUnknown={handleLinkUnknown}
-        onOrderChange={handleOrderChange}
-      />
+      {(() => {
+        // Check if this is a split level with assignments
+        const splitStatus = activeRound.is_final_team
+          ? splitStatuses.find((s) => s.team_level === activeRound.team_level && s.is_split)
+          : undefined
+        const hasSubTeamAssignments = splitStatus && localPlayers.some(
+          (p) => p.sub_team && activeRound.jersey_numbers.includes(p.jersey_number)
+        )
+
+        if (splitStatus && hasSubTeamAssignments && activeView === "continuing") {
+          // Group jersey numbers by sub-team
+          const subTeamMap = new Map<string | null, string[]>()
+          for (const jn of activeRound.jersey_numbers) {
+            const player = localPlayers.find((p) => p.jersey_number === jn)
+            const st = player?.sub_team ?? null
+            const arr = subTeamMap.get(st) ?? []
+            arr.push(jn)
+            subTeamMap.set(st, arr)
+          }
+
+          const sections: { name: string, jerseys: string[] }[] = []
+          const team1Jerseys = subTeamMap.get(splitStatus.sub_team_1_name) ?? []
+          const team2Jerseys = subTeamMap.get(splitStatus.sub_team_2_name) ?? []
+          const unassignedJerseys = subTeamMap.get(null) ?? []
+
+          if (unassignedJerseys.length > 0) {
+            sections.push({ name: "Unassigned", jerseys: unassignedJerseys })
+          }
+          if (team1Jerseys.length > 0) {
+            sections.push({ name: splitStatus.sub_team_1_name, jerseys: team1Jerseys })
+          }
+          if (team2Jerseys.length > 0) {
+            sections.push({ name: splitStatus.sub_team_2_name, jerseys: team2Jerseys })
+          }
+
+          return sections.map((section) => {
+            const sectionRound = {
+              ...activeRound,
+              jersey_numbers: section.jerseys,
+            }
+            return (
+              <div key={section.name}>
+                <div className="continuations-subteam-header">
+                  {section.name}
+                  <span className="continuations-subteam-count">{section.jerseys.length}</span>
+                </div>
+                <RoundSection
+                  key={`${activeRound.id}-${section.name}-${activeView}-${hasCustomOrder}`}
+                  teamLevel={activeRound.team_level}
+                  division={division}
+                  activeRound={sectionRound}
+                  previousRound={previousRound}
+                  playerMap={playerMap}
+                  annotations={annotations}
+                  activeView={activeView}
+                  positionFilter={activePosition}
+                  newPlayers={newPlayers}
+                  onToggleFavorite={handleToggleFavorite}
+                  onPlayerEdit={setSelectedPlayer}
+                  onLinkUnknown={handleLinkUnknown}
+                />
+              </div>
+            )
+          })
+        }
+
+        return (
+          <RoundSection
+            key={`${activeRound.id}-${activeView}-${hasCustomOrder}`}
+            teamLevel={activeRound.team_level}
+            division={division}
+            activeRound={activeRound}
+            previousRound={previousRound}
+            playerMap={playerMap}
+            annotations={annotations}
+            activeView={activeView}
+            positionFilter={activePosition}
+            savedOrder={currentOrders[activeRound.id]}
+            newPlayers={newPlayers}
+            onToggleFavorite={handleToggleFavorite}
+            onPlayerEdit={setSelectedPlayer}
+            onLinkUnknown={handleLinkUnknown}
+            onOrderChange={handleOrderChange}
+          />
+        )
+      })()}
 
       {selectedPlayer && (
         <LongPressMenu

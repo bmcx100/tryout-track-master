@@ -32,24 +32,38 @@ function buildStatusGroups(favs: FavoriteStatus[]): StatusGroup[] {
     groups.push({ statusType: "cut", groupKey: "cut", players: cut })
   }
 
-  // Made Team — split by teamLevel, reverse LEVEL_ORDER (C, B, BB, A, AA)
+  // Made Team — split by teamLevel and subTeam, reverse LEVEL_ORDER (C, B, BB, A, AA)
   const madeTeam = favs.filter((f) => f.statusType === "made_team")
-  const madeByLevel = new Map<string, FavoriteStatus[]>()
+  // Group by level:subTeam
+  const madeByKey = new Map<string, FavoriteStatus[]>()
   const madeNullLevel: FavoriteStatus[] = []
   for (const f of madeTeam) {
     if (f.teamLevel) {
-      const existing = madeByLevel.get(f.teamLevel) ?? []
+      const subKey = f.subTeam ? `${f.teamLevel}:${f.subTeam}` : f.teamLevel
+      const existing = madeByKey.get(subKey) ?? []
       existing.push(f)
-      madeByLevel.set(f.teamLevel, existing)
+      madeByKey.set(subKey, existing)
     } else {
       madeNullLevel.push(f)
     }
   }
   const reverseLevels = [...LEVEL_ORDER].reverse()
   for (const lvl of reverseLevels) {
-    const players = madeByLevel.get(lvl)
-    if (players && players.length > 0) {
-      groups.push({ statusType: "made_team", groupKey: `made_team:${lvl}`, players })
+    // Find all keys that start with this level
+    const levelKeys = Array.from(madeByKey.keys()).filter(
+      (k) => k === lvl || k.startsWith(`${lvl}:`)
+    )
+    // Sort: level without sub-team first, then sub-teams alphabetically
+    levelKeys.sort((a, b) => {
+      if (a === lvl) return -1
+      if (b === lvl) return 1
+      return a.localeCompare(b)
+    })
+    for (const key of levelKeys) {
+      const players = madeByKey.get(key)
+      if (players && players.length > 0) {
+        groups.push({ statusType: "made_team", groupKey: `made_team:${key}`, players })
+      }
     }
   }
   if (madeNullLevel.length > 0) {

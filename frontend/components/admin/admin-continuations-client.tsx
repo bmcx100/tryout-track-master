@@ -20,8 +20,23 @@ import {
   getRevertablePlayerCount,
   completeLevel,
   uncompleteLevel,
+  enableSplit,
+  updateSplitNames,
+  assignSubTeam,
+  removeSplit,
 } from "@/app/(app)/admin/continuations/actions"
-import type { ContinuationRound } from "@/types"
+import type { ContinuationRound, SplitStatus } from "@/types"
+import { Scissors, X } from "lucide-react"
+
+type DivisionPlayer = {
+  id: string
+  jersey_number: string
+  name: string
+  position: string | null
+  sub_team: string | null
+  status: string
+  team_id: string | null
+}
 
 type AdminContinuationsClientProps = {
   associationId: string
@@ -31,6 +46,8 @@ type AdminContinuationsClientProps = {
   publishedRounds: ContinuationRound[]
   defaultTeamLevel: string
   completedLevels: { team_level: string, completed_at: string | null }[]
+  splitStatuses: SplitStatus[]
+  divisionPlayers: DivisionPlayer[]
 }
 
 const PAGE_TYPE_LABELS: Record<string, string> = {
@@ -67,6 +84,8 @@ export function AdminContinuationsClient({
   publishedRounds: initialPublished,
   defaultTeamLevel,
   completedLevels: initialCompletedLevels,
+  splitStatuses: initialSplitStatuses,
+  divisionPlayers: initialDivisionPlayers,
 }: AdminContinuationsClientProps) {
   const router = useRouter()
 
@@ -138,6 +157,19 @@ export function AdminContinuationsClient({
   const [deleteTarget, setDeleteTarget] = useState<ContinuationRound | null>(null)
   const [deleteRevertCount, setDeleteRevertCount] = useState(0)
   const [deleting, setDeleting] = useState(false)
+
+  // Split state
+  const [splitStatuses, setSplitStatuses] = useState(initialSplitStatuses)
+  useEffect(() => { setSplitStatuses(initialSplitStatuses) }, [initialSplitStatuses])
+  const [divPlayers, setDivPlayers] = useState(initialDivisionPlayers)
+  useEffect(() => { setDivPlayers(initialDivisionPlayers) }, [initialDivisionPlayers])
+  const [splitSetupLevel, setSplitSetupLevel] = useState<string | null>(null)
+  const [splitName1, setSplitName1] = useState("Team 1")
+  const [splitName2, setSplitName2] = useState("Team 2")
+  const [splitEnabling, setSplitEnabling] = useState(false)
+  const [selectedForAssign, setSelectedForAssign] = useState<Set<string>>(new Set())
+  const [removeSplitTarget, setRemoveSplitTarget] = useState<string | null>(null)
+  const [removingSplit, setRemovingSplit] = useState(false)
 
   // Create empty round state
   const [showCreateEmpty, setShowCreateEmpty] = useState(false)
@@ -643,6 +675,125 @@ export function AdminContinuationsClient({
     router.refresh()
   }
 
+  // Split handlers
+  const handleStartSplit = (level: string) => {
+    setSplitSetupLevel(level)
+    setSplitName1("Team 1")
+    setSplitName2("Team 2")
+  }
+
+  const handleEnableSplit = async () => {
+    if (!splitSetupLevel) return
+    setSplitEnabling(true)
+    const { error: splitErr } = await enableSplit(associationId, division, splitSetupLevel, splitName1, splitName2)
+    setSplitEnabling(false)
+    setSplitSetupLevel(null)
+    if (splitErr) {
+      setError(splitErr)
+      return
+    }
+    setSplitStatuses((prev) => {
+      const existing = prev.find((s) => s.team_level === splitSetupLevel)
+      if (existing) {
+        return prev.map((s) => s.team_level === splitSetupLevel
+          ? { ...s, is_split: true, sub_team_1_name: splitName1, sub_team_2_name: splitName2 }
+          : s
+        )
+      }
+      return [...prev, {
+        team_level: splitSetupLevel!,
+        is_completed: false,
+        is_split: true,
+        sub_team_1_name: splitName1,
+        sub_team_2_name: splitName2,
+      }]
+    })
+  }
+
+  const handleAssignPlayers = async (subTeamName: string) => {
+    if (selectedForAssign.size === 0) return
+    const ids = Array.from(selectedForAssign)
+    const { error: assignErr } = await assignSubTeam(ids, subTeamName)
+    if (assignErr) {
+      setError(assignErr)
+      return
+    }
+    setDivPlayers((prev) =>
+      prev.map((p) => ids.includes(p.id) ? { ...p, sub_team: subTeamName } : p)
+    )
+    setSelectedForAssign(new Set())
+  }
+
+  const handleRenameSplit = async (level: string, oldName: string, newName: string) => {
+    if (oldName === newName || !newName.trim()) return
+    const { error: renameErr } = await updateSplitNames(associationId, division, level, oldName, newName)
+    if (renameErr) {
+      setError(renameErr)
+      return
+    }
+    setSplitStatuses((prev) =>
+      prev.map((s) => {
+        if (s.team_level !== level) return s
+        return {
+          ...s,
+          sub_team_1_name: s.sub_team_1_name === oldName ? newName : s.sub_team_1_name,
+          sub_team_2_name: s.sub_team_2_name === oldName ? newName : s.sub_team_2_name,
+        }
+      })
+    )
+    setDivPlayers((prev) =>
+      prev.map((p) => p.sub_team === oldName ? { ...p, sub_team: newName } : p)
+    )
+  }
+
+  const handleRemoveSplit = async () => {
+    if (!removeSplitTarget) return
+    setRemovingSplit(true)
+    const { error: removeErr } = await removeSplit(associationId, division, removeSplitTarget)
+    setRemovingSplit(false)
+    setRemoveSplitTarget(null)
+    if (removeErr) {
+      setError(removeErr)
+      return
+    }
+    setSplitStatuses((prev) =>
+      prev.map((s) => s.team_level === removeSplitTarget
+        ? { ...s, is_split: false, sub_team_1_name: "Team 1", sub_team_2_name: "Team 2" }
+        : s
+      )
+    )
+    setDivPlayers((prev) =>
+      prev.map((p) => p.sub_team !== null ? { ...p, sub_team: null } : p)
+    )
+  }
+
+  const togglePlayerSelection = (playerId: string) => {
+    setSelectedForAssign((prev) => {
+      const next = new Set(prev)
+      if (next.has(playerId)) next.delete(playerId)
+      else next.add(playerId)
+      return next
+    })
+  }
+
+  const selectAllInSection = (playerIds: string[]) => {
+    setSelectedForAssign((prev) => {
+      const next = new Set(prev)
+      const allSelected = playerIds.every((id) => next.has(id))
+      if (allSelected) {
+        for (const id of playerIds) next.delete(id)
+      } else {
+        for (const id of playerIds) next.add(id)
+      }
+      return next
+    })
+  }
+
+  // Helper: get split status for a level
+  const getSplitForLevel = (level: string): SplitStatus | undefined => {
+    return splitStatuses.find((s) => s.team_level === level)
+  }
+
   // Group published rounds by team level
   const roundsByTeam: Record<string, ContinuationRound[]> = {}
   for (const round of publishedRounds) {
@@ -700,6 +851,106 @@ export function AdminContinuationsClient({
         updateEdit(roundId, "estimated_players", ((fVal || 0) + (dVal || 0) + (gVal || 0)).toString())
       }
     }
+  }
+
+  // Render split assignment UI for a given level
+  const renderSplitUI = (level: string, finalRound: ContinuationRound | undefined) => {
+    const split = getSplitForLevel(level)
+    if (!split || !split.is_split) return null
+    if (!finalRound) return null
+
+    // Find team for this level to filter players
+    const teamPlayers = divPlayers.filter(
+      (p) => p.status === "made_team" && finalRound.jersey_numbers.includes(p.jersey_number)
+    )
+
+    const unassigned = teamPlayers.filter((p) => !p.sub_team)
+    const team1 = teamPlayers.filter((p) => p.sub_team === split.sub_team_1_name)
+    const team2 = teamPlayers.filter((p) => p.sub_team === split.sub_team_2_name)
+
+    const renderSection = (title: string, players: DivisionPlayer[], nameKey?: "sub_team_1_name" | "sub_team_2_name") => {
+      const ids = players.map((p) => p.id)
+      const allSelected = ids.length > 0 && ids.every((id) => selectedForAssign.has(id))
+
+      return (
+        <div className="admin-split-section">
+          <div className="admin-split-section-header">
+            {nameKey ? (
+              <input
+                className="admin-split-name-input admin-split-section-header-name"
+                defaultValue={title}
+                onBlur={(e) => {
+                  const newVal = e.target.value.trim()
+                  if (newVal && newVal !== title) {
+                    handleRenameSplit(level, title, newVal)
+                  }
+                }}
+              />
+            ) : (
+              <span className="admin-split-section-header-name">{title}</span>
+            )}
+            <span className="admin-split-section-count">{players.length}</span>
+            {ids.length > 0 && (
+              <input
+                type="checkbox"
+                className="admin-split-player-checkbox"
+                checked={allSelected}
+                onChange={() => selectAllInSection(ids)}
+                title={allSelected ? "Deselect all" : "Select all"}
+              />
+            )}
+          </div>
+          {players.map((p) => (
+            <div key={p.id} className="admin-split-player-row">
+              <input
+                type="checkbox"
+                className="admin-split-player-checkbox"
+                checked={selectedForAssign.has(p.id)}
+                onChange={() => togglePlayerSelection(p.id)}
+              />
+              <span className="admin-split-player-jersey">#{p.jersey_number}</span>
+              <span className="admin-split-player-name">{p.name}</span>
+              {p.position && p.position !== "?" && (
+                <span className="admin-split-player-pos">{p.position}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    return (
+      <div>
+        <div className="admin-split-assign-bar">
+          <button
+            className="admin-split-assign-btn"
+            disabled={selectedForAssign.size === 0}
+            onClick={() => handleAssignPlayers(split.sub_team_1_name)}
+          >
+            Assign to {split.sub_team_1_name}
+          </button>
+          <button
+            className="admin-split-assign-btn"
+            disabled={selectedForAssign.size === 0}
+            onClick={() => handleAssignPlayers(split.sub_team_2_name)}
+          >
+            Assign to {split.sub_team_2_name}
+          </button>
+        </div>
+
+        {unassigned.length > 0 && renderSection("Unassigned", unassigned)}
+        {renderSection(split.sub_team_1_name, team1, "sub_team_1_name")}
+        {renderSection(split.sub_team_2_name, team2, "sub_team_2_name")}
+
+        <button
+          className="admin-remove-split-btn"
+          onClick={() => setRemoveSplitTarget(level)}
+        >
+          <X size={14} />
+          Remove Split
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -1486,6 +1737,58 @@ export function AdminContinuationsClient({
                               Mark Level Complete
                             </button>
                           )}
+
+                          {/* Split into 2 Teams — only on Final Team round cards */}
+                          {state.is_final_team && !getSplitForLevel(round.team_level)?.is_split && splitSetupLevel !== round.team_level && (
+                            <button
+                              className="admin-split-btn"
+                              onClick={() => handleStartSplit(round.team_level)}
+                            >
+                              <Scissors size={14} />
+                              Split into 2 Teams
+                            </button>
+                          )}
+
+                          {/* Split setup panel */}
+                          {splitSetupLevel === round.team_level && (
+                            <div className="admin-split-setup">
+                              <div className="admin-split-setup-row">
+                                <span className="admin-split-setup-label">Team 1</span>
+                                <input
+                                  className="admin-split-name-input"
+                                  value={splitName1}
+                                  onChange={(e) => setSplitName1(e.target.value)}
+                                />
+                              </div>
+                              <div className="admin-split-setup-row">
+                                <span className="admin-split-setup-label">Team 2</span>
+                                <input
+                                  className="admin-split-name-input"
+                                  value={splitName2}
+                                  onChange={(e) => setSplitName2(e.target.value)}
+                                />
+                              </div>
+                              <div className="admin-split-setup-actions">
+                                <button
+                                  className="scrape-confirm-btn"
+                                  onClick={handleEnableSplit}
+                                  disabled={splitEnabling || !splitName1.trim() || !splitName2.trim()}
+                                >
+                                  {splitEnabling ? <Loader2 size={14} className="scrape-spinner" /> : null}
+                                  Enable Split
+                                </button>
+                                <button
+                                  className="scrape-discard-btn"
+                                  onClick={() => setSplitSetupLevel(null)}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Sub-team assignment UI */}
+                          {state.is_final_team && renderSplitUI(round.team_level, round)}
                         </div>
                       )}
                     </div>
@@ -1551,6 +1854,58 @@ export function AdminContinuationsClient({
                           )}
                         </div>
                       ))}
+
+                      {/* Split into 2 Teams — completed level */}
+                      {finalRound && !getSplitForLevel(level)?.is_split && splitSetupLevel !== level && (
+                        <button
+                          className="admin-split-btn"
+                          onClick={() => handleStartSplit(level)}
+                        >
+                          <Scissors size={14} />
+                          Split into 2 Teams
+                        </button>
+                      )}
+
+                      {/* Split setup panel — completed level */}
+                      {splitSetupLevel === level && (
+                        <div className="admin-split-setup">
+                          <div className="admin-split-setup-row">
+                            <span className="admin-split-setup-label">Team 1</span>
+                            <input
+                              className="admin-split-name-input"
+                              value={splitName1}
+                              onChange={(e) => setSplitName1(e.target.value)}
+                            />
+                          </div>
+                          <div className="admin-split-setup-row">
+                            <span className="admin-split-setup-label">Team 2</span>
+                            <input
+                              className="admin-split-name-input"
+                              value={splitName2}
+                              onChange={(e) => setSplitName2(e.target.value)}
+                            />
+                          </div>
+                          <div className="admin-split-setup-actions">
+                            <button
+                              className="scrape-confirm-btn"
+                              onClick={handleEnableSplit}
+                              disabled={splitEnabling || !splitName1.trim() || !splitName2.trim()}
+                            >
+                              {splitEnabling ? <Loader2 size={14} className="scrape-spinner" /> : null}
+                              Enable Split
+                            </button>
+                            <button
+                              className="scrape-discard-btn"
+                              onClick={() => setSplitSetupLevel(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Sub-team assignment UI — completed level */}
+                      {finalRound && renderSplitUI(level, finalRound)}
 
                       <button
                         className="admin-uncomplete-btn"
@@ -1663,6 +2018,30 @@ export function AdminContinuationsClient({
                 Reopen
               </button>
               <button className="scrape-discard-btn" onClick={() => setUncompleteTarget(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Remove split confirmation dialog */}
+      {removeSplitTarget && (
+        <div className="scrape-modal-overlay" onClick={() => setRemoveSplitTarget(null)}>
+          <div className="scrape-modal-card" onClick={(e) => e.stopPropagation()}>
+            <p className="scrape-size-confirm-text">
+              Remove the sub-team split for {division} {removeSplitTarget}? All sub-team assignments will be&nbsp;cleared.
+            </p>
+            <div className="scrape-modal-actions">
+              <button
+                className="admin-delete-btn"
+                onClick={handleRemoveSplit}
+                disabled={removingSplit}
+              >
+                {removingSplit ? <Loader2 size={14} className="scrape-spinner" /> : null}
+                Remove Split
+              </button>
+              <button className="scrape-discard-btn" onClick={() => setRemoveSplitTarget(null)}>
                 Cancel
               </button>
             </div>

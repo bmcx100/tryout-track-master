@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import type { ContinuationRound, ContinuationLevelStatus } from "@/types"
+import type { ContinuationRound, ContinuationLevelStatus, SplitStatus } from "@/types"
 
 export async function getAllRounds(
   associationId: string,
@@ -97,13 +97,25 @@ export async function deleteRound(
         const playerIds = players.map((p) => p.id)
         const { error: revertError } = await supabase
           .from("tryout_players")
-          .update({ status: "trying_out" as const, team_id: null })
+          .update({ status: "trying_out" as const, team_id: null, sub_team: null })
           .in("id", playerIds)
 
         if (revertError) return { error: revertError.message }
         revertedCount = playerIds.length
       }
     }
+
+    // Clear split status for this level
+    await supabase
+      .from("continuation_level_status")
+      .update({
+        is_split: false,
+        sub_team_1_name: "Team 1",
+        sub_team_2_name: "Team 2",
+      })
+      .eq("association_id", round.association_id)
+      .eq("division", round.division)
+      .eq("team_level", round.team_level)
   }
 
   // Delete associated continuation_orders
@@ -288,4 +300,183 @@ export async function uncompleteLevel(
   })
 
   return {}
+}
+
+export async function enableSplit(
+  associationId: string,
+  division: string,
+  teamLevel: string,
+  team1Name: string,
+  team2Name: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from("continuation_level_status")
+    .upsert({
+      association_id: associationId,
+      division,
+      team_level: teamLevel,
+      is_split: true,
+      sub_team_1_name: team1Name,
+      sub_team_2_name: team2Name,
+    }, { onConflict: "association_id,division,team_level" })
+
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function updateSplitNames(
+  associationId: string,
+  division: string,
+  teamLevel: string,
+  oldName: string,
+  newName: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+
+  // Determine which sub-team name field to update
+  const { data: row } = await supabase
+    .from("continuation_level_status")
+    .select("sub_team_1_name, sub_team_2_name")
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .eq("team_level", teamLevel)
+    .single()
+
+  if (!row) return { error: "Split status not found" }
+
+  const updates: Record<string, string> = {}
+  if (row.sub_team_1_name === oldName) updates.sub_team_1_name = newName
+  if (row.sub_team_2_name === oldName) updates.sub_team_2_name = newName
+
+  if (Object.keys(updates).length === 0) return { error: "Name not found" }
+
+  const { error } = await supabase
+    .from("continuation_level_status")
+    .update(updates)
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .eq("team_level", teamLevel)
+
+  if (error) return { error: error.message }
+
+  // Cascade rename to players
+  // Find the team for this level
+  const { data: team } = await supabase
+    .from("teams")
+    .select("id")
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .eq("name", teamLevel)
+    .single()
+
+  if (team) {
+    await supabase
+      .from("tryout_players")
+      .update({ sub_team: newName })
+      .eq("association_id", associationId)
+      .eq("division", division)
+      .eq("team_id", team.id)
+      .eq("sub_team", oldName)
+      .eq("status", "made_team")
+  }
+
+  return {}
+}
+
+export async function assignSubTeam(
+  playerIds: string[],
+  subTeamName: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from("tryout_players")
+    .update({ sub_team: subTeamName })
+    .in("id", playerIds)
+
+  if (error) return { error: error.message }
+  return {}
+}
+
+export async function removeSplit(
+  associationId: string,
+  division: string,
+  teamLevel: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+
+  // Reset split status
+  const { error } = await supabase
+    .from("continuation_level_status")
+    .update({
+      is_split: false,
+      sub_team_1_name: "Team 1",
+      sub_team_2_name: "Team 2",
+    })
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .eq("team_level", teamLevel)
+
+  if (error) return { error: error.message }
+
+  // Clear sub_team on all matching players
+  const { data: team } = await supabase
+    .from("teams")
+    .select("id")
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .eq("name", teamLevel)
+    .single()
+
+  if (team) {
+    await supabase
+      .from("tryout_players")
+      .update({ sub_team: null })
+      .eq("association_id", associationId)
+      .eq("division", division)
+      .eq("team_id", team.id)
+      .eq("status", "made_team")
+      .not("sub_team", "is", null)
+  }
+
+  return {}
+}
+
+export async function getSplitStatus(
+  associationId: string,
+  division: string
+): Promise<SplitStatus[]> {
+  const supabase = await createClient()
+
+  const { data } = await supabase
+    .from("continuation_level_status")
+    .select("team_level, is_completed, is_split, sub_team_1_name, sub_team_2_name")
+    .eq("association_id", associationId)
+    .eq("division", division)
+
+  return (data ?? []).map((row) => ({
+    team_level: row.team_level,
+    is_completed: row.is_completed,
+    is_split: row.is_split,
+    sub_team_1_name: row.sub_team_1_name ?? "Team 1",
+    sub_team_2_name: row.sub_team_2_name ?? "Team 2",
+  }))
+}
+
+export async function getPlayersForDivision(
+  associationId: string,
+  division: string
+): Promise<{ id: string, jersey_number: string, name: string, position: string | null, sub_team: string | null, status: string, team_id: string | null }[]> {
+  const supabase = await createClient()
+
+  const { data } = await supabase
+    .from("tryout_players")
+    .select("id, jersey_number, name, position, sub_team, status, team_id")
+    .eq("association_id", associationId)
+    .eq("division", division)
+    .is("deleted_at", null)
+
+  return data ?? []
 }

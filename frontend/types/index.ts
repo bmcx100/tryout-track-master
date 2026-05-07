@@ -35,6 +35,17 @@ export type ContinuationLevelStatus = {
   is_completed: boolean
   completed_at: string | null
   completed_by: string | null
+  is_split: boolean
+  sub_team_1_name: string | null
+  sub_team_2_name: string | null
+}
+
+export type SplitStatus = {
+  team_level: string
+  is_completed: boolean
+  is_split: boolean
+  sub_team_1_name: string
+  sub_team_2_name: string
 }
 
 // Status display labels

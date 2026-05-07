@@ -4,7 +4,7 @@ Last updated: 2026-05-07
 
 **Completed:** 001 (Previous teams sorting), 002 (Position filter), 003 (Continuations tracker), 004 (Division switcher), 005 (Continuations auto-scraper), 006 (Player management — parent), 007 (Admin CRUD & continuations linking), 008 (Bulk heart by previous team), 009 (Dashboard redesign), 010 (Association picker), 011 (Dashboard favourites summary), 012 (My Favourites page), 013 (Onboarding tooltips & help page), 014 (Sessions card & toggle), 015 (Dashboard hero cards & favourites), 016 (Sessions position filter & drag sorting), 017 (Scraper robustness & Final Team), 018 (Scraper manual fallback & team validation), 022 (Player row swipe & readability), 023 (Fix favourite logic), 024 (Player detail form redesign), 025 (Nav loading skeletons), 026 (Sessions column sort header), 027 (Team group drag reorder), 028 (Onboarding styling), 029 (Position filter count), 030 (Corrections redesign), 031 (Admin continuations redesign), 033 (Complete level + dashboard favourites), 034 (Estimated players by position), 035 (Withdrawn status), 036 (Multi-session rounds), 037 (Favourite Made Team split)
 
-**Specced:** 038 (Player birth year)
+**Specced:** 038 (Player birth year), 039 (Multi-team levels)
 
 | # | Feature | PRD Ref | Status |
 |---|---------|---------|--------|
@@ -32,6 +32,7 @@ Last updated: 2026-05-07
 | 36 | Multi-session rounds — scraper detects split sessions (Split 1/2, Session 1/2), stores per-session jersey numbers, admin preview shows session breakdown | FR-039 | Done ([036](036-multi-session-rounds.md)) |
 | 37 | Favourite Made Team split — separate Made Team cards per level, reverse level ordering, team names from DB | FR-025 | Done ([037](037-favourite-made-team-split.md)) |
 | 38 | Player birth year — store birth_year on players, infer from division + previous team, admin-editable, SQL backfill | FR-021 | Specced ([038](038-player-birth-year.md)) |
+| 39 | Multi-team levels — split final team roster into 2 named sub-teams, bulk assign players, update dashboard/favourites/continuations display | FR-016, FR-039 | Specced ([039](039-multi-team-levels.md)) |
 | 100 | Light mode (gold scale theme) | — | Specced ([021](021-light-mode.md)) |
 | 101 | Rework Help Page — expand content, mockups, deeper feature guidance | — | Not started |
 | 102 | Bulk status updates | FR-022 | Not started |

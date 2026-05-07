@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       associations: {
@@ -118,6 +93,88 @@ export type Database = {
             columns: ["association_id"]
             isOneToOne: false
             referencedRelation: "associations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      continuation_level_status: {
+        Row: {
+          association_id: string
+          completed_at: string | null
+          completed_by: string | null
+          division: string
+          id: string
+          is_completed: boolean
+          is_split: boolean
+          sub_team_1_name: string | null
+          sub_team_2_name: string | null
+          team_level: string
+        }
+        Insert: {
+          association_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          division: string
+          id?: string
+          is_completed?: boolean
+          is_split?: boolean
+          sub_team_1_name?: string | null
+          sub_team_2_name?: string | null
+          team_level: string
+        }
+        Update: {
+          association_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          division?: string
+          id?: string
+          is_completed?: boolean
+          is_split?: boolean
+          sub_team_1_name?: string | null
+          sub_team_2_name?: string | null
+          team_level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "continuation_level_status_association_id_fkey"
+            columns: ["association_id"]
+            isOneToOne: false
+            referencedRelation: "associations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      continuation_orders: {
+        Row: {
+          created_at: string
+          id: string
+          player_order: string[]
+          round_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          player_order?: string[]
+          round_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          player_order?: string[]
+          round_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "continuation_orders_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "continuation_rounds"
             referencedColumns: ["id"]
           },
         ]
@@ -291,7 +348,11 @@ export type Database = {
       player_annotations: {
         Row: {
           created_at: string
+          custom_jersey: string | null
           custom_name: string | null
+          custom_position: string | null
+          custom_previous_team: string | null
+          custom_team: string | null
           id: string
           is_favorite: boolean
           notes: string | null
@@ -301,7 +362,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custom_jersey?: string | null
           custom_name?: string | null
+          custom_position?: string | null
+          custom_previous_team?: string | null
+          custom_team?: string | null
           id?: string
           is_favorite?: boolean
           notes?: string | null
@@ -311,7 +376,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custom_jersey?: string | null
           custom_name?: string | null
+          custom_position?: string | null
+          custom_previous_team?: string | null
+          custom_team?: string | null
           id?: string
           is_favorite?: boolean
           notes?: string | null
@@ -434,6 +503,44 @@ export type Database = {
           },
         ]
       }
+      team_group_orders: {
+        Row: {
+          association_id: string
+          created_at: string
+          division: string
+          id: string
+          team_order: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          association_id: string
+          created_at?: string
+          division: string
+          id?: string
+          team_order?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          association_id?: string
+          created_at?: string
+          division?: string
+          id?: string
+          team_order?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_group_orders_association_id_fkey"
+            columns: ["association_id"]
+            isOneToOne: false
+            referencedRelation: "associations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           association_id: string
@@ -489,6 +596,7 @@ export type Database = {
           previous_team: string | null
           status: Database["public"]["Enums"]["player_status"]
           status_updated_at: string
+          sub_team: string | null
           suggested_by: string | null
           team_id: string | null
           updated_at: string
@@ -506,6 +614,7 @@ export type Database = {
           previous_team?: string | null
           status?: Database["public"]["Enums"]["player_status"]
           status_updated_at?: string
+          sub_team?: string | null
           suggested_by?: string | null
           team_id?: string | null
           updated_at?: string
@@ -523,6 +632,7 @@ export type Database = {
           previous_team?: string | null
           status?: Database["public"]["Enums"]["player_status"]
           status_updated_at?: string
+          sub_team?: string | null
           suggested_by?: string | null
           team_id?: string | null
           updated_at?: string
@@ -766,9 +876,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       app_role: ["admin", "group_admin", "member"],

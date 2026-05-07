@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth"
 import { getActiveDivision, getDivisions } from "@/app/(app)/division/actions"
 import { getDraftRounds, getContinuationsUrl } from "@/app/(app)/continuations/scraper-actions"
-import { getAllRounds, getCompletedLevels } from "./actions"
+import { getAllRounds, getCompletedLevels, getSplitStatus, getPlayersForDivision } from "./actions"
 import { AdminContinuationsClient } from "@/components/admin/admin-continuations-client"
 
 export default async function AdminContinuationsPage() {
@@ -14,11 +14,13 @@ export default async function AdminContinuationsPage() {
     : ""
   const activeDivision = savedDivision ?? defaultDivision
 
-  const [drafts, { url }, allRounds, completedLevels] = await Promise.all([
+  const [drafts, { url }, allRounds, completedLevels, splitStatuses, divisionPlayers] = await Promise.all([
     getDraftRounds(associationId, activeDivision),
     getContinuationsUrl(associationId, activeDivision),
     getAllRounds(associationId, activeDivision),
     getCompletedLevels(associationId, activeDivision),
+    getSplitStatus(associationId, activeDivision),
+    getPlayersForDivision(associationId, activeDivision),
   ])
 
   // Compute defaultTeamLevel from most recent published round
@@ -39,6 +41,8 @@ export default async function AdminContinuationsPage() {
       publishedRounds={publishedRounds}
       defaultTeamLevel={defaultTeamLevel}
       completedLevels={completedLevels}
+      splitStatuses={splitStatuses}
+      divisionPlayers={divisionPlayers}
     />
   )
 }

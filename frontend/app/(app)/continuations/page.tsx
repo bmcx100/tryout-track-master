@@ -2,6 +2,7 @@ import { requireAssociation } from "@/lib/auth"
 import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
 import { ContinuationsPageClient } from "@/components/continuations/continuations-page-client"
 import { getAllPublishedRounds, getPlayerAnnotations, getContinuationOrders } from "./actions"
+import { getSplitStatus } from "@/app/(app)/admin/continuations/actions"
 import type { TryoutPlayer } from "@/types"
 
 export default async function ContinuationsPage() {
@@ -17,7 +18,7 @@ export default async function ContinuationsPage() {
     : ""
   const activeDivision = savedDivision ?? defaultDivision
 
-  // Fetch players filtered by active division
+  // Fetch players filtered by active division (include sub_team)
   const { data: playersData } = await supabase
     .from("tryout_players")
     .select("*")
@@ -28,10 +29,11 @@ export default async function ContinuationsPage() {
   const players: TryoutPlayer[] = playersData ?? []
 
   // Fetch all published rounds for the active division (newest first)
-  const rounds = await getAllPublishedRounds(associationId, activeDivision)
-
-  // Fetch user's annotations
-  const annotations = await getPlayerAnnotations(associationId)
+  const [rounds, annotations, splitStatuses] = await Promise.all([
+    getAllPublishedRounds(associationId, activeDivision),
+    getPlayerAnnotations(associationId),
+    getSplitStatus(associationId, activeDivision),
+  ])
 
   // Fetch user's saved continuation orders
   const roundIds = rounds.map((r) => r.id)
@@ -47,6 +49,7 @@ export default async function ContinuationsPage() {
       division={activeDivision}
       isAdmin={role === "group_admin" || role === "admin"}
       savedOrders={savedOrders}
+      splitStatuses={splitStatuses}
     />
   )
 }
