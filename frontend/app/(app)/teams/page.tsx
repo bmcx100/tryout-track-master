@@ -3,7 +3,7 @@ import { getDivisions, getActiveDivision } from "@/app/(app)/division/actions"
 import { getPlayerAnnotations } from "@/app/(app)/annotations/actions"
 import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 import { TeamsPageClient } from "@/components/teams/teams-page-client"
-import type { TryoutPlayer, Team } from "@/types"
+import type { TryoutPlayer, Team, SplitStatus } from "@/types"
 
 export default async function TeamsPage() {
   const { supabase, user, associationId, role } = await requireAssociation()
@@ -86,6 +86,22 @@ export default async function TeamsPage() {
 
   const savedTeamGroupOrder: string[] = (teamGroupOrderData?.team_order ?? []).map(normalizePreviousTeam)
 
+  // Fetch split statuses for this division
+  const { data: splitData } = await supabase
+    .from("continuation_level_status")
+    .select("team_level, is_completed, is_split, sub_team_1_name, sub_team_2_name")
+    .eq("association_id", associationId)
+    .eq("division", activeDivision)
+    .eq("is_split", true)
+
+  const splitStatuses: SplitStatus[] = (splitData ?? []).map((s) => ({
+    team_level: s.team_level,
+    is_completed: s.is_completed,
+    is_split: s.is_split,
+    sub_team_1_name: s.sub_team_1_name ?? "Team 1",
+    sub_team_2_name: s.sub_team_2_name ?? "Team 2",
+  }))
+
   // Fetch user's player annotations (hearts, names)
   const annotations = await getPlayerAnnotations(associationId)
 
@@ -98,6 +114,7 @@ export default async function TeamsPage() {
         savedOrders={savedOrders}
         savedPreviousOrders={savedPreviousOrders}
         savedTeamGroupOrder={savedTeamGroupOrder}
+        splitStatuses={splitStatuses}
         associationId={associationId}
         division={activeDivision}
         annotations={annotations}

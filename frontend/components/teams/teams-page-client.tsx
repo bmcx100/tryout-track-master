@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useMemo } from "react"
 import { Plus } from "lucide-react"
-import type { TryoutPlayer, Team, Annotations } from "@/types"
+import type { TryoutPlayer, Team, Annotations, SplitStatus } from "@/types"
 import { ViewToggle } from "./view-toggle"
 import { PositionFilter } from "./position-filter"
 import { PredictionBoard } from "./prediction-board"
@@ -27,6 +27,7 @@ type TeamsPageClientProps = {
   savedOrders: Record<string, string[]>
   savedPreviousOrders: Record<string, string[]>
   savedTeamGroupOrder: string[]
+  splitStatuses: SplitStatus[]
   associationId: string
   division: string
   annotations: Annotations
@@ -41,6 +42,7 @@ export function TeamsPageClient({
   savedOrders,
   savedPreviousOrders,
   savedTeamGroupOrder,
+  splitStatuses,
   associationId,
   division,
   annotations: initialAnnotations,
@@ -257,6 +259,7 @@ export function TeamsPageClient({
           key={`predictions-${resetKey}`}
           players={activePlayers}
           teams={teams}
+          splitStatuses={splitStatuses}
           savedOrders={currentPredictionOrders}
           savedPreviousOrders={currentPreviousOrders}
           savedTeamGroupOrder={currentTeamGroupOrder}

@@ -11,7 +11,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
-import type { TryoutPlayer, Team, Annotations } from "@/types"
+import type { TryoutPlayer, Team, Annotations, SplitStatus } from "@/types"
 import { normalizePreviousTeam } from "@/lib/normalize-previous-team"
 import { TeamSection } from "./team-section"
 
@@ -169,6 +169,7 @@ function splitByPosition(players: TryoutPlayer[]) {
 type PredictionBoardProps = {
   players: TryoutPlayer[]
   teams: Team[]
+  splitStatuses?: SplitStatus[]
   savedOrders: Record<string, string[]>
   savedPreviousOrders: Record<string, string[]>
   savedTeamGroupOrder?: string[]
@@ -182,6 +183,7 @@ type PredictionBoardProps = {
 export function PredictionBoard({
   players,
   teams,
+  splitStatuses = [],
   savedOrders,
   savedPreviousOrders,
   savedTeamGroupOrder,
@@ -341,12 +343,44 @@ export function PredictionBoard({
   for (const team of sorted) {
     const official = officialByTeam.get(team.id)
     if (official && official.length > 0) {
-      sections.push({
-        key: `official-${team.id}`,
-        teamName: `${team.division} ${team.name}`,
-        players: sortByPosition(official),
-        isOfficial: true,
-      })
+      const split = splitStatuses.find((s) => s.team_level === team.name)
+      if (split && split.is_split) {
+        const team1 = official.filter((p) => p.sub_team === split.sub_team_1_name)
+        const team2 = official.filter((p) => p.sub_team === split.sub_team_2_name)
+        const unassigned = official.filter((p) => !p.sub_team)
+
+        if (team1.length > 0) {
+          sections.push({
+            key: `official-${team.id}-1`,
+            teamName: `${team.division} ${team.name} (${split.sub_team_1_name})`,
+            players: sortByPosition(team1),
+            isOfficial: true,
+          })
+        }
+        if (team2.length > 0) {
+          sections.push({
+            key: `official-${team.id}-2`,
+            teamName: `${team.division} ${team.name} (${split.sub_team_2_name})`,
+            players: sortByPosition(team2),
+            isOfficial: true,
+          })
+        }
+        if (unassigned.length > 0) {
+          sections.push({
+            key: `official-${team.id}-unassigned`,
+            teamName: `${team.division} ${team.name} (Unassigned)`,
+            players: sortByPosition(unassigned),
+            isOfficial: true,
+          })
+        }
+      } else {
+        sections.push({
+          key: `official-${team.id}`,
+          teamName: `${team.division} ${team.name}`,
+          players: sortByPosition(official),
+          isOfficial: true,
+        })
+      }
     } else {
       const div = team.division
       const pool = divPools[div]
